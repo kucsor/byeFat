@@ -37,18 +37,23 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
     return { ...foodTotals, activeCalories };
   }, [foodItems, activities]);
   
+  // Calculate caloric deficit
+  const maintenanceCalories = baseGoal; // BMR * 1.2 (sedentary)
+  const totalBurned = maintenanceCalories + totals.activeCalories; // Maintenance + exercise
+  const caloricDeficit = Math.round(totalBurned - totals.totalCalories); // Positive = losing weight
+  
+  // For the ring chart - show deficit
   const dynamicGoal = baseGoal > 0 ? baseGoal + totals.activeCalories : 0;
-  const caloriesRemaining = Math.round(dynamicGoal - totals.totalCalories);
+  const calorieProgress = dynamicGoal > 0 ? (totals.totalCalories / dynamicGoal) * 100 : 0;
 
-  const displayValue = Math.abs(caloriesRemaining);
-  const displayLabel = caloriesRemaining >= 0 ? 'kcal rămase' : 'kcal surplus';
+  // Display values for the ring
+  const displayValue = Math.abs(caloricDeficit);
+  const displayLabel = caloricDeficit >= 0 ? 'kcal deficit' : 'kcal surplus';
 
   // Define goals for macros, falling back to profile, then 0
   const proteinGoal = selectedLog?.goalProtein ?? userProfile.dailyProtein ?? 0;
   const carbsGoal = selectedLog?.goalCarbs ?? userProfile.dailyCarbs ?? 0;
   const fatGoal = selectedLog?.goalFat ?? userProfile.dailyFat ?? 0;
-
-  const calorieProgress = dynamicGoal > 0 ? (totals.totalCalories / dynamicGoal) * 100 : 0;
 
   const { animationClass, animationStyle } = useMemo(() => {
     if (calorieProgress < 85) {
