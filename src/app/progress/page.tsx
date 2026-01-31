@@ -204,14 +204,28 @@ export default function ProgressPage() {
       return [];
     }
     
+    // Include all daily logs, even those without weight history
     const logMap = new Map(dailyLogs?.map(log => [log.date, { goal: log.goalCalories, consumed: log.consumedCalories }]) ?? []);
     const weightMap = new Map(sortedWeightHistory?.map(entry => [entry.date, entry.weight]) ?? []);
     
-    if (logMap.size === 0 && weightMap.size === 0) {
+    // Debug logging
+    console.log('DailyLogs:', dailyLogs);
+    console.log('LogMap keys:', Array.from(logMap.keys()));
+    console.log('WeightMap keys:', Array.from(weightMap.keys()));
+
+    // Get all dates from logs that have consumed calories > 0
+    const datesWithFood = dailyLogs
+      ?.filter(log => (log.consumedCalories || 0) > 0)
+      .map(log => log.date) || [];
+    
+    console.log('Dates with food:', datesWithFood);
+
+    if (datesWithFood.length === 0 && weightMap.size === 0) {
       return [];
     }
 
-    const allDates = [...new Set([...Array.from(logMap.keys()), ...Array.from(weightMap.keys())])].sort();
+    const allDates = [...new Set([...datesWithFood, ...Array.from(weightMap.keys())])].sort();
+    console.log('All dates for chart:', allDates);
 
     let lastSeenWeight: number | null = null;
     
