@@ -8,6 +8,7 @@ import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
 import { ResponsiveContainer, RadialBarChart, PolarAngleAxis, RadialBar } from 'recharts';
 import { cn } from '@/lib/utils';
+import { Beef, Wheat as WheatIcon, Droplets } from 'lucide-react';
 
 type DailySummaryProps = {
   foodItems?: DailyLogItem[] | null;
@@ -148,28 +149,58 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
         </div>
 
         <div className="mt-6 space-y-4">
-            <div>
-                <div className="flex justify-between mb-1 text-sm font-medium">
-                    <span>Proteine</span>
-                    <span className="text-muted-foreground">{totals.totalProtein.toLocaleString()}g / {proteinGoal.toLocaleString()}g</span>
+            {/* Protein */}
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50">
+                            <Beef className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        </div>
+                        <span className="font-medium">Proteine</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                        <span className="font-semibold text-foreground">{totals.totalProtein.toLocaleString()}</span>
+                        <span className="mx-1">/</span>
+                        {proteinGoal.toLocaleString()}g
+                    </span>
                 </div>
-                <Progress value={proteinGoal > 0 ? (totals.totalProtein / proteinGoal) * 100 : 0} className="h-2 [&>div]:bg-chart-2" />
+                <Progress value={proteinGoal > 0 ? (totals.totalProtein / proteinGoal) * 100 : 0} className="h-2.5 [&>div]:bg-red-500" />
             </div>
 
-            <div>
-                <div className="flex justify-between mb-1 text-sm font-medium">
-                    <span>Carbohidrați</span>
-                    <span className="text-muted-foreground">{totals.totalCarbohydrates.toLocaleString()}g / {carbsGoal.toLocaleString()}g</span>
+            {/* Carbs */}
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/50">
+                            <WheatIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <span className="font-medium">Carbohidrați</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                        <span className="font-semibold text-foreground">{totals.totalCarbohydrates.toLocaleString()}</span>
+                        <span className="mx-1">/</span>
+                        {carbsGoal.toLocaleString()}g
+                    </span>
                 </div>
-                <Progress value={carbsGoal > 0 ? (totals.totalCarbohydrates / carbsGoal) * 100 : 0} className="h-2 [&>div]:bg-chart-3" />
+                <Progress value={carbsGoal > 0 ? (totals.totalCarbohydrates / carbsGoal) * 100 : 0} className="h-2.5 [&>div]:bg-amber-500" />
             </div>
-            
-            <div>
-                <div className="flex justify-between mb-1 text-sm font-medium">
-                    <span>Grăsimi</span>
-                    <span className="text-muted-foreground">{totals.totalFat.toLocaleString()}g / {fatGoal.toLocaleString()}g</span>
+
+            {/* Fat */}
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/50">
+                            <Droplets className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <span className="font-medium">Grăsimi</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                        <span className="font-semibold text-foreground">{totals.totalFat.toLocaleString()}</span>
+                        <span className="mx-1">/</span>
+                        {fatGoal.toLocaleString()}g
+                    </span>
                 </div>
-                <Progress value={fatGoal > 0 ? (totals.totalFat / fatGoal) * 100 : 0} className="h-2 [&>div]:bg-chart-1" />
+                <Progress value={fatGoal > 0 ? (totals.totalFat / fatGoal) * 100 : 0} className="h-2.5 [&>div]:bg-blue-500" />
             </div>
         </div>
       </CardContent>

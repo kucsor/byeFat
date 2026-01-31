@@ -5,8 +5,8 @@ import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } fro
 import type { DailyLogItem, DailyLogActivity, UserProfile, DailyLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Trash2, Loader2, Flame, Pencil, Plus, Soup } from 'lucide-react';
-import { doc, increment } from 'firebase/firestore';
+import { Trash2, Loader2, Flame, Pencil, Plus, Soup, Sun, Moon, Coffee, Apple } from 'lucide-react';
+import { doc, increment, Timestamp } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { triggerHapticFeedback } from '@/lib/haptics';
@@ -23,6 +23,23 @@ import {
 } from "@/components/ui/alert-dialog"
 
 const EditFoodLogItemSheet = dynamic(() => import('./edit-food-log-item-sheet').then(mod => mod.EditFoodLogItemSheet));
+
+// Helper to categorize items by meal time
+function getMealCategory(timestamp: Timestamp | undefined): 'breakfast' | 'lunch' | 'dinner' | 'snack' {
+  if (!timestamp) return 'snack';
+  const hour = timestamp.toDate().getHours();
+  if (hour >= 5 && hour < 11) return 'breakfast';
+  if (hour >= 11 && hour < 15) return 'lunch';
+  if (hour >= 15 && hour < 21) return 'dinner';
+  return 'snack';
+}
+
+const mealConfig = {
+  breakfast: { label: 'Mic Dejun', icon: Coffee, color: 'text-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-950/30' },
+  lunch: { label: 'Prânz', icon: Sun, color: 'text-orange-500', bgColor: 'bg-orange-50 dark:bg-orange-950/30' },
+  dinner: { label: 'Cină', icon: Moon, color: 'text-indigo-500', bgColor: 'bg-indigo-50 dark:bg-indigo-950/30' },
+  snack: { label: 'Gustare', icon: Apple, color: 'text-green-500', bgColor: 'bg-green-50 dark:bg-green-950/30' },
+};
 
 
 type DailyLogProps = {
@@ -123,28 +140,53 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     setIsEditSheetOpen(true);
   };
 
-  const combinedLog = useMemo(() => {
+  // Group items by meal category
+  const groupedItems = useMemo(() => {
     if (items === undefined && activities === undefined) {
         return undefined; // Still loading
     }
 
-    const typedFoodItems = (items || []).map(item => ({ ...item, type: 'food' as const }));
-    const typedActivities = (activities || []).map(item => ({ ...item, type: 'activity' as const }));
-    
-    const allItems = [...typedFoodItems, ...typedActivities];
+    const groups: {
+      breakfast: DailyLogItem[];
+      lunch: DailyLogItem[];
+      dinner: DailyLogItem[];
+      snack: DailyLogItem[];
+      activities: DailyLogActivity[];
+    } = {
+      breakfast: [],
+      lunch: [],
+      dinner: [],
+      snack: [],
+      activities: activities || [],
+    };
 
-    // Sort by createdAt timestamp, newest first
-    allItems.sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-            return b.createdAt.toMillis() - a.createdAt.toMillis();
-        }
-        // Fallback for items without a timestamp
-        if (a.createdAt) return -1;
-        if (b.createdAt) return 1;
-        return 0;
+    // Sort food items into meal categories
+    (items || []).forEach(item => {
+      const category = getMealCategory(item.createdAt);
+      groups[category].push(item);
     });
-    
-    return allItems;
+
+    // Sort each group by time (newest first)
+    (Object.keys(groups) as Array<keyof typeof groups>).forEach(key => {
+      if (key !== 'activities') {
+        groups[key].sort((a: DailyLogItem, b: DailyLogItem) => {
+          if (a.createdAt && b.createdAt) {
+            return b.createdAt.toMillis() - a.createdAt.toMillis();
+          }
+          return 0;
+        });
+      }
+    });
+
+    // Sort activities
+    groups.activities.sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return b.createdAt.toMillis() - a.createdAt.toMillis();
+      }
+      return 0;
+    });
+
+    return groups;
   }, [items, activities]);
 
   const handleDelete = (itemId: string, type: 'items' | 'activities') => {
@@ -162,39 +204,112 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     deleteDocumentNonBlocking(docRef);
     triggerHapticFeedback();
   };
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Daily Log</h2>
-      </div>
 
-      {combinedLog === undefined && (
-         <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
-             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-         </Card>
-      )}
-      {combinedLog && combinedLog.length > 0 ? (
-        <div className="space-y-4">
+  const hasAnyItems = groupedItems && (
+    groupedItems.breakfast.length > 0 ||
+    groupedItems.lunch.length > 0 ||
+    groupedItems.dinner.length > 0 ||
+    groupedItems.snack.length > 0 ||
+    groupedItems.activities.length > 0
+  );
+
+  const renderMealSection = (category: keyof typeof mealConfig) => {
+    if (!groupedItems) return null;
+    const items = groupedItems[category] as DailyLogItem[];
+    if (items.length === 0) return null;
+
+    const config = mealConfig[category];
+    const Icon = config.icon;
+    const totalCalories = items.reduce((sum, item) => sum + item.calories, 0);
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-3"
+      >
+        <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${config.bgColor}`}>
+          <div className="flex items-center gap-2">
+            <Icon className={`h-5 w-5 ${config.color}`} />
+            <span className={`font-semibold ${config.color}`}>{config.label}</span>
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">
+            {totalCalories} kcal
+          </span>
+        </div>
+        <div className="space-y-2">
           <AnimatePresence>
-            {combinedLog.map((item) => (
+            {items.map((item) => (
               <motion.div
-                key={item.type === 'food' ? `food-${item.id}` : `activity-${item.id}`}
+                key={`food-${item.id}`}
                 layout
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
               >
-                {item.type === 'food' ? (
-                  <FoodItemCard item={item as DailyLogItem} onDelete={handleDelete} onEdit={handleEdit} />
-                ) : (
-                  <ActivityItemCard item={item as DailyLogActivity} onDelete={handleDelete} />
-                )}
+                <FoodItemCard item={item} onDelete={handleDelete} onEdit={handleEdit} />
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
-      ) : combinedLog !== undefined && (
+      </motion.div>
+    );
+  };
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold tracking-tight">Jurnal Zilnic</h2>
+      </div>
+
+      {groupedItems === undefined && (
+         <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+         </Card>
+      )}
+
+      {hasAnyItems ? (
+        <div className="space-y-6">
+          {renderMealSection('breakfast')}
+          {renderMealSection('lunch')}
+          {renderMealSection('dinner')}
+          {renderMealSection('snack')}
+
+          {/* Activities Section */}
+          {groupedItems!.activities.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-orange-50 dark:bg-orange-950/30">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-orange-500" />
+                  <span className="font-semibold text-orange-500">Activități</span>
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">
+                  +{groupedItems!.activities.reduce((sum, item) => sum + item.calories, 0)} kcal
+                </span>
+              </div>
+              <div className="space-y-2">
+                <AnimatePresence>
+                  {groupedItems!.activities.map((item) => (
+                    <motion.div
+                      key={`activity-${item.id}`}
+                      layout
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                    >
+                      <ActivityItemCard item={item} onDelete={handleDelete} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      ) : groupedItems !== undefined && (
         <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
             <CardHeader className="items-center">
                 <Soup className="h-12 w-12 text-muted-foreground mb-4" />
@@ -209,7 +324,8 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
             </CardContent>
         </Card>
       )}
-       <EditFoodLogItemSheet 
+
+      <EditFoodLogItemSheet 
         isOpen={isEditSheetOpen}
         setIsOpen={setIsEditSheetOpen}
         item={itemToEdit}

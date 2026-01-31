@@ -33,10 +33,34 @@ export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculato
   };
 
   const actions = [
-    { label: "AI Calculator", icon: Bot, action: onAiCalculator },
-    { label: "Log Activity", icon: Flame, action: onLogActivity },
-    { label: "Add Food", icon: Soup, action: onAddFood },
-    { label: "Scan Barcode", icon: ScanLine, action: onScanBarcode },
+    { 
+      label: "AI Calculator", 
+      icon: Bot, 
+      action: onAiCalculator,
+      color: "bg-violet-500 hover:bg-violet-600 text-white",
+      shadowColor: "shadow-violet-500/30"
+    },
+    { 
+      label: "Log Activity", 
+      icon: Flame, 
+      action: onLogActivity,
+      color: "bg-orange-500 hover:bg-orange-600 text-white",
+      shadowColor: "shadow-orange-500/30"
+    },
+    { 
+      label: "Add Food", 
+      icon: Soup, 
+      action: onAddFood,
+      color: "bg-emerald-500 hover:bg-emerald-600 text-white",
+      shadowColor: "shadow-emerald-500/30"
+    },
+    { 
+      label: "Scan Barcode", 
+      icon: ScanLine, 
+      action: onScanBarcode,
+      color: "bg-blue-500 hover:bg-blue-600 text-white",
+      shadowColor: "shadow-blue-500/30"
+    },
   ];
 
   return (
@@ -60,8 +84,12 @@ export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculato
                   transition={{ delay: index * 0.05 }}
                >
                 <span className="bg-card text-card-foreground rounded-md px-2 py-1 text-sm shadow-md">{item.label}</span>
-                <Button size="icon" className="h-12 w-12 rounded-full shadow-md" onClick={() => handleActionClick(item.action)}>
-                  <item.icon />
+                <Button 
+                  size="icon" 
+                  className={`h-12 w-12 rounded-full shadow-lg ${item.color} ${item.shadowColor} border-0`} 
+                  onClick={() => handleActionClick(item.action)}
+                >
+                  <item.icon className="h-5 w-5" />
                 </Button>
               </motion.div>
             ))}
