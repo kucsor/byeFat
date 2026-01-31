@@ -9,6 +9,7 @@ import { Trash2, Loader2, Flame, Pencil, Plus, Soup, Sun, Moon, Coffee, Apple } 
 import { doc, increment, Timestamp } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import {
   AlertDialog,
@@ -53,14 +54,17 @@ function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete
   const isAiItem = item.productId.startsWith('ai-');
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 p-3">
+    <Card className="overflow-hidden transition-all hover:shadow-md group">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 p-4">
         <div className="space-y-1">
-          <CardTitle className="text-base">{item.productName}</CardTitle>
-          <CardDescription>{item.grams}g</CardDescription>
+          <CardTitle className="text-lg font-serif">{item.productName}</CardTitle>
+          <CardDescription className="font-bold uppercase tracking-widest text-[10px]">{item.grams}g</CardDescription>
         </div>
-        <div className="flex items-center gap-1">
-            <div className="font-bold text-base text-primary text-right">{item.calories} <span className="text-xs font-normal text-muted-foreground">kcal</span></div>
+        <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div className="font-serif font-bold text-xl text-primary leading-none">{item.calories}</div>
+              <div className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">kcal</div>
+            </div>
             {!isAiItem && (
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
                   <Pencil className="h-4 w-4" />
@@ -95,13 +99,15 @@ function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete
 
 function ActivityItemCard({ item, onDelete }: { item: DailyLogActivity, onDelete: (id: string, type: 'items' | 'activities') => void }) {
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 p-3">
-        <div className="flex items-center gap-3">
-          <Flame className="h-6 w-6 text-orange-500" />
-          <div className='space-y-1'>
-            <CardTitle className="text-base">{item.name}</CardTitle>
-            <CardDescription className="font-bold text-sm text-orange-500">+{item.calories} kcal active</CardDescription>
+    <Card className="overflow-hidden transition-all hover:shadow-md group">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 p-4">
+        <div className="flex items-center gap-4">
+          <div className="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/30">
+            <Flame className="h-6 w-6 text-orange-500" />
+          </div>
+          <div className='space-y-0.5'>
+            <CardTitle className="text-lg font-serif">{item.name}</CardTitle>
+            <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-orange-500">+{item.calories} kcal active</CardDescription>
           </div>
         </div>
         <AlertDialog>
@@ -228,14 +234,19 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
         animate={{ opacity: 1, y: 0 }}
         className="space-y-3"
       >
-        <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${config.bgColor}`}>
-          <div className="flex items-center gap-2">
-            <Icon className={`h-5 w-5 ${config.color}`} />
-            <span className={`font-semibold ${config.color}`}>{config.label}</span>
+        <div className={`flex items-center justify-between px-4 py-3 rounded-2xl border-2 border-primary/5 ${config.bgColor} shadow-sm`}>
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-xl bg-white/50 shadow-sm")}>
+              <Icon className={`h-5 w-5 ${config.color}`} />
+            </div>
+            <span className={cn("font-serif font-bold text-lg", config.color)}>{config.label}</span>
           </div>
-          <span className="text-sm font-medium text-muted-foreground">
-            {totalCalories} kcal
-          </span>
+          <div className="flex flex-col items-end">
+            <span className="text-lg font-serif font-bold text-foreground leading-none">
+              {totalCalories}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">kcal</span>
+          </div>
         </div>
         <div className="space-y-2">
           <AnimatePresence>
@@ -257,9 +268,9 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
   };
   
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Jurnal Zilnic</h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center px-2">
+        <h2 className="text-3xl font-serif font-bold tracking-tight text-primary">Jurnal Zilnic</h2>
       </div>
 
       {groupedItems === undefined && (

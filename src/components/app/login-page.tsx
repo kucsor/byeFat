@@ -24,9 +24,11 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mx-auto flex w-full max-w-sm flex-col items-center justify-center space-y-6">
-        <div className="flex items-center gap-2">
-          <Leaf className="h-12 w-12 text-primary" />
-          <h1 className="text-4xl font-bold">byeFat</h1>
+        <div className="flex flex-col items-center gap-4">
+          <div className="p-4 rounded-3xl bg-primary/10 shadow-inner">
+            <Leaf className="h-16 w-16 text-primary" />
+          </div>
+          <h1 className="text-6xl font-serif font-bold text-primary tracking-tighter">byeFat</h1>
         </div>
         <p className="text-center text-muted-foreground">
           Track your calories, simplify your life.
