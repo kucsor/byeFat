@@ -33,25 +33,27 @@ type DeficitProgressChartProps = {
 };
 
 export function DeficitProgressChart({ chartData, maintenanceCalories }: DeficitProgressChartProps) {
-  // Calculate deficit data for each day
+  // Calculate deficit data for each day - only include days with consumed calories
   const deficitData = useMemo(() => {
     if (!chartData || chartData.length === 0) return [];
 
-    return chartData.map((day) => {
-      // Deficit = (Maintenance + Active) - Consumed
-      // We use goalCalories as the target (which already includes the deficit)
-      // So actual deficit = maintenance - consumed
-      const maintenance = maintenanceCalories || day.goalCalories || 2000;
-      const consumed = day.consumedCalories || 0;
-      const deficit = maintenance - consumed;
+    return chartData
+      .filter((day) => (day.consumedCalories || 0) > 0) // Only days with logged food
+      .map((day) => {
+        // Deficit = (Maintenance + Active) - Consumed
+        // We use goalCalories as the target (which already includes the deficit)
+        // So actual deficit = maintenance - consumed
+        const maintenance = maintenanceCalories || day.goalCalories || 2000;
+        const consumed = day.consumedCalories || 0;
+        const deficit = maintenance - consumed;
 
-      return {
-        date: day.date,
-        deficit: Math.round(deficit),
-        maintenance: Math.round(maintenance),
-        consumed: Math.round(consumed),
-      };
-    }).filter(d => d.deficit !== undefined);
+        return {
+          date: day.date,
+          deficit: Math.round(deficit),
+          maintenance: Math.round(maintenance),
+          consumed: Math.round(consumed),
+        };
+      });
   }, [chartData, maintenanceCalories]);
 
   // Calculate statistics
