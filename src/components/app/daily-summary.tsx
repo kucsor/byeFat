@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
 import { ResponsiveContainer, RadialBarChart, PolarAngleAxis, RadialBar } from 'recharts';
 import { cn } from '@/lib/utils';
-import { Beef, Wheat as WheatIcon, Droplets } from 'lucide-react';
+import { Beef, Wheat as WheatIcon, Droplets, Flame } from 'lucide-react';
 
 type DailySummaryProps = {
   foodItems?: DailyLogItem[] | null;
@@ -138,14 +138,42 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
            </div>
         </div>
         
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          <span className='font-medium text-foreground'>{dynamicGoal.toLocaleString()}</span> Goal
-          = 
-          <span className='font-medium text-foreground'>{baseGoal.toLocaleString()}</span> Base
-          -
-          <span className='font-medium text-foreground'>{totals.totalCalories.toLocaleString()}</span> Food
-          + 
-          <span className='font-medium text-orange-500'>{totals.activeCalories.toLocaleString()}</span> Active
+        {/* Calorie Balance Breakdown */}
+        <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+          <div className="space-y-1">
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/50">
+                <span className="text-sm font-bold text-blue-600 dark:text-blue-400">M</span>
+              </div>
+            </div>
+            <div className="text-lg font-bold text-foreground">{baseGoal.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">Mentenanță</div>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/50">
+                <Flame className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              </div>
+              {totals.activeCalories > 0 && (
+                <span className="text-xs font-medium text-orange-600 dark:text-orange-400">+{totals.activeCalories.toLocaleString()}</span>
+              )}
+            </div>
+            <div className="text-lg font-bold text-orange-500">
+              {dynamicGoal.toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground">Target Activ</div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/50">
+                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">C</span>
+              </div>
+            </div>
+            <div className="text-lg font-bold text-emerald-600">{totals.totalCalories.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">Consumat</div>
+          </div>
         </div>
 
         <div className="mt-6 space-y-4">

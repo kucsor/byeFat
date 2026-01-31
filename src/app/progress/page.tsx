@@ -51,7 +51,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { Calendar } from '@/components/ui/calendar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BottomNav } from '@/components/app/bottom-nav';
 
@@ -328,29 +327,6 @@ export default function ProgressPage() {
                 </Card>
             </div>
         )}
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Activity Calendar</CardTitle>
-                <CardDescription>Days with any logged food or activities are highlighted.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-                <Calendar
-                    mode="multiple"
-                    selected={loggedDates}
-                    showOutsideDays={true}
-                    numberOfMonths={isMobile ? 1 : 3}
-                    defaultMonth={defaultCalendarMonth}
-                    classNames={{
-                        nav_button_previous: 'hidden',
-                        nav_button_next: 'hidden',
-                        caption_label: 'text-base font-medium',
-                        day_selected: "bg-primary/90 text-primary-foreground rounded-md hover:bg-primary/90 focus:bg-primary/90",
-                        day_today: "bg-accent text-accent-foreground rounded-md",
-                    }}
-                />
-            </CardContent>
-        </Card>
 
         {noData ? (
              <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
