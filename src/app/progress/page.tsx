@@ -213,18 +213,19 @@ export default function ProgressPage() {
     console.log('LogMap keys:', Array.from(logMap.keys()));
     console.log('WeightMap keys:', Array.from(weightMap.keys()));
 
-    // Get all dates from logs that have consumed calories > 0
-    const datesWithFood = dailyLogs
-      ?.filter(log => (log.consumedCalories || 0) > 0)
+    // Get all dates from dailyLogs that have goals set (active tracking days)
+    // This includes days with or without consumed calories
+    const datesWithData = dailyLogs
+      ?.filter(log => log.goalCalories && log.goalCalories > 0)
       .map(log => log.date) || [];
     
-    console.log('Dates with food:', datesWithFood);
+    console.log('Dates with data:', datesWithData);
 
-    if (datesWithFood.length === 0 && weightMap.size === 0) {
+    if (datesWithData.length === 0 && weightMap.size === 0) {
       return [];
     }
 
-    const allDates = [...new Set([...datesWithFood, ...Array.from(weightMap.keys())])].sort();
+    const allDates = [...new Set([...datesWithData, ...Array.from(weightMap.keys())])].sort();
     console.log('All dates for chart:', allDates);
 
     let lastSeenWeight: number | null = null;
