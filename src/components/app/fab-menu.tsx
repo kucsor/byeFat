@@ -37,29 +37,29 @@ export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculato
       label: "AI Calculator", 
       icon: Bot, 
       action: onAiCalculator,
-      color: "bg-violet-500 hover:bg-violet-600 text-white",
-      shadowColor: "shadow-violet-500/30"
+      color: "bg-secondary hover:bg-secondary/90 text-white",
+      shadowColor: "shadow-secondary/30"
     },
     { 
       label: "Log Activity", 
       icon: Flame, 
       action: onLogActivity,
-      color: "bg-orange-500 hover:bg-orange-600 text-white",
-      shadowColor: "shadow-orange-500/30"
+      color: "bg-accent hover:bg-accent/90 text-white",
+      shadowColor: "shadow-accent/30"
     },
     { 
       label: "Add Food", 
       icon: Soup, 
       action: onAddFood,
-      color: "bg-emerald-500 hover:bg-emerald-600 text-white",
-      shadowColor: "shadow-emerald-500/30"
+      color: "bg-primary hover:bg-primary/90 text-white",
+      shadowColor: "shadow-primary/30"
     },
     { 
       label: "Scan Barcode", 
       icon: ScanLine, 
       action: onScanBarcode,
-      color: "bg-blue-500 hover:bg-blue-600 text-white",
-      shadowColor: "shadow-blue-500/30"
+      color: "bg-foreground/80 hover:bg-foreground text-white",
+      shadowColor: "shadow-foreground/30"
     },
   ];
 
@@ -98,7 +98,7 @@ export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculato
       </AnimatePresence>
       <Button
         size="icon"
-        className="h-16 w-16 rounded-full shadow-lg"
+        className="h-16 w-16 rounded-full shadow-2xl border-4 border-background"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-label={isOpen ? 'Close menu' : 'Open menu'}

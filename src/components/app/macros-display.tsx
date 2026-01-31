@@ -1,5 +1,3 @@
-import type { FoodItem } from '@/lib/types';
-
 type MacrosDisplayProps = {
   fat: number;
   protein: number;

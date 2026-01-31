@@ -82,11 +82,11 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
   return (
     <>
       <div className="container mx-auto max-w-5xl p-4 md:p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight text-primary">
             {getGreeting()}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-card p-1 rounded-lg border shadow-sm">
             <Button
                 variant="outline"
                 size="icon"
@@ -107,19 +107,23 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
             </Button>
           </div>
         </div>
-        <div className="space-y-8">
-            <DailySummary 
-              foodItems={foodItems} 
-              activities={activities} 
-              userProfile={userProfile} 
-              selectedLog={selectedLog}
-            />
-            <FoodLog
-              items={foodItems}
-              activities={activities}
-              selectedDate={selectedDateString}
-              onAddFood={() => setIsAddFoodSheetOpen(true)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div className="md:col-span-12 lg:col-span-7">
+                <DailySummary
+                  foodItems={foodItems}
+                  activities={activities}
+                  userProfile={userProfile}
+                  selectedLog={selectedLog}
+                />
+            </div>
+            <div className="md:col-span-12 lg:col-span-5">
+                <FoodLog
+                  items={foodItems}
+                  activities={activities}
+                  selectedDate={selectedDateString}
+                  onAddFood={() => setIsAddFoodSheetOpen(true)}
+                />
+            </div>
         </div>
       </div>
 
