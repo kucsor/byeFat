@@ -30,7 +30,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
   const [isAddFoodSheetOpen, setIsAddFoodSheetOpen] = useState(false);
   const [isActivitySheetOpen, setIsActivitySheetOpen] = useState(false);
 
-  const selectedDateString = selectedDate.toISOString().slice(0, 10);
+  const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
   const dailyLogsQuery = useMemoFirebase(() => {
     if (!user) return null;
