@@ -55,8 +55,12 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
   const totalBurned = maintenanceCalories + totals.activeCalories; // Maintenance + exercise
   const caloricDeficit = Math.round(totalBurned - totals.totalCalories); // Positive = losing weight
   
-  // For the ring chart - show deficit
-  const dynamicGoal = maintenanceCalories > 0 ? maintenanceCalories + totals.activeCalories : 0;
+  // Target Active = Maintenance - Deficit Target + Active Calories
+  // This is the actual calorie goal for the day
+  const targetActive = maintenanceCalories - deficitTarget + totals.activeCalories;
+  
+  // For the ring chart - show progress toward target
+  const dynamicGoal = targetActive > 0 ? targetActive : 0;
   const calorieProgress = dynamicGoal > 0 ? (totals.totalCalories / dynamicGoal) * 100 : 0;
 
   // Display values for the ring
