@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
-import { Beef, Wheat as WheatIcon, Droplets, Flame } from 'lucide-react';
+import { Beef, Wheat as WheatIcon, Droplets, Flame, Soup } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 type DailySummaryProps = {
@@ -88,98 +88,101 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
     )
   }
 
-  const needleRotation = useMemo(() => {
-    // -90deg is 0%, +90deg is 100%
-    const progress = Math.min(Math.max(calorieProgress, 0), 120);
-    return (progress / 100) * 180 - 90;
-  }, [calorieProgress]);
-
   return (
-    <Card className="shadow-lg border-2 border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden relative">
-      <div className="absolute top-0 right-0 p-4 opacity-10">
-        <Flame className="w-24 h-24 text-primary" />
-      </div>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Consumed Card */}
+        <Card className="shadow-lg border-2 border-primary/20 bg-card overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Soup className="w-16 h-16 text-primary" />
+          </div>
+          <CardHeader className="pb-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Consumat Astăzi</span>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-serif font-bold text-foreground">{totals.totalCalories.toLocaleString()}</span>
+              <span className="text-sm font-bold text-muted-foreground uppercase tracking-tighter">kcal</span>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-bold">Target:</span>
+              <span className="font-serif">{dynamicGoal.toLocaleString()} kcal</span>
+            </div>
+          </CardContent>
+        </Card>
 
-      <CardContent className="p-6 md:p-8">
-        <div className="flex flex-col items-center">
-          <h2 className="text-xl font-serif font-bold text-primary mb-6 uppercase tracking-widest">Calorie Balance</h2>
-
-          <div className="relative w-64 h-40 md:w-80 md:h-48 flex items-center justify-center">
-            {/* Gauge Background */}
-            <svg viewBox="0 0 200 120" className="w-full h-full">
-              {/* Decorative ticks */}
-              {[...Array(11)].map((_, i) => {
-                const angle = (i * 18) - 180;
-                const rad = (angle * Math.PI) / 180;
-                const x1 = 100 + Math.cos(rad) * 85;
-                const y1 = 100 + Math.sin(rad) * 85;
-                const x2 = 100 + Math.cos(rad) * 95;
-                const y2 = 100 + Math.sin(rad) * 95;
-                return (
-                  <line
-                    key={i}
-                    x1={x1} y1={y1} x2={x2} y2={y2}
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    className="text-muted-foreground/40"
-                  />
-                );
-              })}
-
-              {/* Gauge Arc */}
-              <path
-                d="M 20 100 A 80 80 0 0 1 180 100"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="12"
-                strokeLinecap="round"
-                className="text-muted/30"
-              />
-
-              {/* Active Arc */}
-              <motion.path
-                d="M 20 100 A 80 80 0 0 1 180 100"
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="12"
-                strokeLinecap="round"
-                strokeDasharray="251.3"
-                initial={{ strokeDashoffset: 251.3 }}
-                animate={{ strokeDashoffset: 251.3 - (Math.min(calorieProgress, 100) / 100) * 251.3 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-
-              {/* Needle */}
-              <motion.g
-                initial={{ rotate: -90, originX: "100px", originY: "100px" }}
-                animate={{ rotate: needleRotation, originX: "100px", originY: "100px" }}
-                transition={{ type: "spring", stiffness: 50, damping: 15 }}
-              >
-                <line
-                  x1="100" y1="100" x2="100" y2="25"
-                  stroke="hsl(var(--accent))"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <circle cx="100" cy="100" r="6" fill="hsl(var(--accent))" />
-                <circle cx="100" cy="100" r="2" fill="white" />
-              </motion.g>
-
-              {/* Center point */}
-              <circle cx="100" cy="100" r="4" fill="currentColor" className="text-primary" />
-            </svg>
-
-            <div className="absolute bottom-0 flex flex-col items-center">
-               <span className="text-4xl md:text-5xl font-serif font-bold text-foreground">
+        {/* Deficit Card */}
+        <Card className="shadow-lg border-2 border-accent/20 bg-card overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Flame className="w-16 h-16 text-accent" />
+          </div>
+          <CardHeader className="pb-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{displayLabel}</span>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-2">
+              <span className={cn(
+                "text-5xl font-serif font-bold",
+                caloricDeficit >= 0 ? "text-primary" : "text-destructive"
+              )}>
                 {displayValue.toLocaleString()}
               </span>
-              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{displayLabel}</span>
+              <span className="text-sm font-bold text-muted-foreground uppercase tracking-tighter">kcal</span>
             </div>
-          </div>
+            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-bold">Țintă Zilnică:</span>
+              <span className="font-serif">{deficitTarget.toLocaleString()} kcal</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Vintage Ruler Progress Bar */}
+      <Card className="shadow-md border-2 border-primary/10 bg-card p-6 relative overflow-hidden">
+        <div className="flex justify-between items-end mb-4">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Progresul Zilei</h3>
+          <span className="text-lg font-serif font-bold">{Math.round(calorieProgress)}%</span>
         </div>
         
+        <div className="relative h-12 bg-[#e5d5b5] rounded-lg border-2 border-[#c4a484] shadow-inner overflow-hidden flex items-center">
+          {/* Ruler Ticks */}
+          <div className="absolute inset-0 flex justify-between px-1 opacity-40">
+            {[...Array(51)].map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "bg-[#8b5a2b]",
+                  i % 10 === 0 ? "h-6 w-0.5" : i % 5 === 0 ? "h-4 w-px" : "h-2 w-px"
+                )}
+              />
+            ))}
+          </div>
+
+          {/* Progress Indicator (The "Slider") */}
+          <motion.div
+            className="absolute top-0 bottom-0 left-0 bg-primary/40 border-r-4 border-primary shadow-lg z-10"
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(calorieProgress, 100)}%` }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+          >
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-8 bg-primary rounded-sm border-2 border-white shadow-md flex items-center justify-center">
+                <div className="w-0.5 h-4 bg-white/50 rounded-full" />
+            </div>
+          </motion.div>
+
+          {/* Wood Texture Overlay */}
+          <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]" />
+        </div>
+        <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">
+          <span>Început</span>
+          <span>Target Atins</span>
+        </div>
+      </Card>
+
+      <Card className="shadow-lg border-2 border-primary/5 bg-card/50 backdrop-blur-sm">
+      <CardContent className="p-6 md:p-8">
         {/* Calorie Balance Breakdown */}
-        <div className="mt-10 grid grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-4 gap-4 text-center">
           <div className="space-y-1">
             <div className="flex items-center justify-center gap-1.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/50">
@@ -274,5 +277,6 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
