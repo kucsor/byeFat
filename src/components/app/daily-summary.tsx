@@ -19,7 +19,19 @@ type DailySummaryProps = {
 
 export function DailySummary({ foodItems, activities, userProfile, selectedLog }: DailySummaryProps) {
   const baseGoal = selectedLog?.goalCalories ?? userProfile?.dailyCalories ?? 0;
-  const maintenanceCalories = userProfile?.maintenanceCalories ?? baseGoal;
+  
+  // Calculate maintenance calories if not saved in profile
+  const calculatedMaintenance = useMemo(() => {
+    if (userProfile?.maintenanceCalories) return userProfile.maintenanceCalories;
+    if (userProfile?.gender && userProfile?.age && userProfile?.weight && userProfile?.height) {
+      const { gender, age, weight, height } = userProfile;
+      const bmr = (10 * weight) + (6.25 * height) - (5 * age) + (gender === 'male' ? 5 : -161);
+      return Math.round(bmr * 1.2);
+    }
+    return baseGoal;
+  }, [userProfile, baseGoal]);
+  
+  const maintenanceCalories = calculatedMaintenance;
   const deficitTarget = userProfile?.deficitTarget ?? 500;
 
   const totals = useMemo(() => {
