@@ -34,7 +34,17 @@ byeFat este o aplicație web PWA (Progressive Web App) pentru tracking calorii �
    
    Creează un fișier `.env.local` în root-ul proiectului cu:
    ```env
+   # Google Gemini AI
    GEMINI_API_KEY=your_gemini_api_key_here
+   
+   # Firebase Configuration
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
    ```
 
 4. **Rulează aplicația în modul development:**
@@ -58,7 +68,14 @@ byeFat este o aplicație web PWA (Progressive Web App) pentru tracking calorii �
 
 Proiectul folosește Firebase App Hosting care injectează automat credențialele în producție.
 
-**Pentru development local:** Configurația este hardcodată în `src/firebase/config.ts`.
+**Pentru development local:** Configurația este citită din variabile de mediu (`.env.local`).
+
+**Variabile necesare:**
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
 
 ## 🤖 Configurare Google Gemini AI
 
@@ -88,10 +105,28 @@ Modelul AI folosit: `googleai/gemini-1.5-pro`
 
 6. **Environment Variables:**
    
-   Adaugă variabila:
+   Adaugă toate variabilele:
    ```
    Key: GEMINI_API_KEY
    Value: AIzaSyBc1eCrvc0HzX5dQCYyH4O-tn5lbMKnfQk
+   
+   Key: NEXT_PUBLIC_FIREBASE_API_KEY
+   Value: AIzaSyCI8xUwAaw0shBDfOFoMbvLBB6jM5ZSQcw
+   
+   Key: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+   Value: studio-8995176861-f1dfd.firebaseapp.com
+   
+   Key: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+   Value: studio-8995176861-f1dfd
+   
+   Key: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+   Value: 900374376666
+   
+   Key: NEXT_PUBLIC_FIREBASE_APP_ID
+   Value: 1:900374376666:web:d05874caba74a32eb635e3
+   
+   Key: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+   Value: (poate fi lăsat gol)
    ```
 
 7. **Click "Deploy"**
@@ -114,8 +149,8 @@ Modelul AI folosit: `googleai/gemini-1.5-pro`
 **Problema:** `NODE_ENV=production` nu funcționează pe Windows.
 **Soluție:** Eliminat prefixul, Next.js setează automat NODE_ENV.
 
-### 3. Securitate Firebase (Opțional)
-**Notă:** Credențialele Firebase sunt hardcodate pentru suport Firebase App Hosting.
+### 3. Securitate Firebase ✅
+**Rezolvat:** Credențialele Firebase au fost mutate din cod în variabile de mediu pentru securitate maximă.
 
 ## 🔍 Funcționalități Principale
 
