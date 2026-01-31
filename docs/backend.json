@@ -1,0 +1,353 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the byeFat application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique, user-chosen name."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "Username": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Username",
+      "type": "object",
+      "description": "Used to enforce username uniqueness. The document ID is the username.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns this username."
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a food product with its nutritional information per 100g.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "brand": {
+          "type": "string",
+          "description": "Brand of the product."
+        },
+        "caloriesPer100g": {
+          "type": "number",
+          "description": "Number of calories per 100 grams of the product."
+        },
+        "fatPer100g": {
+          "type": "number",
+          "description": "Amount of fat in grams per 100 grams of the product."
+        },
+        "carbsPer100g": {
+          "type": "number",
+          "description": "Amount of carbohydrates in grams per 100 grams of the product."
+        },
+        "proteinPer100g": {
+          "type": "number",
+          "description": "Amount of protein in grams per 100 grams of the product."
+        },
+        "creatorId": {
+          "type": "string",
+          "description": "The UID of the user who created the product."
+        },
+        "creatorUsername": {
+          "type": "string",
+          "description": "The username of the user who created the product."
+        },
+        "likes": {
+          "type": "number",
+          "description": "Number of users who confirmed the nutritional information."
+        },
+        "likedBy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of user IDs who liked this product."
+        },
+        "barcode": {
+          "type": "string",
+          "description": "The EAN/UPC barcode of the product, if applicable."
+        },
+        "source": {
+          "type": "string",
+          "description": "How the product was added to the database.",
+          "enum": ["manual", "scanned"]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "brand",
+        "caloriesPer100g",
+        "fatPer100g",
+        "carbsPer100g",
+        "proteinPer100g",
+        "creatorId",
+        "creatorUsername",
+        "likes",
+        "likedBy"
+      ]
+    },
+    "DailyLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DailyLog",
+      "type": "object",
+      "description": "Represents a user's daily food consumption log, with snapshotted goals.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the DailyLog entity (e.g., YYYY-MM-DD)."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the log in YYYY-MM-DD format."
+        },
+        "goalCalories": {
+          "type": "number",
+          "description": "The user's calorie goal for this specific day."
+        },
+        "goalFat": {
+          "type": "number",
+          "description": "The user's fat goal for this specific day."
+        },
+        "goalCarbs": {
+          "type": "number",
+          "description": "The user's carbohydrate goal for this specific day."
+        },
+        "goalProtein": {
+          "type": "number",
+          "description": "The user's protein goal for this specific day."
+        },
+        "consumedCalories": {
+          "type": "number",
+          "description": "The total calories consumed for this specific day."
+        }
+      },
+      "required": [
+        "id",
+        "date"
+      ]
+    },
+    "DailyLogItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DailyLogItem",
+      "type": "object",
+      "description": "Represents a single food item consumed within a daily log.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the log item."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product consumed."
+        },
+        "productName": {
+          "type": "string",
+          "description": "Denormalized name of the product for display."
+        },
+        "grams": {
+          "type": "number",
+          "description": "The amount of the product consumed in grams."
+        },
+        "calories": {
+          "type": "number"
+        },
+        "fat": {
+          "type": "number"
+        },
+        "carbs": {
+          "type": "number"
+        },
+        "protein": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the item was logged."
+        }
+      },
+      "required": [
+        "id",
+        "productId",
+        "productName",
+        "grams",
+        "calories",
+        "fat",
+        "carbs",
+        "protein"
+      ]
+    },
+    "DailyLogActivity": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DailyLogActivity",
+      "type": "object",
+      "description": "Represents a single activity performed within a daily log.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the activity log item."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the activity (e.g., Running, Weightlifting)."
+        },
+        "calories": {
+          "type": "number",
+          "description": "Calories burned during the activity."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the activity was logged."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "calories"
+      ]
+    },
+    "WeightEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WeightEntry",
+      "type": "object",
+      "description": "Represents a single weight measurement for a user on a specific date.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the weight entry."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the weight measurement in YYYY-MM-DD format."
+        },
+        "weight": {
+          "type": "number",
+          "description": "The user's weight in kilograms."
+        }
+      },
+      "required": [
+        "date",
+        "weight"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Collection to store user profiles."
+        }
+      },
+      {
+        "path": "/usernames/{usernameId}",
+        "definition": {
+          "entityName": "Username",
+          "schema": {
+            "$ref": "#/backend/entities/Username"
+          },
+          "description": "Collection to enforce username uniqueness."
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Global collection for all food products."
+        }
+      },
+      {
+        "path": "/users/{userId}/dailyLogs/{dailyLogId}",
+        "definition": {
+          "entityName": "DailyLog",
+          "schema": {
+            "$ref": "#/backend/entities/DailyLog"
+          },
+          "description": "Subcollection to store daily summary logs for a user. The ID is the date in YYYY-MM-DD format."
+        }
+      },
+      {
+        "path": "/users/{userId}/dailyLogs/{dailyLogId}/items/{itemId}",
+        "definition": {
+          "entityName": "DailyLogItem",
+          "schema": {
+            "$ref": "#/backend/entities/DailyLogItem"
+          },
+          "description": "Subcollection to store individual food items logged for a specific day."
+        }
+      },
+      {
+        "path": "/users/{userId}/dailyLogs/{dailyLogId}/activities/{activityId}",
+        "definition": {
+          "entityName": "DailyLogActivity",
+          "schema": {
+            "$ref": "#/backend/entities/DailyLogActivity"
+          },
+          "description": "Subcollection to store individual activities logged for a specific day."
+        }
+      },
+      {
+        "path": "/users/{userId}/weightHistory/{weightEntryId}",
+        "definition": {
+          "entityName": "WeightEntry",
+          "schema": {
+            "$ref": "#/backend/entities/WeightEntry"
+          },
+          "description": "Subcollection to store a user's weight history over time."
+        }
+      }
+    ]
+  }
+}
+
+    

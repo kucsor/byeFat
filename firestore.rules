@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Users can read, create, and update their own profile. Username cannot be changed.
+    match /users/{userId} {
+      allow read, create: if isOwner(userId);
+      allow update: if isOwner(userId);
+    }
+
+    // All users can read the global product list
+    // Only signed in users can create products
+    match /products/{productId} {
+      allow list, read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      
+      // Only the creator can delete their own products
+      allow delete: if isOwner(resource.data.creatorId);
+
+      // The owner can update any field.
+      // Other signed-in users can only update the 'likes' and 'likedBy' fields.
+      allow update: if isOwner(resource.data.creatorId) || 
+                      (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy']));
+    }
+
+    // Used to enforce username uniqueness
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Users can manage their own daily logs, logged items and activities
+    match /users/{userId}/dailyLogs/{dailyLogId} {
+      allow read, list, create, update, delete: if isOwner(userId);
+    }
+    
+    match /users/{userId}/dailyLogs/{dailyLogId}/items/{itemId} {
+        allow read, list, create, update, delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/dailyLogs/{dailyLogId}/activities/{activityId} {
+        allow read, list, create, update, delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/weightHistory/{weightEntryId} {
+        allow read, list, create, update, delete: if isOwner(userId);
+    }
+  }
+}

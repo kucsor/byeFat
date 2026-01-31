@@ -1,0 +1,485 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  ReferenceLine,
+  Cell,
+} from 'recharts';
+import { format } from 'date-fns';
+import { AppHeader } from '@/components/app/header';
+import { useFirebase, useCollection, useMemoFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import Loading from '@/app/loading';
+import { collection, query, orderBy, doc, increment } from 'firebase/firestore';
+import type { WeightEntry, DailyLog } from '@/lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { AddWeightEntrySheet } from '@/components/app/add-weight-entry-sheet';
+import { Plus, Trash2, Scale, TrendingUp, TrendingDown, HeartPulse, Flame, ChevronsUpDown } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { triggerHapticFeedback } from '@/lib/haptics';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Calendar } from '@/components/ui/calendar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { BottomNav } from '@/components/app/bottom-nav';
+
+
+// Custom Tooltip for charts
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col space-y-1">
+                <span className="text-[0.7rem] uppercase text-muted-foreground">Date</span>
+                <span className="font-bold">{label ? format(new Date(label), 'MMM d, yyyy') : ''}</span>
+            </div>
+            {payload.map((pld: any) => (
+                <div key={pld.dataKey} className="flex flex-col space-y-1">
+                    <span className="text-[0.7rem] uppercase text-muted-foreground">{pld.name}</span>
+                    <span className="font-bold" style={{ color: pld.color }}>
+                        {pld.value} {pld.unit}
+                    </span>
+                </div>
+            ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const getBmiCategory = (bmi: number): string => {
+    if (bmi < 18.5) return "Underweight";
+    if (bmi < 25) return "Normal weight";
+    if (bmi < 30) return "Overweight";
+    return "Obese";
+};
+
+
+export default function ProgressPage() {
+  const { firestore, user, userProfile } = useFirebase();
+  const isMobile = useIsMobile();
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const weightHistoryQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, `users/${user.uid}/weightHistory`),
+      orderBy('date', 'desc') // Show most recent first in the table
+    );
+  }, [firestore, user]);
+
+  const { data: weightHistory, isLoading: isWeightLoading } = useCollection<WeightEntry>(weightHistoryQuery);
+
+  const dailyLogsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+        collection(firestore, `users/${user.uid}/dailyLogs`),
+        orderBy('date', 'asc')
+    );
+  }, [firestore, user]);
+
+  const { data: dailyLogs, isLoading: isLogsLoading } = useCollection<DailyLog>(dailyLogsQuery);
+
+  const streak = useMemo(() => {
+    if (!dailyLogs || dailyLogs.length < 1) {
+        return 0;
+    }
+    
+    const sortedLogs = [...dailyLogs].sort((a, b) => b.date.localeCompare(a.date));
+    
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    
+    const todayStr = format(today, 'yyyy-MM-dd');
+    const yesterdayStr = format(yesterday, 'yyyy-MM-dd');
+
+    const lastLogDateStr = sortedLogs[0].date;
+    
+    if (lastLogDateStr !== todayStr && lastLogDateStr !== yesterdayStr) {
+        return 0;
+    }
+    
+    let currentStreak = 0;
+    // Use replace to handle date string parsing safely across timezones
+    let expectedDate = new Date(lastLogDateStr.replace(/-/g, '/'));
+
+    for (const log of sortedLogs) {
+        const expectedDateStr = format(expectedDate, 'yyyy-MM-dd');
+        if (log.date === expectedDateStr) {
+            currentStreak++;
+            expectedDate.setDate(expectedDate.getDate() - 1);
+        } else {
+            break;
+        }
+    }
+    
+    return currentStreak;
+  }, [dailyLogs]);
+
+  const loggedDates = useMemo(() => {
+    if (!dailyLogs) return [];
+    // Use replace to handle date string parsing safely across timezones
+    return dailyLogs.map(log => new Date(log.date.replace(/-/g, '/')));
+  }, [dailyLogs]);
+  
+  const defaultCalendarMonth = useMemo(() => {
+    if (loggedDates.length > 0) {
+      // Sort to find the most recent date to show in the calendar
+      const sortedDates = [...loggedDates].sort((a, b) => b.getTime() - a.getTime());
+      return sortedDates[0];
+    }
+    return new Date();
+  }, [loggedDates]);
+
+  const stats = useMemo(() => {
+    if (!weightHistory || weightHistory.length === 0) {
+      return null;
+    }
+    
+    // History is desc, so current is [0] and initial is last element
+    const initialWeight = weightHistory[weightHistory.length - 1]?.weight;
+    const currentWeight = weightHistory[0]?.weight;
+    const weightChange = currentWeight - initialWeight;
+
+    let bmi = null;
+    if (userProfile?.height && currentWeight) {
+        const heightInMeters = userProfile.height / 100;
+        bmi = currentWeight / (heightInMeters * heightInMeters);
+    }
+    
+    return {
+      initialWeight,
+      currentWeight,
+      weightChange,
+      bmi,
+    };
+  }, [weightHistory, userProfile?.height]);
+  
+  const handleDeleteWeightEntry = (id: string) => {
+    if (!user) return;
+    const docRef = doc(firestore, `users/${user.uid}/weightHistory`, id);
+    deleteDocumentNonBlocking(docRef);
+    triggerHapticFeedback();
+  };
+
+  const chartData = useMemo(() => {
+    const sortedWeightHistory = [...(weightHistory || [])].sort((a,b) => a.date.localeCompare(b.date));
+
+    if (isLogsLoading || isWeightLoading) {
+      return [];
+    }
+    
+    const logMap = new Map(dailyLogs?.map(log => [log.date, { goal: log.goalCalories, consumed: log.consumedCalories }]) ?? []);
+    const weightMap = new Map(sortedWeightHistory?.map(entry => [entry.date, entry.weight]) ?? []);
+    
+    if (logMap.size === 0 && weightMap.size === 0) {
+      return [];
+    }
+
+    const allDates = [...new Set([...Array.from(logMap.keys()), ...Array.from(weightMap.keys())])].sort();
+
+    let lastSeenWeight: number | null = null;
+    
+    const mappedData = allDates.map(date => {
+        const log = logMap.get(date);
+        const weightOnDate = weightMap.get(date);
+
+        if (weightOnDate !== undefined) {
+            lastSeenWeight = weightOnDate;
+        }
+        
+        const calorieBalance = (log?.goal != null && log?.consumed != null) ? log.goal - log.consumed : null;
+
+        return {
+            date: date,
+            goalCalories: log?.goal,
+            consumedCalories: log?.consumed,
+            calorieBalance,
+            weight: lastSeenWeight
+        };
+    }).filter(d => d.date);
+
+    const dataWithTrend = mappedData.map((dataPoint, index) => {
+        const past7DaysWeights: number[] = [];
+        for (let i = 0; i < 7; i++) {
+            if (index - i >= 0) {
+                const pastDataPoint = mappedData[index - i];
+                if (pastDataPoint.weight !== null) {
+                    past7DaysWeights.push(pastDataPoint.weight);
+                }
+            }
+        }
+        
+        if (past7DaysWeights.length > 0) {
+            const sum = past7DaysWeights.reduce((a, b) => a + b, 0);
+            const avg = sum / past7DaysWeights.length;
+            return { ...dataPoint, weightTrend: parseFloat(avg.toFixed(2)) };
+        }
+
+        return { ...dataPoint, weightTrend: null };
+    });
+    
+    return dataWithTrend;
+  }, [dailyLogs, weightHistory, isLogsLoading, isWeightLoading]);
+  
+  if (isWeightLoading || isLogsLoading) {
+    return <Loading />;
+  }
+
+  const noData = !chartData || chartData.length === 0 || (chartData.every(d => !d.weight) && chartData.every(d => !d.goalCalories));
+
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-background">
+      <AppHeader />
+      <main className="container mx-auto max-w-4xl flex-1 space-y-8 p-4 pb-20 md:p-8 md:pb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Your Progress</h1>
+            <p className="text-muted-foreground">Visualize your journey over time.</p>
+          </div>
+          <AddWeightEntrySheet>
+              <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Weight
+              </Button>
+          </AddWeightEntrySheet>
+        </div>
+
+        {stats && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Current Weight</CardTitle>
+                        <Scale className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.currentWeight?.toFixed(1)} kg</div>
+                        <p className="text-xs text-muted-foreground">Your most recent weight entry.</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Weight Change</CardTitle>
+                         {stats.weightChange <= 0 ? <TrendingDown className="h-4 w-4 text-primary" /> : <TrendingUp className="h-4 w-4 text-destructive" />}
+                    </CardHeader>
+                    <CardContent>
+                        <div className={`text-2xl font-bold ${stats.weightChange > 0 ? 'text-destructive' : 'text-primary'}`}>
+                            {stats.weightChange > 0 ? '+' : ''}{stats.weightChange.toFixed(1)} kg
+                        </div>
+                        <p className="text-xs text-muted-foreground">From {stats.initialWeight?.toFixed(1)} kg initially.</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">BMI</CardTitle>
+                        <HeartPulse className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.bmi ? stats.bmi.toFixed(1) : 'N/A'}</div>
+                         <p className="text-xs text-muted-foreground">
+                            {stats.bmi ? getBmiCategory(stats.bmi) : 'Enter height in profile.'}
+                        </p>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
+                        <Flame className="h-4 w-4 text-orange-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{streak} days</div>
+                        <p className="text-xs text-muted-foreground">Consecutive days with logged entries.</p>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Activity Calendar</CardTitle>
+                <CardDescription>Days with any logged food or activities are highlighted.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+                <Calendar
+                    mode="multiple"
+                    selected={loggedDates}
+                    showOutsideDays={true}
+                    numberOfMonths={isMobile ? 1 : 3}
+                    defaultMonth={defaultCalendarMonth}
+                    classNames={{
+                        nav_button_previous: 'hidden',
+                        nav_button_next: 'hidden',
+                        caption_label: 'text-base font-medium',
+                        day_selected: "bg-primary/90 text-primary-foreground rounded-md hover:bg-primary/90 focus:bg-primary/90",
+                        day_today: "bg-accent text-accent-foreground rounded-md",
+                    }}
+                />
+            </CardContent>
+        </Card>
+
+        {noData ? (
+             <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
+                <CardHeader>
+                    <CardTitle>Not Enough Data Yet</CardTitle>
+                    <CardDescription>Update your weight in your profile or add a historical entry to start tracking your progress.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild>
+                        <Link href="/profile">Update Profile</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        ) : (
+            <div className="space-y-8">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Weight Over Time</CardTitle>
+                        <CardDescription>Your daily weight fluctuations and the underlying 7-day trend.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-80">
+                         <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={chartData.filter(d => d.weight || d.weightTrend)}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" tickFormatter={(date) => format(new Date(date), 'MMM d')} />
+                                <YAxis domain={['dataMin - 2', 'dataMax + 2']} unit="kg" />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend />
+                                <Line type="monotone" dataKey="weight" name="Daily Weight" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} strokeOpacity={0.5} unit="kg" dot={false} />
+                                <Line type="monotone" dataKey="weightTrend" name="7-Day Trend" stroke="hsl(var(--primary))" strokeWidth={2} unit="kg" dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Daily Calorie Balance</CardTitle>
+                        <CardDescription>Your daily calorie deficit (positive bars) or surplus (negative bars).</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-80">
+                         <ResponsiveContainer width="100%" height="100%">
+                            <BarChart 
+                                data={chartData.filter(d => d.calorieBalance !== null)}
+                                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" tickFormatter={(date) => format(new Date(date), 'MMM d')} />
+                                <YAxis unit="kcal" allowDecimals={false} />
+                                <Tooltip cursor={{fill: 'hsl(var(--muted)/0.5)'}} content={<CustomTooltip />} />
+                                <Legend />
+                                <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                                <Bar dataKey="calorieBalance" name="Balance" unit="kcal">
+                                    {chartData.filter(d => d.calorieBalance !== null).map((entry, index) => (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={entry.calorieBalance != null && entry.calorieBalance >= 0 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} 
+                                        />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
+        
+        {weightHistory && weightHistory.length > 0 && (
+            <Card>
+              <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                          <CardTitle>Weight History</CardTitle>
+                          <CardDescription>All recorded weight entries.</CardDescription>
+                      </div>
+                      <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                              <ChevronsUpDown className="h-4 w-4" />
+                              <span className="sr-only">Toggle history</span>
+                          </Button>
+                      </CollapsibleTrigger>
+                  </CardHeader>
+                  <CollapsibleContent>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Weight (kg)</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {isHistoryOpen && weightHistory.map(entry => (
+                                    <TableRow key={entry.id}>
+                                        <TableCell>{format(new Date(entry.date), 'PPP')}</TableCell>
+                                        <TableCell>{entry.weight} kg</TableCell>
+                                        <TableCell className="text-right">
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                        <Trash2 className="h-4 w-4" />
+                                                        <span className="sr-only">Delete</span>
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This will permanently delete the weight entry for {format(new Date(entry.date), 'PPP')}. This action cannot be undone.
+                                                    </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteWeightEntry(entry.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+        )}
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
