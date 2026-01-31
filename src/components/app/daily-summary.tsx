@@ -19,6 +19,8 @@ type DailySummaryProps = {
 
 export function DailySummary({ foodItems, activities, userProfile, selectedLog }: DailySummaryProps) {
   const baseGoal = selectedLog?.goalCalories ?? userProfile?.dailyCalories ?? 0;
+  const maintenanceCalories = userProfile?.maintenanceCalories ?? baseGoal;
+  const deficitTarget = userProfile?.deficitTarget ?? 500;
 
   const totals = useMemo(() => {
     const foodTotals = foodItems?.reduce(
@@ -38,12 +40,11 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
   }, [foodItems, activities]);
   
   // Calculate caloric deficit
-  const maintenanceCalories = baseGoal; // BMR * 1.2 (sedentary)
   const totalBurned = maintenanceCalories + totals.activeCalories; // Maintenance + exercise
   const caloricDeficit = Math.round(totalBurned - totals.totalCalories); // Positive = losing weight
   
   // For the ring chart - show deficit
-  const dynamicGoal = baseGoal > 0 ? baseGoal + totals.activeCalories : 0;
+  const dynamicGoal = maintenanceCalories > 0 ? maintenanceCalories + totals.activeCalories : 0;
   const calorieProgress = dynamicGoal > 0 ? (totals.totalCalories / dynamicGoal) * 100 : 0;
 
   // Display values for the ring
@@ -144,17 +145,27 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
         </div>
         
         {/* Calorie Balance Breakdown */}
-        <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+        <div className="mt-6 grid grid-cols-4 gap-2 text-center">
           <div className="space-y-1">
             <div className="flex items-center justify-center gap-1.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/50">
                 <span className="text-sm font-bold text-blue-600 dark:text-blue-400">M</span>
               </div>
             </div>
-            <div className="text-lg font-bold text-foreground">{baseGoal.toLocaleString()}</div>
+            <div className="text-base font-bold text-foreground">{maintenanceCalories.toLocaleString()}</div>
             <div className="text-xs text-muted-foreground">Mentenanță</div>
           </div>
           
+          <div className="space-y-1">
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-950/50">
+                <span className="text-sm font-bold text-violet-600 dark:text-violet-400">-</span>
+              </div>
+            </div>
+            <div className="text-base font-bold text-violet-600">{deficitTarget.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">Deficit Țintă</div>
+          </div>
+
           <div className="space-y-1">
             <div className="flex items-center justify-center gap-1.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950/50">
@@ -164,7 +175,7 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
                 <span className="text-xs font-medium text-orange-600 dark:text-orange-400">+{totals.activeCalories.toLocaleString()}</span>
               )}
             </div>
-            <div className="text-lg font-bold text-orange-500">
+            <div className="text-base font-bold text-orange-500">
               {dynamicGoal.toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">Target Activ</div>
@@ -176,7 +187,7 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
                 <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">C</span>
               </div>
             </div>
-            <div className="text-lg font-bold text-emerald-600">{totals.totalCalories.toLocaleString()}</div>
+            <div className="text-base font-bold text-emerald-600">{totals.totalCalories.toLocaleString()}</div>
             <div className="text-xs text-muted-foreground">Consumat</div>
           </div>
         </div>

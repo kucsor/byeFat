@@ -65,20 +65,24 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
     // Mifflin-St Jeor Equation for BMR
     const bmr = (10 * weight) + (6.25 * height) - (5 * age) + (gender === 'male' ? 5 : -161);
     
-    // TDEE (sedentary)
+    // TDEE (sedentary) = Maintenance calories
     const tdee = bmr * 1.2;
+    const maintenanceCalories = Math.round(tdee);
+    
+    // Deficit target (500 kcal for weight loss)
+    const deficitTarget = 500;
 
     const maintain = {
-        calories: Math.round(tdee),
+        calories: maintenanceCalories,
         protein: Math.round((tdee * 0.3) / 4),
         carbs: Math.round((tdee * 0.4) / 4),
         fat: Math.round((tdee * 0.3) / 9),
     };
     const lose = {
-        calories: Math.round(tdee - 500),
-        protein: Math.round(( (tdee - 500) * 0.4) / 4),
-        carbs: Math.round(( (tdee - 500) * 0.3) / 4),
-        fat: Math.round(( (tdee - 500) * 0.3) / 9),
+        calories: Math.round(tdee - deficitTarget),
+        protein: Math.round(( (tdee - deficitTarget) * 0.4) / 4),
+        carbs: Math.round(( (tdee - deficitTarget) * 0.3) / 4),
+        fat: Math.round(( (tdee - deficitTarget) * 0.3) / 9),
     };
     const gain = {
         calories: Math.round(tdee + 500),
@@ -87,7 +91,13 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
         fat: Math.round(( (tdee + 500) * 0.2) / 9),
     };
 
-    return { lose, maintain, gain };
+    return { 
+      lose, 
+      maintain, 
+      gain, 
+      maintenanceCalories, 
+      deficitTarget 
+    };
 
   }, [formData]);
 
@@ -113,6 +123,10 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
 
     const updatedProfile = {
       ...values,
+      // Save maintenance and deficit info
+      maintenanceCalories: results.maintenanceCalories,
+      deficitTarget: values.goal === 'lose' ? results.deficitTarget : 0,
+      // Target calories based on goal
       dailyCalories: goalData.calories,
       dailyProtein: goalData.protein,
       dailyCarbs: goalData.carbs,
@@ -246,22 +260,25 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Obiectivele tale zilnice</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {Object.entries(results).map(([key, value]) => (
-                        <Card key={key} className={formData.goal === key ? 'border-primary' : ''}>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base capitalize">{goalTitles[key]}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-sm space-y-1">
-                                <CardDescription>{goalDescriptions[key]}</CardDescription>
-                                <p className="font-bold text-lg text-primary pt-1">{value.calories} kcal</p>
-                                <div className="grid grid-cols-3 gap-x-1 text-muted-foreground pt-1 text-xs">
-                                  <span>{value.protein}g P</span>
-                                  <span>{value.carbs}g C</span>
-                                  <span>{value.fat}g F</span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                    {(['lose', 'maintain', 'gain'] as const).map((key) => {
+                        const value = results[key];
+                        return (
+                            <Card key={key} className={formData.goal === key ? 'border-primary' : ''}>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base capitalize">{goalTitles[key]}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-sm space-y-1">
+                                    <CardDescription>{goalDescriptions[key]}</CardDescription>
+                                    <p className="font-bold text-lg text-primary pt-1">{value.calories} kcal</p>
+                                    <div className="grid grid-cols-3 gap-x-1 text-muted-foreground pt-1 text-xs">
+                                      <span>{value.protein}g P</span>
+                                      <span>{value.carbs}g C</span>
+                                      <span>{value.fat}g F</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
               </div>
             )}

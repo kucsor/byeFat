@@ -8,7 +8,10 @@ export type UserProfile = {
   weight?: number;
   height?: number;
   goal?: 'lose' | 'maintain' | 'gain';
-  dailyCalories?: number;
+  // TDEE and targets
+  maintenanceCalories?: number; // BMR * 1.2 (sedentary)
+  deficitTarget?: number; // How much deficit to target (e.g., 500)
+  dailyCalories?: number; // maintenanceCalories - deficitTarget
   dailyProtein?: number;
   dailyCarbs?: number;
   dailyFat?: number;
