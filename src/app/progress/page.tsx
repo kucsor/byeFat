@@ -220,13 +220,12 @@ export default function ProgressPage() {
     
     console.log('Dates with food:', datesWithFood);
 
-    // Only include dates that have food data - exclude weight-only dates
-    if (datesWithFood.length === 0) {
+    if (datesWithFood.length === 0 && weightMap.size === 0) {
       return [];
     }
 
-    const allDates = datesWithFood.sort();
-    console.log('All dates for chart (food only):', allDates);
+    const allDates = [...new Set([...datesWithFood, ...Array.from(weightMap.keys())])].sort();
+    console.log('All dates for chart:', allDates);
 
     let lastSeenWeight: number | null = null;
     
