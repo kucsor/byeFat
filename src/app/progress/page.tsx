@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/collapsible"
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BottomNav } from '@/components/app/bottom-nav';
+import { DeficitProgressChart } from '@/components/app/deficit-progress-chart';
 
 
 // Custom Tooltip for charts
@@ -361,35 +362,10 @@ export default function ProgressPage() {
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Daily Calorie Balance</CardTitle>
-                        <CardDescription>Your daily calorie deficit (positive bars) or surplus (negative bars).</CardDescription>
-                    </CardHeader>
-                    <CardContent className="h-80">
-                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart 
-                                data={chartData.filter(d => d.calorieBalance !== null)}
-                                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" tickFormatter={(date) => format(new Date(date), 'MMM d')} />
-                                <YAxis unit="kcal" allowDecimals={false} />
-                                <Tooltip cursor={{fill: 'hsl(var(--muted)/0.5)'}} content={<CustomTooltip />} />
-                                <Legend />
-                                <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                                <Bar dataKey="calorieBalance" name="Balance" unit="kcal">
-                                    {chartData.filter(d => d.calorieBalance !== null).map((entry, index) => (
-                                        <Cell 
-                                            key={`cell-${index}`} 
-                                            fill={entry.calorieBalance != null && entry.calorieBalance >= 0 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} 
-                                        />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+                <DeficitProgressChart 
+                    chartData={chartData}
+                    maintenanceCalories={userProfile?.maintenanceCalories}
+                />
             </div>
         )}
         
