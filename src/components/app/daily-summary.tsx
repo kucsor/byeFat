@@ -91,92 +91,174 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Consumed Card */}
-        <Card className="shadow-lg border-2 border-primary/20 bg-card overflow-hidden relative group">
+        {/* Consumed Card - Radio Tuner Style */}
+        <Card className="shadow-lg border-2 border-primary/20 bg-[#f4ead5] overflow-hidden relative group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <Soup className="w-16 h-16 text-primary" />
           </div>
-          <CardHeader className="pb-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Consumat Astăzi</span>
+          <CardHeader className="pb-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Consumat Astăzi</span>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-serif font-bold text-foreground">{totals.totalCalories.toLocaleString()}</span>
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-tighter">kcal</span>
+          <CardContent className="space-y-4">
+            <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline gap-2">
+                <span className="text-6xl font-serif font-bold text-foreground drop-shadow-sm">{totals.totalCalories.toLocaleString()}</span>
+                <span className="text-xs font-black text-muted-foreground uppercase tracking-tighter">kcal</span>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold uppercase text-muted-foreground leading-none">Target</div>
+                <div className="text-xl font-serif font-bold text-primary">{dynamicGoal.toLocaleString()}</div>
+              </div>
             </div>
-            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-bold">Target:</span>
-              <span className="font-serif">{dynamicGoal.toLocaleString()} kcal</span>
+
+            {/* Tuner Scale */}
+            <div className="relative h-8 bg-black/5 rounded border border-black/10 flex items-center px-1 overflow-hidden">
+               <div className="absolute inset-0 flex justify-between items-end pb-1 px-2 opacity-30">
+                  {[...Array(21)].map((_, i) => (
+                    <div key={i} className={cn("bg-foreground", i % 5 === 0 ? "h-4 w-0.5" : "h-2 w-px")} />
+                  ))}
+               </div>
+               <motion.div
+                 className="absolute top-0 bottom-0 w-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)] z-10"
+                 initial={{ left: 0 }}
+                 animate={{ left: `${Math.min((totals.totalCalories / (dynamicGoal || 1)) * 100, 100)}%` }}
+                 transition={{ duration: 1.5, ease: "easeOut" }}
+               >
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
+               </motion.div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Deficit Card */}
-        <Card className="shadow-lg border-2 border-accent/20 bg-card overflow-hidden relative group">
+        {/* Deficit Card - Hi-Fi VU Meter Style */}
+        <Card className="shadow-lg border-2 border-accent/20 bg-[#f4ead5] overflow-hidden relative group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <Flame className="w-16 h-16 text-accent" />
           </div>
-          <CardHeader className="pb-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{displayLabel}</span>
+          <CardHeader className="pb-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent/70">{displayLabel}</span>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <span className={cn(
-                "text-5xl font-serif font-bold",
-                caloricDeficit >= 0 ? "text-primary" : "text-destructive"
-              )}>
-                {displayValue.toLocaleString()}
-              </span>
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-tighter">kcal</span>
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-bold">Țintă Zilnică:</span>
-              <span className="font-serif">{deficitTarget.toLocaleString()} kcal</span>
-            </div>
+          <CardContent className="space-y-4">
+             <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline gap-2">
+                  <span className={cn(
+                    "text-6xl font-serif font-bold drop-shadow-sm",
+                    caloricDeficit >= 0 ? "text-accent" : "text-destructive"
+                  )}>
+                    {displayValue.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-black text-muted-foreground uppercase tracking-tighter">kcal</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] font-bold uppercase text-muted-foreground leading-none">Țintă Zilnică</div>
+                  <div className="text-xl font-serif font-bold text-accent">{deficitTarget.toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* VU Meter Bars */}
+              <div className="flex gap-1 h-8 items-end bg-black/5 rounded border border-black/10 p-1">
+                {[...Array(20)].map((_, i) => {
+                  const progress = (displayValue / (deficitTarget || 1)) * 100;
+                  const threshold = (i / 20) * 100;
+                  const isActive = progress > threshold;
+                  return (
+                    <motion.div
+                      key={i}
+                      className={cn(
+                        "flex-1 rounded-sm transition-colors duration-500",
+                        isActive
+                          ? (i > 15 ? "bg-destructive" : i > 10 ? "bg-accent" : "bg-primary")
+                          : "bg-black/10"
+                      )}
+                      initial={{ height: "10%" }}
+                      animate={{ height: isActive ? ["40%", "100%", "60%"] : "10%" }}
+                      transition={{
+                        repeat: isActive ? Infinity : 0,
+                        repeatType: "mirror",
+                        duration: 0.5 + (i * 0.05) % 0.4,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  );
+                })}
+              </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Vintage Ruler Progress Bar */}
-      <Card className="shadow-md border-2 border-primary/10 bg-card p-6 relative overflow-hidden">
-        <div className="flex justify-between items-end mb-4">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Progresul Zilei</h3>
-          <span className="text-lg font-serif font-bold">{Math.round(calorieProgress)}%</span>
+      {/* Retro Hi-Fi Frequency Progress Bar */}
+      <Card className="shadow-xl border-2 border-foreground/10 bg-[#2a2a2a] p-6 relative overflow-hidden text-[#e5d5b5]">
+        <div className="flex justify-between items-center mb-6 border-b border-[#e5d5b5]/20 pb-2">
+          <div className="flex items-center gap-4">
+            <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse" />
+            <h3 className="text-xs font-black uppercase tracking-[0.3em]">Progresul Zilei (KCAL)</h3>
+          </div>
+          <div className="flex items-baseline gap-1 bg-black/40 px-3 py-1 rounded-md border border-white/10">
+            <span className="text-2xl font-serif font-bold text-primary">{Math.round(calorieProgress)}</span>
+            <span className="text-[10px] font-black opacity-50">%</span>
+          </div>
         </div>
         
-        <div className="relative h-12 bg-[#e5d5b5] rounded-lg border-2 border-[#c4a484] shadow-inner overflow-hidden flex items-center">
-          {/* Ruler Ticks */}
-          <div className="absolute inset-0 flex justify-between px-1 opacity-40">
-            {[...Array(51)].map((_, i) => (
+        <div className="relative h-20 bg-black/60 rounded-lg border-2 border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,1)] overflow-hidden flex flex-col justify-center">
+          {/* Frequency Ticks */}
+          <div className="absolute inset-0 flex justify-between items-center px-4 opacity-20 pointer-events-none">
+            {[...Array(41)].map((_, i) => (
               <div
                 key={i}
                 className={cn(
-                  "bg-[#8b5a2b]",
-                  i % 10 === 0 ? "h-6 w-0.5" : i % 5 === 0 ? "h-4 w-px" : "h-2 w-px"
+                  "bg-white",
+                  i % 10 === 0 ? "h-12 w-0.5" : i % 5 === 0 ? "h-8 w-px" : "h-4 w-px"
                 )}
               />
             ))}
           </div>
 
-          {/* Progress Indicator (The "Slider") */}
+          {/* Glow Effect */}
           <motion.div
-            className="absolute top-0 bottom-0 left-0 bg-primary/40 border-r-4 border-primary shadow-lg z-10"
+            className="absolute top-0 bottom-0 left-0 bg-primary/20 blur-xl pointer-events-none"
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(calorieProgress, 100)}%` }}
             transition={{ duration: 1.5, ease: "easeOut" }}
-          >
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-8 bg-primary rounded-sm border-2 border-white shadow-md flex items-center justify-center">
-                <div className="w-0.5 h-4 bg-white/50 rounded-full" />
-            </div>
-          </motion.div>
+          />
 
-          {/* Wood Texture Overlay */}
-          <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]" />
+          {/* Scale Numbers */}
+          <div className="absolute inset-0 flex justify-between items-end px-4 pb-2 text-[8px] font-black opacity-40 pointer-events-none uppercase tracking-widest">
+            <span>0</span>
+            <span>25</span>
+            <span>50</span>
+            <span>75</span>
+            <span>100</span>
+          </div>
+
+          {/* The Needle */}
+          <motion.div
+            className="absolute top-0 bottom-0 w-1 bg-primary z-10 flex flex-col items-center"
+            initial={{ left: 0 }}
+            animate={{ left: `${Math.min(calorieProgress, 100)}%` }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+          >
+            <div className="w-4 h-1 bg-primary shadow-[0_0_15px_hsl(var(--primary))]" />
+            <div className="flex-1 w-px bg-white/20" />
+            <div className="w-4 h-1 bg-primary shadow-[0_0_15px_hsl(var(--primary))]" />
+
+            {/* Indicator Light */}
+            <div className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-primary/30 blur-md" />
+          </motion.div>
         </div>
-        <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">
-          <span>Început</span>
-          <span>Target Atins</span>
+
+        <div className="flex justify-between mt-4 px-2">
+           <div className="flex flex-col">
+             <span className="text-[8px] font-black uppercase tracking-tighter opacity-50">Start Line</span>
+             <span className="text-[10px] font-bold">ÎNCEPUT</span>
+           </div>
+           <div className="flex flex-col items-end">
+             <span className="text-[8px] font-black uppercase tracking-tighter opacity-50">Operational Goal</span>
+             <span className="text-[10px] font-bold text-primary">TARGET ATINS</span>
+           </div>
         </div>
+
+        {/* Brushed Metal Texture Effect (Subtle Noise) */}
+        <div className="absolute inset-0 pointer-events-none opacity-5 mix-blend-overlay bg-black/10" />
       </Card>
 
       <Card className="shadow-lg border-2 border-primary/5 bg-card/50 backdrop-blur-sm">
