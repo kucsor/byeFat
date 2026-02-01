@@ -90,102 +90,6 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Consumed Card - Radio Tuner Style */}
-        <Card className="shadow-lg border-2 border-primary/20 bg-[#f4ead5] overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Soup className="w-16 h-16 text-primary" />
-          </div>
-          <CardHeader className="pb-1">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Consumat Astăzi</span>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-baseline justify-between">
-              <div className="flex items-baseline gap-2">
-                <span className="text-6xl font-serif font-bold text-foreground drop-shadow-sm">{totals.totalCalories.toLocaleString()}</span>
-                <span className="text-xs font-black text-muted-foreground uppercase tracking-tighter">kcal</span>
-              </div>
-              <div className="text-right">
-                <div className="text-[10px] font-bold uppercase text-muted-foreground leading-none">Target</div>
-                <div className="text-xl font-serif font-bold text-primary">{dynamicGoal.toLocaleString()}</div>
-              </div>
-            </div>
-
-            {/* Tuner Scale */}
-            <div className="relative h-8 bg-black/5 rounded border border-black/10 flex items-center px-1 overflow-hidden">
-               <div className="absolute inset-0 flex justify-between items-end pb-1 px-2 opacity-30">
-                  {[...Array(21)].map((_, i) => (
-                    <div key={i} className={cn("bg-foreground", i % 5 === 0 ? "h-4 w-0.5" : "h-2 w-px")} />
-                  ))}
-               </div>
-               <motion.div
-                 className="absolute top-0 bottom-0 w-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)] z-10"
-                 initial={{ left: 0 }}
-                 animate={{ left: `${Math.min((totals.totalCalories / (dynamicGoal || 1)) * 100, 100)}%` }}
-                 transition={{ duration: 1.5, ease: "easeOut" }}
-               >
-                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
-               </motion.div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Deficit Card - Hi-Fi VU Meter Style */}
-        <Card className="shadow-lg border-2 border-accent/20 bg-[#f4ead5] overflow-hidden relative group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Flame className="w-16 h-16 text-accent" />
-          </div>
-          <CardHeader className="pb-1">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent/70">{displayLabel}</span>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <div className="flex items-baseline justify-between">
-                <div className="flex items-baseline gap-2">
-                  <span className={cn(
-                    "text-6xl font-serif font-bold drop-shadow-sm",
-                    caloricDeficit >= 0 ? "text-accent" : "text-destructive"
-                  )}>
-                    {displayValue.toLocaleString()}
-                  </span>
-                  <span className="text-xs font-black text-muted-foreground uppercase tracking-tighter">kcal</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] font-bold uppercase text-muted-foreground leading-none">Țintă Zilnică</div>
-                  <div className="text-xl font-serif font-bold text-accent">{deficitTarget.toLocaleString()}</div>
-                </div>
-              </div>
-
-              {/* VU Meter Bars */}
-              <div className="flex gap-1 h-8 items-end bg-black/5 rounded border border-black/10 p-1">
-                {[...Array(20)].map((_, i) => {
-                  const progress = (displayValue / (deficitTarget || 1)) * 100;
-                  const threshold = (i / 20) * 100;
-                  const isActive = progress > threshold;
-                  return (
-                    <motion.div
-                      key={i}
-                      className={cn(
-                        "flex-1 rounded-sm transition-colors duration-500",
-                        isActive
-                          ? (i > 15 ? "bg-destructive" : i > 10 ? "bg-accent" : "bg-primary")
-                          : "bg-black/10"
-                      )}
-                      initial={{ height: "10%" }}
-                      animate={{ height: isActive ? ["40%", "100%", "60%"] : "10%" }}
-                      transition={{
-                        repeat: isActive ? Infinity : 0,
-                        repeatType: "mirror",
-                        duration: 0.5 + (i * 0.05) % 0.4,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  );
-                })}
-              </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Retro Hi-Fi Frequency Progress Bar */}
       <Card className="shadow-xl border-2 border-foreground/10 bg-[#2a2a2a] p-6 relative overflow-hidden text-[#e5d5b5]">
         <div className="flex justify-between items-center mb-6 border-b border-[#e5d5b5]/20 pb-2">
@@ -260,6 +164,102 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
         {/* Brushed Metal Texture Effect (Subtle Noise) */}
         <div className="absolute inset-0 pointer-events-none opacity-5 mix-blend-overlay bg-black/10" />
       </Card>
+
+      <div className="flex flex-col gap-6">
+        {/* Deficit Card - Hi-Fi VU Meter Style */}
+        <Card className="shadow-lg border-2 border-accent/20 bg-[#f4ead5] overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Flame className="w-16 h-16 text-accent" />
+          </div>
+          <CardHeader className="pb-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent/70">{displayLabel}</span>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline gap-2">
+                  <span className={cn(
+                    "text-6xl font-serif font-bold drop-shadow-sm",
+                    caloricDeficit >= 0 ? "text-accent" : "text-destructive"
+                  )}>
+                    {displayValue.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-black text-muted-foreground uppercase tracking-tighter">kcal</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] font-bold uppercase text-muted-foreground leading-none">Țintă Zilnică</div>
+                  <div className="text-xl font-serif font-bold text-accent">{deficitTarget.toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* VU Meter Bars */}
+              <div className="flex gap-1 h-8 items-end bg-black/5 rounded border border-black/10 p-1">
+                {[...Array(20)].map((_, i) => {
+                  const progress = (displayValue / (deficitTarget || 1)) * 100;
+                  const threshold = (i / 20) * 100;
+                  const isActive = progress > threshold;
+                  return (
+                    <motion.div
+                      key={i}
+                      className={cn(
+                        "flex-1 rounded-sm transition-colors duration-500",
+                        isActive
+                          ? (i > 15 ? "bg-destructive" : i > 10 ? "bg-accent" : "bg-primary")
+                          : "bg-black/10"
+                      )}
+                      initial={{ height: "10%" }}
+                      animate={{ height: isActive ? ["40%", "100%", "60%"] : "10%" }}
+                      transition={{
+                        repeat: isActive ? Infinity : 0,
+                        repeatType: "mirror",
+                        duration: 0.5 + (i * 0.05) % 0.4,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  );
+                })}
+              </div>
+          </CardContent>
+        </Card>
+
+        {/* Consumed Card - Radio Tuner Style */}
+        <Card className="shadow-lg border-2 border-primary/20 bg-[#f4ead5] overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Soup className="w-16 h-16 text-primary" />
+          </div>
+          <CardHeader className="pb-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Consumat Astăzi</span>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline gap-2">
+                <span className="text-6xl font-serif font-bold text-foreground drop-shadow-sm">{totals.totalCalories.toLocaleString()}</span>
+                <span className="text-xs font-black text-muted-foreground uppercase tracking-tighter">kcal</span>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold uppercase text-muted-foreground leading-none">Target</div>
+                <div className="text-xl font-serif font-bold text-primary">{dynamicGoal.toLocaleString()}</div>
+              </div>
+            </div>
+
+            {/* Tuner Scale */}
+            <div className="relative h-8 bg-black/5 rounded border border-black/10 flex items-center px-1 overflow-hidden">
+               <div className="absolute inset-0 flex justify-between items-end pb-1 px-2 opacity-30">
+                  {[...Array(21)].map((_, i) => (
+                    <div key={i} className={cn("bg-foreground", i % 5 === 0 ? "h-4 w-0.5" : "h-2 w-px")} />
+                  ))}
+               </div>
+               <motion.div
+                 className="absolute top-0 bottom-0 w-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)] z-10"
+                 initial={{ left: 0 }}
+                 animate={{ left: `${Math.min((totals.totalCalories / (dynamicGoal || 1)) * 100, 100)}%` }}
+                 transition={{ duration: 1.5, ease: "easeOut" }}
+               >
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
+               </motion.div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="shadow-lg border-2 border-primary/5 bg-card/50 backdrop-blur-sm">
       <CardContent className="p-6 md:p-8">
