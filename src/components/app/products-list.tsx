@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { collection, query, doc, updateDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, query, doc, updateDoc, increment, arrayUnion, arrayRemove, limit } from 'firebase/firestore';
 import { useFirebase, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import type { Product, UserProfile } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
@@ -128,13 +128,26 @@ export function ProductsList({ userProfile }: { userProfile: UserProfile }) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProductListOpen, setIsProductListOpen] = useState(false);
+  const [limitCount, setLimitCount] = useState(20);
 
   const productsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, `products`));
-  }, [firestore]);
+    return query(collection(firestore, `products`), limit(limitCount));
+  }, [firestore, limitCount]);
 
   const { data: products, isLoading } = useCollection<Product>(productsQuery);
+
+  const handleLoadMore = () => {
+    setLimitCount((prev) => prev + 20);
+  };
+
+  const onItemsRendered = ({ visibleStopIndex }: { visibleStopIndex: number }) => {
+    if (products && visibleStopIndex >= products.length - 1 && !isLoading) {
+        if (products.length >= limitCount) {
+             handleLoadMore();
+        }
+    }
+  };
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -179,7 +192,7 @@ export function ProductsList({ userProfile }: { userProfile: UserProfile }) {
         </CardHeader>
         <CollapsibleContent>
             <CardContent className="space-y-4 pt-0">
-                {isLoading && <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
+                {isLoading && (!products || products.length === 0) && <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
                 {!isLoading && !products?.length && isProductListOpen && (
                 <div className="text-center text-muted-foreground p-8">
                     <p>No products yet.</p>
@@ -187,14 +200,22 @@ export function ProductsList({ userProfile }: { userProfile: UserProfile }) {
                 </div>
                 )}
                 {products && products.length > 0 && isProductListOpen && (
+                   <>
                    <List
                         height={400}
                         itemCount={products.length}
                         itemSize={125}
                         width="100%"
+                        onItemsRendered={onItemsRendered}
                     >
                         {Row}
                     </List>
+                     {isLoading && products.length > 0 && (
+                        <div className="flex justify-center py-2 text-xs text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading more...
+                        </div>
+                    )}
+                   </>
                 )}
             </CardContent>
         </CollapsibleContent>
