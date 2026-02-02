@@ -17,9 +17,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        serif: ['"DM Serif Display"', 'serif'],
-        headline: ['"DM Serif Display"', 'serif'],
+        body: ['var(--font-quicksand)', 'sans-serif'],
+        serif: ['var(--font-fredoka)', 'serif'],
+        headline: ['var(--font-fredoka)', 'serif'],
         code: ['monospace'],
       },
       colors: {
@@ -75,9 +75,9 @@ export default {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        lg: '2rem',
+        md: '1.5rem',
+        sm: '1rem',
       },
       keyframes: {
         'accordion-down': {

@@ -37,29 +37,29 @@ export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculato
       label: "AI Calculator", 
       icon: Bot, 
       action: onAiCalculator,
-      color: "bg-secondary hover:bg-secondary/90 text-white",
-      shadowColor: "shadow-secondary/30"
+      color: "bg-secondary hover:bg-secondary/90 text-secondary-foreground",
+      shadowColor: "shadow-secondary/40"
     },
     { 
       label: "Log Activity", 
       icon: Flame, 
       action: onLogActivity,
-      color: "bg-accent hover:bg-accent/90 text-white",
-      shadowColor: "shadow-accent/30"
+      color: "bg-accent hover:bg-accent/90 text-accent-foreground",
+      shadowColor: "shadow-accent/40"
     },
     { 
       label: "Add Food", 
       icon: Soup, 
       action: onAddFood,
-      color: "bg-primary hover:bg-primary/90 text-white",
-      shadowColor: "shadow-primary/30"
+      color: "bg-primary hover:bg-primary/90 text-primary-foreground",
+      shadowColor: "shadow-primary/40"
     },
     { 
       label: "Scan Barcode", 
       icon: ScanLine, 
       action: onScanBarcode,
-      color: "bg-foreground/80 hover:bg-foreground text-white",
-      shadowColor: "shadow-foreground/30"
+      color: "bg-muted hover:bg-muted/90 text-muted-foreground",
+      shadowColor: "shadow-muted/40"
     },
   ];
 
@@ -98,7 +98,7 @@ export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculato
       </AnimatePresence>
       <Button
         size="icon"
-        className="h-16 w-16 rounded-full shadow-2xl border-4 border-background"
+        className="h-20 w-20 rounded-full shadow-2xl border-4 border-white bg-primary text-primary-foreground bouncy-hover"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-label={isOpen ? 'Close menu' : 'Open menu'}

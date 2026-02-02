@@ -98,13 +98,13 @@ function UserNav() {
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b-2 border-primary/10 bg-card/95 backdrop-blur-md shadow-sm">
-      <div className="container mx-auto flex h-16 max-w-5xl items-center px-4">
-        <Link href="/" className='flex items-center group'>
-            <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-              <Leaf className="h-6 w-6 text-primary" />
+    <header className="sticky top-0 z-40 w-full border-b-4 border-primary/20 bg-white/70 backdrop-blur-xl shadow-sm">
+      <div className="container mx-auto flex h-20 max-w-5xl items-center px-4">
+        <Link href="/" className='flex items-center group gap-2'>
+            <div className="p-2 rounded-2xl bg-primary/20 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+              <Leaf className="h-7 w-7 text-primary-foreground" />
             </div>
-            <h1 className="ml-2 text-2xl font-serif font-bold text-primary tracking-tight">
+            <h1 className="text-3xl font-black text-primary-foreground tracking-tight drop-shadow-sm">
             byeFat
             </h1>
         </Link>
