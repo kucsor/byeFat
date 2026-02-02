@@ -26,10 +26,26 @@ const PortionCalculatorOutputSchema = z.object({
 });
 export type PortionCalculatorOutput = z.infer<typeof PortionCalculatorOutputSchema>;
 
+export type PortionCalculatorResponse =
+  | { success: true; data: PortionCalculatorOutput }
+  | { success: false; error: string };
+
 export async function calculatePortion(
   input: PortionCalculatorInput
-): Promise<PortionCalculatorOutput> {
-  return portionCalculatorFlow(input);
+): Promise<PortionCalculatorResponse> {
+  try {
+    const result = await portionCalculatorFlow(input);
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error('AI Portion Calculator Error:', error);
+    let errorMessage = 'Failed to calculate portion.';
+    if (error.message?.includes('API key')) {
+      errorMessage = 'Configurația AI lipsește (Cheia API). Te rugăm să adaugi GEMINI_API_KEY în variabilele de mediu.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    return { success: false, error: errorMessage };
+  }
 }
 
 const prompt = ai.definePrompt({

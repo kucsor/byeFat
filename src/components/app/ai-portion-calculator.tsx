@@ -64,13 +64,20 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
     setResult(null);
     try {
       const response = await calculatePortion(values);
-      if (response.description.startsWith('ERROR:')) {
+      if (!response.success) {
+        setError(response.error);
+        setResult(null);
+        return;
+      }
+
+      const result = response.data;
+      if (result.description.startsWith('ERROR:')) {
         setError(
           'Calculation failed. Please include the nutritional values for the raw product (e.g., "calories", "protein", "fat").'
         );
         setResult(null);
       } else {
-        setResult(response);
+        setResult(result);
       }
     } catch (e: any) {
       setError(e.message || 'An unexpected error occurred.');
