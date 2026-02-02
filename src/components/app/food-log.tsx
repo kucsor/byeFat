@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, memo, useCallback } from 'react';
 import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import type { DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ type DailyLogProps = {
   onAddFood: () => void;
 };
 
-function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete: (id: string, type: 'items' | 'activities') => void, onEdit: (item: DailyLogItem) => void }) {
+const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void, onEdit: (item: DailyLogItem) => void }) {
   const isAiItem = item.productId.startsWith('ai-');
 
   // Format the time from Firestore Timestamp
@@ -86,7 +86,7 @@ function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(item.id, 'items')} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                  <AlertDialogAction onClick={() => onDelete(item.id, 'items', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -94,9 +94,9 @@ function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete
       </CardHeader>
     </Card>
   )
-}
+});
 
-function ActivityItemCard({ item, onDelete }: { item: DailyLogActivity, onDelete: (id: string, type: 'items' | 'activities') => void }) {
+const ActivityItemCard = memo(function ActivityItemCard({ item, onDelete }: { item: DailyLogActivity, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void }) {
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md group">
       <CardHeader className="flex flex-row items-center justify-between gap-4 p-4">
@@ -125,14 +125,14 @@ function ActivityItemCard({ item, onDelete }: { item: DailyLogActivity, onDelete
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(item.id, 'activities')} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                <AlertDialogAction onClick={() => onDelete(item.id, 'activities', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
       </CardHeader>
     </Card>
   )
-}
+});
 
 
 export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLogProps) {
@@ -140,10 +140,10 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
   const [itemToEdit, setItemToEdit] = useState<DailyLogItem | null>(null);
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
 
-  const handleEdit = (item: DailyLogItem) => {
+  const handleEdit = useCallback((item: DailyLogItem) => {
     setItemToEdit(item);
     setIsEditSheetOpen(true);
-  };
+  }, []);
 
   // Sort items by time (newest first)
   const sortedItems = useMemo(() => {
@@ -166,27 +166,22 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     });
   }, [activities]);
 
-  const handleDelete = (itemId: string, type: 'items' | 'activities') => {
+  const handleDelete = useCallback((itemId: string, type: 'items' | 'activities', calories: number) => {
     if (!user || !selectedDate) return;
     const docRef = doc(firestore, `users/${user.uid}/dailyLogs/${selectedDate}/${type}`, itemId);
     
+    // We update the daily log document to reflect the removed calories
+    const dailyLogRef = doc(firestore, `users/${user.uid}/dailyLogs`, selectedDate);
+
     if (type === 'items') {
-      const itemToDelete = items?.find(i => i.id === itemId);
-      if (itemToDelete) {
-        const dailyLogRef = doc(firestore, `users/${user.uid}/dailyLogs`, selectedDate);
-        updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(-itemToDelete.calories) });
-      }
+         updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(-calories) });
     } else if (type === 'activities') {
-        const activityToDelete = activities?.find(a => a.id === itemId);
-        if (activityToDelete) {
-            const dailyLogRef = doc(firestore, `users/${user.uid}/dailyLogs`, selectedDate);
-            updateDocumentNonBlocking(dailyLogRef, { activeCalories: increment(-activityToDelete.calories) });
-        }
+         updateDocumentNonBlocking(dailyLogRef, { activeCalories: increment(-calories) });
     }
     
     deleteDocumentNonBlocking(docRef);
     triggerHapticFeedback();
-  };
+  }, [user, selectedDate, firestore]);
 
   const hasAnyItems = sortedItems.length > 0 || sortedActivities.length > 0;
   const isLoading = items === undefined || activities === undefined;
