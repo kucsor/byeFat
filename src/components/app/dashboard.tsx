@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { User } from 'firebase/auth';
-import { collection, query } from 'firebase/firestore';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, doc } from 'firebase/firestore';
+import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { DailyLog, DailyLogItem, DailyLogActivity, UserProfile } from '@/lib/types';
 import { DailySummary } from './daily-summary';
 import { FoodLog } from './food-log';
@@ -35,17 +35,12 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
 
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
-  const dailyLogsQuery = useMemoFirebase(() => {
+  const dailyLogDocRef = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/dailyLogs`));
-  }, [user, firestore]);
+    return doc(firestore, `users/${user.uid}/dailyLogs`, selectedDateString);
+  }, [user, firestore, selectedDateString]);
 
-  const { data: dailyLogs } = useCollection<DailyLog>(dailyLogsQuery);
-
-  const selectedLog = useMemo(() => {
-    if (!dailyLogs) return null;
-    return dailyLogs.find((log) => log.id === selectedDateString) ?? null;
-  }, [dailyLogs, selectedDateString]);
+  const { data: selectedLog } = useDoc<DailyLog>(dailyLogDocRef);
 
   const foodItemsQuery = useMemoFirebase(() => {
     if (!user) return null;
