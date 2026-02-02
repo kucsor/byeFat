@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
-import { collection, query, doc } from 'firebase/firestore';
+import { collection, query, doc, updateDoc } from 'firebase/firestore';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { DailyLog, DailyLogItem, DailyLogActivity, UserProfile } from '@/lib/types';
 import { DailySummary } from './daily-summary';
@@ -55,6 +55,29 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
     }, [user, firestore, selectedDateString]);
 
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
+
+  // Sync activeCalories to DailyLog if mismatch (Lazy Fix for historical data)
+  useEffect(() => {
+    // Only proceed if both selectedLog and activities are loaded
+    if (!selectedLog || !activities) return;
+
+    // Calculate what the active calories SHOULD be based on the subcollection (source of truth)
+    const totalActiveFromActivities = activities.reduce((acc, curr) => acc + curr.calories, 0);
+
+    // Compare with what is stored in the parent document
+    const storedActive = selectedLog.activeCalories || 0;
+
+    // If there is a mismatch, update the parent document
+    // This fixes historical data discrepancies when the user views the day
+    if (totalActiveFromActivities !== storedActive && dailyLogDocRef) {
+      console.log(`Fixing data consistency for ${selectedDateString}: Active Calories ${storedActive} -> ${totalActiveFromActivities}`);
+      updateDoc(dailyLogDocRef, {
+        activeCalories: totalActiveFromActivities
+      }).catch(err => {
+        console.error("Failed to sync active calories:", err);
+      });
+    }
+  }, [activities, selectedLog, dailyLogDocRef, selectedDateString]);
   
   const getGreeting = () => {
     if (!userProfile?.name) return "Today's Dashboard";
