@@ -39,10 +39,10 @@ export async function calculatePortion(
   } catch (error: any) {
     console.error('AI Portion Calculator Error:', error);
     let errorMessage = 'Failed to calculate portion.';
-    if (error.message?.includes('API key')) {
-      errorMessage = 'Configurația AI lipsește (Cheia API). Te rugăm să adaugi GEMINI_API_KEY în variabilele de mediu.';
+    if (error.message?.includes('API key') && (error.message?.includes('not found') || error.message?.includes('missing'))) {
+      errorMessage = 'Configurația AI lipsește (Cheia API). Te rugăm să adaugi GEMINI_API_KEY în variabilele de mediu sau în fișierul .env.local.';
     } else if (error.message) {
-      errorMessage = error.message;
+      errorMessage = `Eroare AI: ${error.message}`;
     }
     return { success: false, error: errorMessage };
   }
