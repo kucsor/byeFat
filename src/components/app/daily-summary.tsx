@@ -23,6 +23,7 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
   
   // Calculate maintenance calories if not saved in profile
   const calculatedMaintenance = useMemo(() => {
+    if (selectedLog?.maintenanceCalories) return selectedLog.maintenanceCalories;
     if (userProfile?.maintenanceCalories) return userProfile.maintenanceCalories;
     if (userProfile?.gender && userProfile?.age && userProfile?.weight && userProfile?.height) {
       const { gender, age, weight, height } = userProfile;
@@ -30,10 +31,10 @@ export function DailySummary({ foodItems, activities, userProfile, selectedLog }
       return Math.round(bmr * 1.2);
     }
     return baseGoal;
-  }, [userProfile, baseGoal]);
+  }, [userProfile, baseGoal, selectedLog]);
   
   const maintenanceCalories = calculatedMaintenance;
-  const deficitTarget = userProfile?.deficitTarget ?? 500;
+  const deficitTarget = selectedLog?.deficitTarget ?? userProfile?.deficitTarget ?? 500;
 
   const totals = useMemo(() => {
     const foodTotals = foodItems?.reduce(

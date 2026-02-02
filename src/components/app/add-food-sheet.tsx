@@ -92,6 +92,8 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
         logDataToSet.goalProtein = userProfile.dailyProtein;
         logDataToSet.goalCarbs = userProfile.dailyCarbs;
         logDataToSet.goalFat = userProfile.dailyFat;
+        logDataToSet.maintenanceCalories = userProfile.maintenanceCalories;
+        logDataToSet.deficitTarget = userProfile.deficitTarget;
     }
     
     setDocumentNonBlocking(dailyLogRef, logDataToSet, { merge: true });

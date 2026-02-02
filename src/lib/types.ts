@@ -60,6 +60,8 @@ export type DailyLog = {
   goalProtein?: number;
   goalCarbs?: number;
   goalFat?: number;
+  maintenanceCalories?: number;
+  deficitTarget?: number;
   consumedCalories?: number;
 };
 
