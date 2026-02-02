@@ -40,7 +40,9 @@ export async function calculatePortion(
     console.error('AI Portion Calculator Error:', error);
     let errorMessage = 'Failed to calculate portion.';
     if (error.message?.includes('API key') && (error.message?.includes('not found') || error.message?.includes('missing'))) {
-      errorMessage = 'Configurația AI lipsește (Cheia API). Te rugăm să adaugi GEMINI_API_KEY în variabilele de mediu sau în fișierul .env.local.';
+      errorMessage = 'Configurația AI lipsește. Adaugă GEMINI_API_KEY în variabilele de mediu (Firebase Console > App Hosting > Secrets).';
+    } else if (error.message?.includes('expired') || error.message?.includes('leaked')) {
+      errorMessage = 'Cheia API a fost revocată sau a expirat. Te rugăm să generezi una nouă și să NU o postezi în chat.';
     } else if (error.message) {
       errorMessage = `Eroare AI: ${error.message}`;
     }
