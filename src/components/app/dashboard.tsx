@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, isToday, isYesterday, addDays, subDays } from 'date-fns';
 import dynamic from 'next/dynamic';
 import { FabMenu } from './fab-menu';
+import { motion } from 'framer-motion';
 
 // Lazy load all the sheets
 const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then(mod => mod.AiPortionCalculator));
@@ -82,31 +83,37 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
   return (
     <>
       <div className="container mx-auto max-w-5xl p-4 md:p-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <h1 className="text-3xl md:text-5xl font-serif font-bold tracking-tight text-primary">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8"
+        >
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-primary-foreground drop-shadow-sm">
             {getGreeting()}
           </h1>
-          <div className="flex items-center gap-2 bg-card p-1 rounded-lg border shadow-sm">
+          <div className="flex items-center gap-2 bg-white/50 backdrop-blur-sm p-1.5 rounded-full border-2 border-primary/20 shadow-sm">
             <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
+                className="rounded-full hover:bg-primary/20"
                 onClick={() => setSelectedDate(subDays(selectedDate, 1))}
             >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5" />
             </Button>
-            <Button variant="outline" className="w-36 justify-center" onClick={() => setSelectedDate(new Date())}>
+            <Button variant="ghost" className="px-6 rounded-full font-bold hover:bg-primary/20" onClick={() => setSelectedDate(new Date())}>
                 {dateLabel}
             </Button>
             <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
+                className="rounded-full hover:bg-primary/20"
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
                 disabled={isToday(selectedDate)}
             >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
-        </div>
+        </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-12 lg:col-span-7">
                 <DailySummary
