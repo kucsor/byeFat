@@ -206,12 +206,12 @@ export default function ProgressPage() {
     }
     
     // Include all daily logs, even those without weight history
-    const logMap = new Map(dailyLogs?.map(log => [log.date, { goal: log.goalCalories, consumed: log.consumedCalories }]) ?? []);
+    const logMap = new Map(dailyLogs?.map(log => [log.date, { goal: log.goalCalories, consumed: log.consumedCalories, active: log.activeCalories }]) ?? []);
     const weightMap = new Map(sortedWeightHistory?.map(entry => [entry.date, entry.weight]) ?? []);
 
-    // Get all dates from logs that have consumed calories > 0
+    // Get all dates from logs that have consumed calories > 0 OR active calories > 0
     const datesWithFood = dailyLogs
-      ?.filter(log => (log.consumedCalories || 0) > 0)
+      ?.filter(log => (log.consumedCalories || 0) > 0 || (log.activeCalories || 0) > 0)
       .map(log => log.date) || [];
 
     if (datesWithFood.length === 0 && weightMap.size === 0) {
@@ -237,6 +237,7 @@ export default function ProgressPage() {
             date: date,
             goalCalories: log?.goal,
             consumedCalories: log?.consumed,
+            activeCalories: log?.active,
             calorieBalance,
             weight: lastSeenWeight
         };

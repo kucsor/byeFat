@@ -63,6 +63,7 @@ export type DailyLog = {
   maintenanceCalories?: number;
   deficitTarget?: number;
   consumedCalories?: number;
+  activeCalories?: number; // Added to track burned calories denormalized
 };
 
 export type WeightEntry = {
@@ -70,6 +71,4 @@ export type WeightEntry = {
     date: string; // YYYY-MM-DD
     weight: number;
 }
-    
-
     

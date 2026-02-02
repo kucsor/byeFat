@@ -176,6 +176,12 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
         const dailyLogRef = doc(firestore, `users/${user.uid}/dailyLogs`, selectedDate);
         updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(-itemToDelete.calories) });
       }
+    } else if (type === 'activities') {
+        const activityToDelete = activities?.find(a => a.id === itemId);
+        if (activityToDelete) {
+            const dailyLogRef = doc(firestore, `users/${user.uid}/dailyLogs`, selectedDate);
+            updateDocumentNonBlocking(dailyLogRef, { activeCalories: increment(-activityToDelete.calories) });
+        }
     }
     
     deleteDocumentNonBlocking(docRef);
