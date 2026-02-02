@@ -108,10 +108,10 @@ Modelul AI folosit: `googleai/gemini-1.5-pro`
    Adaugă toate variabilele:
    ```
    Key: GEMINI_API_KEY
-   Value: AIzaSyBc1eCrvc0HzX5dQCYyH4O-tn5lbMKnfQk
+   Value: your_gemini_api_key_here
    
    Key: NEXT_PUBLIC_FIREBASE_API_KEY
-   Value: AIzaSyCI8xUwAaw0shBDfOFoMbvLBB6jM5ZSQcw
+   Value: your_firebase_api_key_here
    
    Key: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
    Value: studio-8995176861-f1dfd.firebaseapp.com
