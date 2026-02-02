@@ -47,15 +47,15 @@ The user can provide two types of queries:
 
 **If the query is a Simple Food Lookup:**
 1.  Identify the food item and its weight in grams.
-2.  Use your general knowledge to find the approximate nutritional values (calories, protein, fat, carbs) for the specified amount of that food.
+2.  Use your internal knowledge (or tools if available) to find the approximate nutritional values (calories, protein, fat, carbs) for the specified amount of that food.
 3.  Create a short, sensible description for the food (e.g., "Apple", "Grilled chicken breast"). \`portionWeight\` will be the weight specified by the user.
 4.  Return the calculated values in the specified JSON format.
 
 **If the query is a Complex Portion Calculation:**
-1.  **CRITICAL CHECK:** First, check if the user's text includes the nutritional values for the *raw* product (e.g., "per 100g raw is 350 kcal, 12g protein...").
-2.  **IF MISSING:** If this information is NOT provided, you CANNOT proceed. You MUST immediately stop and return a JSON object where all numeric values are \`0\`, and the \`description\` is \`"ERROR: Missing nutritional values for the raw product."\`.
-3.  **IF PRESENT:** Proceed with the original calculation steps:
-    a. Identify the nutritional values per 100g of the *raw* product.
+1.  **Identify Available Information:** Look for nutritional values per 100g (raw), total raw weight, total cooked weight, and final portion weight.
+2.  **Handling Missing Nutrients:** If the user does NOT provide nutritional values for the raw product (e.g., "calories per 100g"), try to use your internal knowledge to find average values for that specific food item.
+3.  **Calculation Steps:**
+    a. Determine the nutritional values per 100g (either provided by user or found in your knowledge).
     b. Identify the total weight of the *raw* product.
     c. Identify the total weight of the product *after cooking*.
     d. Identify the weight of the final *portion* the user will eat. This is the 'portionWeight'.
@@ -63,6 +63,8 @@ The user can provide two types of queries:
     f. Calculate the nutrient density of the cooked product: \`(total nutrients from step e) / (total cooked weight)\`.
     g. Calculate the final nutrients for the user's portion: \`(nutrient density from step f) * (portion weight)\`.
     h. Create a short, sensible description for the calculated meal.
+
+**Error Handling:** Only return an error description (starting with "ERROR:") if you are completely unable to identify the food item or if critical weight ratios are missing and cannot be reasonably estimated.
 
 Return ONLY the calculated values for the final portion, the portion weight, and the description in the specified JSON format. Do not respond with any conversational text.
 `,

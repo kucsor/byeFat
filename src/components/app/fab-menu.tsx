@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Bot, ScanLine, Flame, Soup } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PlateCutlery } from './animated-icons';
 
 type FabMenuProps = {
   onAddFood: () => void;
   onLogActivity: () => void;
   onScanBarcode: () => void;
   onAiCalculator: () => void;
+  onManualLog: () => void;
 };
 
 const menuVariants = {
@@ -24,7 +26,7 @@ const menuVariants = {
   },
 };
 
-export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculator }: FabMenuProps) {
+export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculator, onManualLog }: FabMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleActionClick = (action: () => void) => {
@@ -46,6 +48,13 @@ export function FabMenu({ onAddFood, onLogActivity, onScanBarcode, onAiCalculato
       action: onLogActivity,
       color: "bg-accent hover:bg-accent/90 text-accent-foreground",
       shadowColor: "shadow-accent/40"
+    },
+    {
+      label: "Manual Log",
+      icon: PlateCutlery,
+      action: onManualLog,
+      color: "bg-primary hover:bg-primary/90 text-primary-foreground",
+      shadowColor: "shadow-primary/40"
     },
     { 
       label: "Add Food", 
