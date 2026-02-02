@@ -78,7 +78,13 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
         logDataToSet.deficitTarget = userProfile.deficitTarget;
     }
     
+    // Create or update the daily log
     setDocumentNonBlocking(dailyLogRef, logDataToSet, { merge: true });
+
+    // Update the total active calories on the daily log
+    updateDocumentNonBlocking(dailyLogRef, {
+        activeCalories: increment(values.calories)
+    });
 
     const activitiesCollection = collection(dailyLogRef, 'activities');
     

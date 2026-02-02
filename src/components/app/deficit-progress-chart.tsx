@@ -26,6 +26,7 @@ type ChartDataPoint = {
   date: string;
   goalCalories?: number;
   consumedCalories?: number;
+  activeCalories?: number;
   calorieBalance?: number | null;
   weight?: number | null;
   weightTrend?: number | null;
@@ -62,13 +63,17 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
       .map((day) => {
         const maintenance = maintenanceCalories || day.goalCalories || 2000;
         const consumed = day.consumedCalories || 0;
-        const deficit = maintenance - consumed;
+        const active = day.activeCalories || 0;
+        // Total burned = Maintenance + Active Calories (Exercise)
+        // Deficit = Total Burned - Consumed
+        const deficit = (maintenance + active) - consumed;
 
         return {
           date: day.date,
           deficit: Math.round(deficit),
           maintenance: Math.round(maintenance),
           consumed: Math.round(consumed),
+          active: Math.round(active),
         };
       });
   }, [chartData, maintenanceCalories, range]);
@@ -135,6 +140,12 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
               <span className="text-muted-foreground">Mentenanță:</span>
               <span className="font-medium">{data.maintenance} kcal</span>
             </div>
+            {data.active > 0 && (
+                <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Activ:</span>
+                    <span className="font-medium text-accent">+{data.active} kcal</span>
+                </div>
+            )}
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">Consumat:</span>
               <span className="font-medium">{data.consumed} kcal</span>
