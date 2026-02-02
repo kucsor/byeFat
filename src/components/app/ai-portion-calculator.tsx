@@ -30,7 +30,7 @@ import { triggerHapticFeedback } from '@/lib/haptics';
 
 
 const formSchema = z.object({
-  query: z.string().min(20, {
+  query: z.string().min(3, {
     message: 'Please provide more details for an accurate calculation.',
   }),
 });
