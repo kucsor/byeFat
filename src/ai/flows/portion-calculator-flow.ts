@@ -43,8 +43,9 @@ export async function calculatePortion(
       errorMessage = 'Configurația AI lipsește. Adaugă GEMINI_API_KEY în variabilele de mediu (Firebase Console > App Hosting > Secrets).';
     } else if (error.message?.includes('expired') || error.message?.includes('leaked')) {
       errorMessage = 'Cheia API a fost revocată sau a expirat. Te rugăm să generezi una nouă și să NU o postezi în chat.';
-    } else if (error.message) {
-      errorMessage = `Eroare AI: ${error.message}`;
+    } else {
+      // SECURITY: Do not leak raw error details to the client to prevent information disclosure.
+      errorMessage = 'A apărut o eroare neașteptată. Vă rugăm să încercați din nou.';
     }
     return { success: false, error: errorMessage };
   }
