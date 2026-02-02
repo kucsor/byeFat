@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useFirebase, setDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
+import { doc, writeBatch } from 'firebase/firestore';
 
 const HISTORICAL_DATA = [
   { date: '2024-01-28', weight: 85.0 },
@@ -39,9 +39,11 @@ export function TempDataSeeder() {
       return;
     }
 
-    const seedData = () => {
+    const seedData = async () => {
       setIsSeeding(true);
       
+      const batch = writeBatch(firestore);
+
       HISTORICAL_DATA.forEach(entry => {
         const weightHistoryRef = doc(firestore, `users/${user.uid}/weightHistory`, entry.date);
         const dataToSet = {
@@ -49,12 +51,18 @@ export function TempDataSeeder() {
           date: entry.date,
           weight: entry.weight,
         };
-        setDocumentNonBlocking(weightHistoryRef, dataToSet, { merge: true });
+        batch.set(weightHistoryRef, dataToSet, { merge: true });
       });
       
-      localStorage.setItem(SEED_FLAG, 'true');
-      console.log('Historical weight data seeding initiated.');
-      setIsSeeding(false);
+      try {
+        await batch.commit();
+        localStorage.setItem(SEED_FLAG, 'true');
+        console.log('Historical weight data seeded successfully.');
+      } catch (error) {
+        console.error('Error seeding data:', error);
+      } finally {
+        setIsSeeding(false);
+      }
     };
 
     seedData();
