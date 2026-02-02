@@ -29,6 +29,8 @@ import { triggerHapticFeedback } from '@/lib/haptics';
 import { useMemo, useState } from 'react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PlayfulFlame } from './animated-icons';
+import { motion } from 'framer-motion';
 
 const activitySchema = z.object({
   name: z.string().min(2, { message: 'Activity name must be at least 2 characters.' }),
@@ -109,11 +111,16 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
 
   return (
       <Sheet open={isOpen} onOpenChange={handleSheetOpen}>
-        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0">
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0 rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none border-none glass overflow-hidden">
           <SheetHeader className="p-6 pb-2">
-            <SheetTitle>Log Activity</SheetTitle>
-            <SheetDescription>
-              Search for an activity, select it, and enter the calories burned.
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-accent/20 p-2 rounded-2xl">
+                <PlayfulFlame />
+              </div>
+              <SheetTitle className="text-2xl font-black text-accent-foreground">Log Activitate</SheetTitle>
+            </div>
+            <SheetDescription className="font-bold opacity-70">
+              Caută o activitate și introdu caloriile arse.
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -124,17 +131,18 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Activity</FormLabel>
+                      <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Activitate</FormLabel>
                       {!selectedActivityName ? (
-                        <Command shouldFilter={false}>
+                        <Command shouldFilter={false} className="rounded-3xl border-2 border-accent/20 overflow-hidden bg-white/50">
                           <CommandInput 
-                            placeholder="Search for an activity..." 
+                            placeholder="Caută activitate..."
                             value={searchValue}
                             onValueChange={setSearchValue}
+                            className="border-none focus:ring-0"
                           />
-                          <ScrollArea className="h-48 rounded-md border">
+                          <ScrollArea className="h-48">
                             <CommandList>
-                              {filteredActivities.length === 0 && <CommandEmpty>No activity found.</CommandEmpty>}
+                              {filteredActivities.length === 0 && <CommandEmpty className="p-4 text-center font-bold opacity-50">Nu am găsit activitatea.</CommandEmpty>}
                               <CommandGroup>
                                 {filteredActivities.map((activity) => (
                                   <CommandItem
@@ -143,8 +151,9 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
                                     onSelect={() => {
                                       form.setValue("name", activity, { shouldValidate: true });
                                     }}
+                                    className="p-3 aria-selected:bg-accent/10 rounded-xl cursor-pointer"
                                   >
-                                    <span>{activity}</span>
+                                    <span className="font-bold">{activity}</span>
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -152,12 +161,23 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
                           </ScrollArea>
                         </Command>
                       ) : (
-                        <div className="flex items-center justify-between rounded-md border bg-muted p-3">
+                        <motion.div
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="flex items-center justify-between rounded-3xl border-2 border-accent/20 bg-accent/10 p-4"
+                        >
                             <div>
-                                <p className="font-medium">{selectedActivityName}</p>
+                                <p className="font-black text-accent-foreground">{selectedActivityName}</p>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => form.setValue('name', '')}>Change</Button>
-                        </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => form.setValue('name', '')}
+                              className="rounded-full hover:bg-accent/20 font-bold"
+                            >
+                              Schimbă
+                            </Button>
+                        </motion.div>
                       )}
                       <FormMessage />
                     </FormItem>
@@ -165,26 +185,42 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
                 />
                 
                 {selectedActivityName && (
-                    <FormField
-                      control={form.control}
-                      name="calories"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Calories Burned</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="300" {...field} onFocus={(e) => e.target.select()} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <FormField
+                        control={form.control}
+                        name="calories"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Calorii Arse</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="300"
+                                {...field}
+                                onFocus={(e) => e.target.select()}
+                                className="h-14 rounded-2xl border-2 border-accent/20 bg-white/50 text-xl font-black text-center focus-visible:ring-accent/30"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </motion.div>
                 )}
               </form>
             </Form>
           </div>
-          <SheetFooter className="bg-card p-6 mt-4 border-t">
-            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full" disabled={!selectedActivityName}>
-              Log Activity
+          <SheetFooter className="p-6 mt-4 border-t border-accent/10 bg-white/30 backdrop-blur-md">
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
+              type="submit"
+              className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-accent/20 bouncy-hover bg-accent text-accent-foreground hover:bg-accent/90"
+              disabled={!selectedActivityName}
+            >
+              Log Activitate
             </Button>
           </SheetFooter>
         </SheetContent>

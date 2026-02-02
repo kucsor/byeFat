@@ -29,6 +29,8 @@ import { collection, doc, query, serverTimestamp, increment } from 'firebase/fir
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { DancingApple } from './animated-icons';
+import { motion } from 'framer-motion';
 
 const logItemSchema = z.object({
   productId: z.string().min(1, { message: "Please select a product."}),
@@ -135,11 +137,16 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
 
   return (
       <Sheet open={isOpen} onOpenChange={handleSheetOpen}>
-        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0">
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0 rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none border-none glass overflow-hidden">
           <SheetHeader className="p-6 pb-2">
-            <SheetTitle>Log Food Item</SheetTitle>
-            <SheetDescription>
-              Search for a product and enter the amount you consumed.
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-primary/20 p-2 rounded-2xl">
+                <DancingApple />
+              </div>
+              <SheetTitle className="text-2xl font-black text-primary-foreground">Adaugă Aliment</SheetTitle>
+            </div>
+            <SheetDescription className="font-bold opacity-70">
+              Caută un produs și introdu cantitatea consumată.
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -150,17 +157,18 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
                   name="productId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product</FormLabel>
+                      <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Produs</FormLabel>
                       {!selectedProduct ? (
-                        <Command shouldFilter={false}>
+                        <Command shouldFilter={false} className="rounded-3xl border-2 border-primary/20 overflow-hidden bg-white/50">
                           <CommandInput 
-                            placeholder="Search product by name or brand..." 
+                            placeholder="Caută după nume sau brand..."
                             value={searchValue}
                             onValueChange={setSearchValue}
+                            className="border-none focus:ring-0"
                           />
-                          <ScrollArea className="h-48 rounded-md border">
+                          <ScrollArea className="h-48">
                             <CommandList>
-                              {filteredProducts.length === 0 && <CommandEmpty>No product found.</CommandEmpty>}
+                              {filteredProducts.length === 0 && <CommandEmpty className="p-4 text-center font-bold opacity-50">Nu am găsit produsul.</CommandEmpty>}
                               <CommandGroup>
                                 {filteredProducts.map((product) => (
                                   <CommandItem
@@ -169,10 +177,11 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
                                     onSelect={() => {
                                       form.setValue("productId", product.id);
                                     }}
+                                    className="p-3 aria-selected:bg-primary/10 rounded-xl cursor-pointer"
                                   >
                                     <div>
-                                      <p>{product.name}</p>
-                                      <p className="text-xs text-muted-foreground">{product.brand}</p>
+                                      <p className="font-bold">{product.name}</p>
+                                      <p className="text-xs text-muted-foreground font-medium">{product.brand}</p>
                                     </div>
                                   </CommandItem>
                                 ))}
@@ -181,13 +190,24 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
                           </ScrollArea>
                         </Command>
                       ) : (
-                        <div className="flex items-center justify-between rounded-md border bg-muted p-3">
+                        <motion.div
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="flex items-center justify-between rounded-3xl border-2 border-primary/20 bg-primary/10 p-4"
+                        >
                             <div>
-                                <p className="font-medium">{selectedProduct.name}</p>
-                                <p className="text-sm text-muted-foreground">{selectedProduct.brand}</p>
+                                <p className="font-black text-primary-foreground">{selectedProduct.name}</p>
+                                <p className="text-xs text-muted-foreground font-bold uppercase">{selectedProduct.brand}</p>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => form.setValue('productId', '')}>Change</Button>
-                        </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => form.setValue('productId', '')}
+                              className="rounded-full hover:bg-primary/20 font-bold"
+                            >
+                              Schimbă
+                            </Button>
+                        </motion.div>
                       )}
                       <FormMessage />
                     </FormItem>
@@ -195,42 +215,61 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
                 />
                 
                 {selectedProduct && (
-                    <>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-6"
+                    >
                         <FormField
                         control={form.control}
                         name="grams"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Weight (grams)</FormLabel>
+                            <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Greutate (grame)</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="150" {...field} onFocus={(e) => e.target.select()} />
+                                <Input
+                                  type="number"
+                                  placeholder="150"
+                                  {...field}
+                                  onFocus={(e) => e.target.select()}
+                                  className="h-14 rounded-2xl border-2 border-primary/20 bg-white/50 text-xl font-black text-center focus-visible:ring-primary/30"
+                                />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
                         )}
                         />
                         {calculatedMacros && (
-                            <div className="space-y-2 rounded-md bg-muted p-4 text-sm">
-                                <h4 className="font-medium text-foreground">Calculated Nutrition</h4>
-                                <div className="flex justify-between"><span>Calories:</span> <span>{calculatedMacros.calories} kcal</span></div>
-                                <div className="flex justify-between"><span>Protein:</span> <span>{calculatedMacros.protein} g</span></div>
-                                <div className="flex justify-between"><span>Fat:</span> <span>{calculatedMacros.fat} g</span></div>
-                                <div className="flex justify-between"><span>Carbs:</span> <span>{calculatedMacros.carbs} g</span></div>
+                            <div className="grid grid-cols-2 gap-3">
+                              {[
+                                { label: 'CALORII', value: `${calculatedMacros.calories} kcal`, color: 'bg-primary/20' },
+                                { label: 'PROTEINE', value: `${calculatedMacros.protein} g`, color: 'bg-blue-100' },
+                                { label: 'CARBS', value: `${calculatedMacros.carbs} g`, color: 'bg-accent/20' },
+                                { label: 'GRĂSIMI', value: `${calculatedMacros.fat} g`, color: 'bg-secondary/20' },
+                              ].map((macro) => (
+                                <div key={macro.label} className={`${macro.color} p-4 rounded-3xl text-center border-2 border-white/50`}>
+                                  <div className="text-[10px] font-black opacity-50 mb-1">{macro.label}</div>
+                                  <div className="text-lg font-black">{macro.value}</div>
+                                </div>
+                              ))}
                             </div>
                         )}
-                    </>
+                    </motion.div>
                 )}
               </form>
             </Form>
           </div>
-          <SheetFooter className="bg-card p-6 mt-4 border-t">
-            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full" disabled={!selectedProduct}>
-              Add to Log
+          <SheetFooter className="p-6 mt-4 border-t border-primary/10 bg-white/30 backdrop-blur-md">
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
+              type="submit"
+              className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20 bouncy-hover"
+              disabled={!selectedProduct}
+            >
+              Adaugă în Jurnal
             </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
   );
 }
-
-    

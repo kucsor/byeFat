@@ -27,11 +27,12 @@ import {
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { motion } from 'framer-motion';
 
 
 const formSchema = z.object({
   query: z.string().min(3, {
-    message: 'Please provide more details for an accurate calculation.',
+    message: 'Te rugăm să oferi mai multe detalii pentru o calculare precisă.',
   }),
 });
 
@@ -73,14 +74,14 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
       const result = response.data;
       if (result.description.startsWith('ERROR:')) {
         setError(
-          'Calculation failed. Please include the nutritional values for the raw product (e.g., "calories", "protein", "fat").'
+          'Calcularea a eșuat. Te rugăm să incluzi valorile nutriționale pentru produsul crud (ex: "calorii", "proteine", "grăsimi").'
         );
         setResult(null);
       } else {
         setResult(result);
       }
     } catch (e: any) {
-      setError(e.message || 'An unexpected error occurred.');
+      setError(e.message || 'A apărut o eroare neașteptată.');
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +140,7 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
 
   const handleScan = (product: any) => {
     const currentQuery = form.getValues('query');
-    const nutritionInfo = `Product: ${product.name} (per 100g: ${product.caloriesPer100g} kcal, ${product.proteinPer100g}g protein, ${product.fatPer100g}g fat, ${product.carbsPer100g}g carbs). `;
+    const nutritionInfo = `Produs: ${product.name} (per 100g: ${product.caloriesPer100g} kcal, ${product.proteinPer100g}g proteine, ${product.fatPer100g}g grăsimi, ${product.carbsPer100g}g carbs). `;
     form.setValue('query', nutritionInfo + currentQuery);
     setIsScanning(false);
     triggerHapticFeedback();
@@ -147,112 +148,121 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
 
   return (
       <Sheet open={isOpen} onOpenChange={handleSheetOpen}>
-        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0">
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0 rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none border-none glass overflow-hidden min-h-[85vh]">
           <SheetHeader className="p-6 pb-2">
-            <SheetTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              AI Portion Calculator
-            </SheetTitle>
-            <SheetDescription>
-              Calculate nutrition for cooked portions.
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-secondary/20 p-2 rounded-2xl">
+                <Sparkles className="h-6 w-6 text-secondary-foreground" />
+              </div>
+              <SheetTitle className="text-2xl font-black text-secondary-foreground">Calculator Porții AI</SheetTitle>
+            </div>
+            <SheetDescription className="font-bold opacity-70">
+              Calculează nutriția pentru porții gătite folosind AI.
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <Form {...form}>
                 <form>
-                <div className="space-y-4">
-                    <CardDescription>
-                    For example: "I cooked a 400g pack of raw pasta. The nutrition per 100g raw is 350 kcal, 12g protein, 1.5g fat, and 70g carbs. After boiling, the total weight was 700g. I ate 250g of the cooked pasta."
-                    </CardDescription>
+                <div className="space-y-6">
+                    <div className="bg-secondary/10 p-4 rounded-2xl border-2 border-secondary/20">
+                      <p className="text-xs font-bold leading-relaxed opacity-80">
+                        Exemplu: "Am gătit 400g paste crude. Nutriția per 100g crud este 350 kcal, 12g proteine. După fierbere, greutatea totală a fost 700g. Am mâncat 250g din pastele gătite."
+                      </p>
+                    </div>
+
                     <FormField
                     control={form.control}
                     name="query"
                     render={({ field }) => (
                         <FormItem>
-                        <div className="flex justify-between items-center">
-                            <FormLabel>Your Description</FormLabel>
+                        <div className="flex justify-between items-center mb-2">
+                            <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Descrierea ta</FormLabel>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-1.5 rounded-full"
+                                className="h-9 gap-1.5 rounded-full font-bold border-2"
                                 onClick={() => setIsScanning(!isScanning)}
                             >
                                 <ScanLine className="h-4 w-4" />
-                                {isScanning ? 'Cancel Scan' : 'Scan Raw Product'}
+                                {isScanning ? 'Anulează' : 'Scanează Produs Crud'}
                             </Button>
                         </div>
                         {isScanning && (
-                            <div className="mb-4">
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              className="mb-4 rounded-[2rem] overflow-hidden border-4 border-secondary/20 h-64 relative bg-black"
+                            >
                                 <BarcodeScanner
                                     onScan={handleScan}
                                     onClose={() => setIsScanning(false)}
                                 />
-                            </div>
+                            </motion.div>
                         )}
                         <FormControl>
                             <Textarea
-                            placeholder="Describe the raw and cooked weights, nutrition per 100g raw, and your final portion size..."
-                            className="resize-none rounded-[1.5rem]"
-                            rows={6}
-                            {...field}
+                              placeholder="Descrie greutatea crudă și gătită, nutriția per 100g crud și porția ta finală..."
+                              className="resize-none rounded-2xl border-2 border-secondary/20 bg-white/50 p-4 font-medium focus-visible:ring-secondary/30"
+                              rows={5}
+                              {...field}
                             />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
                     />
+
                     {result && (
-                    <div className="mt-6 space-y-2 rounded-md bg-muted p-4">
-                        <h4 className="font-medium text-foreground text-sm">Calculated Nutrition for Your Portion</h4>
-                        <div className="text-sm space-y-1">
-                            <div className="flex justify-between">
-                            <span>Calories:</span>
-                            <span className="font-bold text-primary">{result.calories.toFixed(0)} kcal</span>
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="space-y-4"
+                    >
+                        <h4 className="text-xs font-black uppercase tracking-widest opacity-60 text-center">Nutriție Calculată pentru Porția Ta</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { label: 'CALORII', value: `${result.calories.toFixed(0)} kcal`, color: 'bg-primary/20' },
+                            { label: 'PROTEINE', value: `${result.protein.toFixed(1)} g`, color: 'bg-blue-100' },
+                            { label: 'CARBS', value: `${result.carbs.toFixed(1)} g`, color: 'bg-accent/20' },
+                            { label: 'GRĂSIMI', value: `${result.fat.toFixed(1)} g`, color: 'bg-secondary/20' },
+                          ].map((macro) => (
+                            <div key={macro.label} className={`${macro.color} p-4 rounded-3xl text-center border-2 border-white/50`}>
+                              <div className="text-[10px] font-black opacity-50 mb-1">{macro.label}</div>
+                              <div className="text-lg font-black">{macro.value}</div>
                             </div>
-                            <div className="flex justify-between">
-                            <span>Protein:</span>
-                            <span>{result.protein.toFixed(1)} g</span>
-                            </div>
-                            <div className="flex justify-between">
-                            <span>Fat:</span>
-                            <span>{result.fat.toFixed(1)} g</span>
-                            </div>
-                            <div className="flex justify-between">
-                            <span>Carbs:</span>
-                            <span>{result.carbs.toFixed(1)} g</span>
-                            </div>
-                            {result.salt !== undefined && (
-                                <div className="flex justify-between">
-                                    <span>Salt:</span>
-                                    <span>{result.salt.toFixed(1)} g</span>
-                                </div>
-                            )}
+                          ))}
                         </div>
-                        <Button onClick={handleAddToLog} className="mt-4 w-full">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add to Log
+                        <Button
+                          onClick={handleAddToLog}
+                          className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20 bouncy-hover"
+                        >
+                            <Plus className="mr-2 h-5 w-5" />
+                            Adaugă în Jurnal
                         </Button>
-                    </div>
+                    </motion.div>
                     )}
                     {error && (
-                        <div className="mt-4 text-sm font-medium text-destructive">
-                            <p>Error: {error}</p>
+                        <div className="mt-4 p-4 rounded-2xl bg-destructive/10 text-destructive text-sm font-bold text-center border-2 border-destructive/20">
+                            {error}
                         </div>
                     )}
                 </div>
                 </form>
             </Form>
           </div>
-          <SheetFooter className="bg-card p-6 mt-4 border-t">
-            <Button onClick={form.handleSubmit(onSubmit)} type="submit" disabled={isLoading} className="w-full">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Calculate
+          <SheetFooter className="p-6 mt-4 border-t border-secondary/10 bg-white/30 backdrop-blur-md">
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-secondary/20 bouncy-hover bg-secondary text-secondary-foreground hover:bg-secondary/90"
+            >
+                {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                Calculează
             </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
   );
 }
-
-    

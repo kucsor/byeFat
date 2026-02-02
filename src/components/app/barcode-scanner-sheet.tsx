@@ -19,6 +19,7 @@ import { Input } from '../ui/input';
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { BarcodeScanner } from './barcode-scanner';
+import { motion } from 'framer-motion';
 
 type BarcodeScannerSheetProps = {
   isOpen: boolean;
@@ -155,38 +156,71 @@ export function BarcodeScannerSheet({ isOpen, setIsOpen, selectedDate, userProfi
             carbs: Math.round(scannedProduct.carbsPer100g * ratio),
         }
         return (
-            <div className="p-4 space-y-4">
-                <div>
-                    <h3 className="font-bold">{scannedProduct.name}</h3>
-                    <p className="text-sm text-muted-foreground">{scannedProduct.brand}</p>
-                </div>
+            <div className="p-6 space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                    <h3 className="text-xl font-black text-primary-foreground">{scannedProduct.name}</h3>
+                    <p className="text-sm font-bold uppercase tracking-wider opacity-60">{scannedProduct.brand}</p>
+                </motion.div>
+
                 <div className="space-y-2">
-                    <label htmlFor="grams" className="text-sm font-medium">Weight (grams)</label>
-                    <Input id="grams" type="number" value={grams} onChange={(e) => setGrams(Number(e.target.value))} placeholder="100" onFocus={(e) => e.target.select()} />
+                    <label htmlFor="grams" className="text-xs font-black uppercase tracking-widest opacity-60">Greutate (grame)</label>
+                    <Input
+                      id="grams"
+                      type="number"
+                      value={grams}
+                      onChange={(e) => setGrams(Number(e.target.value))}
+                      placeholder="100"
+                      onFocus={(e) => e.target.select()}
+                      className="h-14 rounded-2xl border-2 border-primary/20 bg-white/50 text-xl font-black text-center focus-visible:ring-primary/30"
+                    />
                 </div>
-                <div className="space-y-2 rounded-md bg-muted p-4 text-sm">
-                    <h4 className="font-medium text-foreground">Calculated Nutrition</h4>
-                    <div className="flex justify-between"><span>Calories:</span> <span>{calculatedMacros.calories} kcal</span></div>
-                    <div className="flex justify-between"><span>Protein:</span> <span>{calculatedMacros.protein} g</span></div>
-                    <div className="flex justify-between"><span>Fat:</span> <span>{calculatedMacros.fat} g</span></div>
-                    <div className="flex justify-between"><span>Carbs:</span> <span>{calculatedMacros.carbs} g</span></div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'CALORII', value: `${calculatedMacros.calories} kcal`, color: 'bg-primary/20' },
+                    { label: 'PROTEINE', value: `${calculatedMacros.protein} g`, color: 'bg-blue-100' },
+                    { label: 'CARBS', value: `${calculatedMacros.carbs} g`, color: 'bg-accent/20' },
+                    { label: 'GRĂSIMI', value: `${calculatedMacros.fat} g`, color: 'bg-secondary/20' },
+                  ].map((macro) => (
+                    <div key={macro.label} className={`${macro.color} p-4 rounded-3xl text-center border-2 border-white/50`}>
+                      <div className="text-[10px] font-black opacity-50 mb-1">{macro.label}</div>
+                      <div className="text-lg font-black">{macro.value}</div>
+                    </div>
+                  ))}
                 </div>
-                 <Button onClick={handleAddToLog} className="w-full" disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add to Log
-                </Button>
-                 <Button variant="outline" className="w-full" onClick={() => { setDetectedBarcode(null); setScannedProduct(null) }} disabled={isSaving}>
-                    Scan Another Item
-                </Button>
+
+                 <div className="space-y-3">
+                    <Button
+                      onClick={handleAddToLog}
+                      className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20 bouncy-hover"
+                      disabled={isSaving}
+                    >
+                        {isSaving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                        Adaugă în Jurnal
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full h-12 rounded-2xl font-bold hover:bg-primary/10"
+                      onClick={() => { setDetectedBarcode(null); setScannedProduct(null) }}
+                      disabled={isSaving}
+                    >
+                        Scanează altul
+                    </Button>
+                 </div>
             </div>
         )
     }
     
     return (
-      <div className="p-4 flex-1">
-        <BarcodeScanner onScan={handleScan} onClose={() => setIsOpen(false)} />
-        <div className="mt-4 text-center text-muted-foreground">
-            <p>Point your camera at a barcode</p>
+      <div className="p-6 flex-1 flex flex-col">
+        <div className="flex-1 rounded-[2rem] overflow-hidden border-4 border-primary/20 bg-black relative">
+          <BarcodeScanner onScan={handleScan} onClose={() => setIsOpen(false)} />
+        </div>
+        <div className="mt-6 text-center">
+            <p className="font-bold opacity-60">Așează codul de bare în centrul ecranului</p>
         </div>
       </div>
     );
@@ -194,19 +228,22 @@ export function BarcodeScannerSheet({ isOpen, setIsOpen, selectedDate, userProfi
   
   return (
     <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
-      <SheetContent side={isMobile ? 'bottom' : 'right'} className="p-0 flex flex-col">
+      <SheetContent side={isMobile ? 'bottom' : 'right'} className="p-0 flex flex-col rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none border-none glass overflow-hidden min-h-[80vh]">
         <SheetHeader className="p-6 pb-2">
-          <SheetTitle>Scan Barcode</SheetTitle>
-          <SheetDescription>
-            {scannedProduct ? `Add ${scannedProduct.name} to your log.` : 'Find a product using its barcode.'}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-primary/20 p-2 rounded-2xl">
+              <ScanLine className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <SheetTitle className="text-2xl font-black text-primary-foreground">Scanare Cod Bare</SheetTitle>
+          </div>
+          <SheetDescription className="font-bold opacity-70">
+            {scannedProduct ? `Adaugă ${scannedProduct.name} în jurnalul tău.` : 'Găsește un produs folosind codul de bare.'}
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {renderContent()}
         </div>
       </SheetContent>
     </Sheet>
   );
 }
-
-    

@@ -27,14 +27,15 @@ import { collection, doc, serverTimestamp, increment } from 'firebase/firestore'
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { PlateCutlery } from './animated-icons';
+import { motion } from 'framer-motion';
 
 const manualLogSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  name: z.string().min(2, { message: 'Numele trebuie să aibă cel puțin 2 caractere.' }),
   calories: z.coerce.number().min(0),
   protein: z.coerce.number().min(0),
   fat: z.coerce.number().min(0),
   carbs: z.coerce.number().min(0),
-  grams: z.coerce.number().min(1, { message: 'Weight must be at least 1g.' }),
+  grams: z.coerce.number().min(1, { message: 'Greutatea trebuie să fie minim 1g.' }),
 });
 
 type AddManualLogSheetProps = {
@@ -108,27 +109,33 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
 
   return (
       <Sheet open={isOpen} onOpenChange={handleSheetOpen}>
-        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0">
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0 rounded-t-[2.5rem] md:rounded-l-[2.5rem] md:rounded-tr-none border-none glass overflow-hidden min-h-[85vh]">
           <SheetHeader className="p-6 pb-2">
-            <div className="flex items-center gap-2">
-                <PlateCutlery />
-                <SheetTitle>Logare Manuală</SheetTitle>
+            <div className="flex items-center gap-3 mb-2">
+                <div className="bg-primary/20 p-2 rounded-2xl">
+                  <PlateCutlery />
+                </div>
+                <SheetTitle className="text-2xl font-black text-primary-foreground">Adăugare Manuală</SheetTitle>
             </div>
-            <SheetDescription>
-              Introdu detaliile mesei tale. Această intrare este privată și nu va apărea în lista publică.
+            <SheetDescription className="font-bold opacity-70">
+              Introdu detaliile mesei tale. Această intrare este privată.
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <Form {...form}>
-              <form className="space-y-4">
+              <form className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nume Masă</FormLabel>
+                      <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Nume Masă</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Ciorbă de văcuță" {...field} className="rounded-full" />
+                        <Input
+                          placeholder="Ex: Ciorbă de văcuță"
+                          {...field}
+                          className="h-12 rounded-2xl border-2 border-primary/20 bg-white/50 font-bold focus-visible:ring-primary/30"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -140,9 +147,14 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
                   name="grams"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Greutate (g)</FormLabel>
+                      <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Greutate (g)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className="rounded-full" onFocus={(e) => e.target.select()} />
+                        <Input
+                          type="number"
+                          {...field}
+                          className="h-12 rounded-2xl border-2 border-primary/20 bg-white/50 font-bold focus-visible:ring-primary/30"
+                          onFocus={(e) => e.target.select()}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -155,9 +167,14 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
                     name="calories"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Calorii (kcal)</FormLabel>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Calorii (kcal)</FormLabel>
                         <FormControl>
-                            <Input type="number" {...field} className="rounded-full" onFocus={(e) => e.target.select()} />
+                            <Input
+                              type="number"
+                              {...field}
+                              className="h-12 rounded-2xl border-2 border-primary/20 bg-white/50 font-bold focus-visible:ring-primary/30"
+                              onFocus={(e) => e.target.select()}
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -168,9 +185,14 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
                     name="protein"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Proteine (g)</FormLabel>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Proteine (g)</FormLabel>
                         <FormControl>
-                            <Input type="number" {...field} className="rounded-full" onFocus={(e) => e.target.select()} />
+                            <Input
+                              type="number"
+                              {...field}
+                              className="h-12 rounded-2xl border-2 border-primary/20 bg-white/50 font-bold focus-visible:ring-primary/30"
+                              onFocus={(e) => e.target.select()}
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -181,9 +203,14 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
                     name="carbs"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Carbohidrați (g)</FormLabel>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Carbohidrați (g)</FormLabel>
                         <FormControl>
-                            <Input type="number" {...field} className="rounded-full" onFocus={(e) => e.target.select()} />
+                            <Input
+                              type="number"
+                              {...field}
+                              className="h-12 rounded-2xl border-2 border-primary/20 bg-white/50 font-bold focus-visible:ring-primary/30"
+                              onFocus={(e) => e.target.select()}
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -194,9 +221,14 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
                     name="fat"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Grăsimi (g)</FormLabel>
+                        <FormLabel className="text-xs font-black uppercase tracking-widest opacity-60">Grăsimi (g)</FormLabel>
                         <FormControl>
-                            <Input type="number" {...field} className="rounded-full" onFocus={(e) => e.target.select()} />
+                            <Input
+                              type="number"
+                              {...field}
+                              className="h-12 rounded-2xl border-2 border-primary/20 bg-white/50 font-bold focus-visible:ring-primary/30"
+                              onFocus={(e) => e.target.select()}
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -206,8 +238,12 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
               </form>
             </Form>
           </div>
-          <SheetFooter className="bg-card p-6 mt-4 border-t">
-            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full h-12 rounded-full text-lg font-bold bouncy-hover">
+          <SheetFooter className="p-6 mt-4 border-t border-primary/10 bg-white/30 backdrop-blur-md">
+            <Button
+              onClick={form.handleSubmit(onSubmit)}
+              type="submit"
+              className="w-full h-14 rounded-2xl text-lg font-black shadow-lg shadow-primary/20 bouncy-hover"
+            >
               Salvează Masă
             </Button>
           </SheetFooter>
