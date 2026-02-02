@@ -89,6 +89,8 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
         logDataToSet.goalProtein = userProfile.dailyProtein;
         logDataToSet.goalCarbs = userProfile.dailyCarbs;
         logDataToSet.goalFat = userProfile.dailyFat;
+        logDataToSet.maintenanceCalories = userProfile.maintenanceCalories;
+        logDataToSet.deficitTarget = userProfile.deficitTarget;
     }
 
     setDocumentNonBlocking(dailyLogRef, logDataToSet, { merge: true });

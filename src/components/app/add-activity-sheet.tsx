@@ -74,6 +74,8 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
         logDataToSet.goalProtein = userProfile.dailyProtein;
         logDataToSet.goalCarbs = userProfile.dailyCarbs;
         logDataToSet.goalFat = userProfile.dailyFat;
+        logDataToSet.maintenanceCalories = userProfile.maintenanceCalories;
+        logDataToSet.deficitTarget = userProfile.deficitTarget;
     }
     
     setDocumentNonBlocking(dailyLogRef, logDataToSet, { merge: true });

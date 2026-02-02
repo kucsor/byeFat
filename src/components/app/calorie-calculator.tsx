@@ -156,6 +156,8 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
       goalProtein: goalData.protein,
       goalCarbs: goalData.carbs,
       goalFat: goalData.fat,
+      maintenanceCalories: results.maintenanceCalories,
+      deficitTarget: values.goal === 'lose' ? results.deficitTarget : 0,
     };
     setDocumentNonBlocking(dailyLogRef, updatedGoals, { merge: true });
 
