@@ -79,7 +79,7 @@ Proiectul folosește Firebase App Hosting care injectează automat credențialel
 
 ## 🤖 Configurare Google Gemini AI
 
-Modelul AI folosit: `googleai/gemini-1.5-pro`
+Modelul AI folosit: `googleai/gemini-2.0-flash`
 
 **Variabilă de mediu necesară:**
 - `GEMINI_API_KEY` - Cheia API de la Google AI Studio (https://makersuite.google.com/app/apikey)
@@ -143,7 +143,7 @@ Modelul AI folosit: `googleai/gemini-1.5-pro`
 
 ### 1. Model AI Inexistent ❌ → ✅
 **Problema:** Modelul `gemini-3-pro-preview` nu există.
-**Soluție:** Schimbat în `gemini-1.5-pro`.
+**Soluție:** Schimbat în `gemini-2.0-flash`.
 
 ### 2. Script Build Incompatibil Windows ❌ → ✅
 **Problema:** `NODE_ENV=production` nu funcționează pe Windows.
