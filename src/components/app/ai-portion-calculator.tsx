@@ -12,8 +12,9 @@ import { CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, Plus } from 'lucide-react';
+import { Loader2, Sparkles, Plus, ScanLine } from 'lucide-react';
 import { useFirebase, setDocumentNonBlocking, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { BarcodeScanner } from './barcode-scanner';
 import { collection, doc, serverTimestamp, increment } from 'firebase/firestore';
 import type { DailyLog, UserProfile } from '@/lib/types';
 import {
@@ -44,6 +45,7 @@ type AiPortionCalculatorProps = {
 
 export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog }: AiPortionCalculatorProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PortionCalculatorOutput | null>(null);
   const { firestore, user } = useFirebase();
@@ -123,9 +125,18 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
       form.reset();
       setResult(null);
       setError(null);
+      setIsScanning(false);
     }
     setIsOpen(open);
   }
+
+  const handleScan = (product: any) => {
+    const currentQuery = form.getValues('query');
+    const nutritionInfo = `Product: ${product.name} (per 100g: ${product.caloriesPer100g} kcal, ${product.proteinPer100g}g protein, ${product.fatPer100g}g fat, ${product.carbsPer100g}g carbs). `;
+    form.setValue('query', nutritionInfo + currentQuery);
+    setIsScanning(false);
+    triggerHapticFeedback();
+  };
 
   return (
       <Sheet open={isOpen} onOpenChange={handleSheetOpen}>
@@ -151,11 +162,31 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
                     name="query"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Your Description</FormLabel>
+                        <div className="flex justify-between items-center">
+                            <FormLabel>Your Description</FormLabel>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 rounded-full"
+                                onClick={() => setIsScanning(!isScanning)}
+                            >
+                                <ScanLine className="h-4 w-4" />
+                                {isScanning ? 'Cancel Scan' : 'Scan Raw Product'}
+                            </Button>
+                        </div>
+                        {isScanning && (
+                            <div className="mb-4">
+                                <BarcodeScanner
+                                    onScan={handleScan}
+                                    onClose={() => setIsScanning(false)}
+                                />
+                            </div>
+                        )}
                         <FormControl>
                             <Textarea
                             placeholder="Describe the raw and cooked weights, nutrition per 100g raw, and your final portion size..."
-                            className="resize-none"
+                            className="resize-none rounded-[1.5rem]"
                             rows={6}
                             {...field}
                             />

@@ -19,6 +19,7 @@ const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then
 const BarcodeScannerSheet = dynamic(() => import('./barcode-scanner-sheet').then(mod => mod.BarcodeScannerSheet));
 const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
 const AddActivitySheet = dynamic(() => import('./add-activity-sheet').then(mod => mod.AddActivitySheet));
+const AddManualLogSheet = dynamic(() => import('./add-manual-log-sheet').then(mod => mod.AddManualLogSheet));
 
 
 export function Dashboard({ user, userProfile }: { user: User, userProfile: UserProfile }) {
@@ -30,6 +31,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
   const [isAddFoodSheetOpen, setIsAddFoodSheetOpen] = useState(false);
   const [isActivitySheetOpen, setIsActivitySheetOpen] = useState(false);
+  const [isManualLogOpen, setIsManualLogOpen] = useState(false);
 
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
@@ -139,6 +141,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
         onLogActivity={() => setIsActivitySheetOpen(true)}
         onScanBarcode={() => setIsBarcodeScannerOpen(true)}
         onAiCalculator={() => setIsAiCalculatorOpen(true)}
+        onManualLog={() => setIsManualLogOpen(true)}
       />
 
       <BarcodeScannerSheet 
@@ -165,6 +168,13 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
       <AddActivitySheet 
         isOpen={isActivitySheetOpen} 
         setIsOpen={setIsActivitySheetOpen} 
+        selectedDate={selectedDateString}
+        userProfile={userProfile}
+        selectedLog={selectedLog}
+       />
+       <AddManualLogSheet
+        isOpen={isManualLogOpen}
+        setIsOpen={setIsManualLogOpen}
         selectedDate={selectedDateString}
         userProfile={userProfile}
         selectedLog={selectedLog}

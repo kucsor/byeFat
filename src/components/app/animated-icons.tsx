@@ -149,3 +149,54 @@ export const HappyStar = () => (
     <path d="M10 14C10 14 11 15 12 15C13 15 14 14 14 14" stroke="#854d0e" strokeWidth="1.5" strokeLinecap="round" />
   </motion.svg>
 );
+
+export const PlateCutlery = () => (
+  <motion.svg
+    width="40"
+    height="40"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    animate={{
+      scale: [1, 1.05, 1],
+      rotate: [0, 2, -2, 0],
+    }}
+    transition={{
+      duration: 3,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  >
+    {/* Plate */}
+    <circle cx="12" cy="12" r="9" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="2" />
+    <circle cx="12" cy="12" r="6" stroke="#bae6fd" strokeWidth="1" strokeDasharray="2 2" />
+
+    {/* Knife */}
+    <motion.path
+      d="M17 8V16"
+      stroke="#94a3b8"
+      strokeWidth="2"
+      strokeLinecap="round"
+      animate={{ y: [0, -1, 0] }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+    />
+    <motion.path
+      d="M17 16V18"
+      stroke="#64748b"
+      strokeWidth="2"
+      strokeLinecap="round"
+      animate={{ y: [0, -1, 0] }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+    />
+
+    {/* Fork */}
+    <motion.path
+      d="M7 8V12M7 12V18M5 8V11M9 8V11"
+      stroke="#94a3b8"
+      strokeWidth="2"
+      strokeLinecap="round"
+      animate={{ y: [0, 1, 0] }}
+      transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+    />
+  </motion.svg>
+);
