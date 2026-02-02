@@ -83,6 +83,8 @@ The user can provide two types of queries:
 **Error Handling:** Only return an error description (starting with "ERROR:") if you are completely unable to identify the food item or if critical weight ratios are missing and cannot be reasonably estimated.
 
 Return ONLY the calculated values for the final portion, the portion weight, and the description in the specified JSON format. Do not respond with any conversational text.
+
+User Query: {{query}}
 `,
 });
 
