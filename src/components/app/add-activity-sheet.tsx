@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { useFirebase, addDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -23,7 +23,7 @@ import {
   SheetFooter,
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, increment } from 'firebase/firestore';
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { useMemo, useState } from 'react';
