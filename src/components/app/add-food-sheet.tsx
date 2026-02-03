@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { useFirebase, useCollection, addDocumentNonBlocking, useMemoFirebase, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import type { Product, DailyLog, UserProfile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -49,11 +50,11 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
   const isMobile = useIsMobile();
   
   const productsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isOpen) return null;
     return query(collection(firestore, `products`));
-  }, [firestore]);
+  }, [firestore, isOpen]);
 
-  const { data: products } = useCollection<Product>(productsQuery);
+  const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
   const form = useForm<z.infer<typeof logItemSchema>>({
     resolver: zodResolver(logItemSchema),
@@ -160,23 +161,31 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
                           />
                           <ScrollArea className="h-48 rounded-md border">
                             <CommandList>
-                              {filteredProducts.length === 0 && <CommandEmpty>No product found.</CommandEmpty>}
-                              <CommandGroup>
-                                {filteredProducts.map((product) => (
-                                  <CommandItem
-                                    key={product.id}
-                                    value={product.id}
-                                    onSelect={() => {
-                                      form.setValue("productId", product.id);
-                                    }}
-                                  >
-                                    <div>
-                                      <p>{product.name}</p>
-                                      <p className="text-xs text-muted-foreground">{product.brand}</p>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
+                              {isLoading ? (
+                                <div className="flex items-center justify-center p-4">
+                                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                </div>
+                              ) : (
+                                <>
+                                  {filteredProducts.length === 0 && <CommandEmpty>No product found.</CommandEmpty>}
+                                  <CommandGroup>
+                                    {filteredProducts.map((product) => (
+                                      <CommandItem
+                                        key={product.id}
+                                        value={product.id}
+                                        onSelect={() => {
+                                          form.setValue("productId", product.id);
+                                        }}
+                                      >
+                                        <div>
+                                          <p>{product.name}</p>
+                                          <p className="text-xs text-muted-foreground">{product.brand}</p>
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </>
+                              )}
                             </CommandList>
                           </ScrollArea>
                         </Command>
