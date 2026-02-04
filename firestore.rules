@@ -28,7 +28,32 @@ service cloud.firestore {
       // The owner can update any field.
       // Other signed-in users can only update the 'likes' and 'likedBy' fields.
       allow update: if isOwner(resource.data.creatorId) || 
-                      (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy']));
+                      (isSignedIn() && isValidLikeUpdate());
+
+      function isValidLikeUpdate() {
+        let diff = request.resource.data.diff(resource.data);
+        let affected = diff.affectedKeys();
+
+        let prevLikes = resource.data.get('likes', 0);
+        let newLikes = request.resource.data.likes;
+        let prevLikedBy = resource.data.get('likedBy', []).toSet();
+        let newLikedBy = request.resource.data.likedBy.toSet();
+
+        let addedUsers = newLikedBy.difference(prevLikedBy);
+        let removedUsers = prevLikedBy.difference(newLikedBy);
+
+        let isLike = (newLikes == prevLikes + 1) &&
+                     (addedUsers.size() == 1) &&
+                     (addedUsers.hasAll([request.auth.uid])) &&
+                     (removedUsers.size() == 0);
+
+        let isUnlike = (newLikes == prevLikes - 1) &&
+                       (removedUsers.size() == 1) &&
+                       (removedUsers.hasAll([request.auth.uid])) &&
+                       (addedUsers.size() == 0);
+
+        return affected.hasOnly(['likes', 'likedBy']) && (isLike || isUnlike);
+      }
     }
 
     // Used to enforce username uniqueness
