@@ -194,19 +194,19 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
               <XAxis 
                 dataKey="date" 
                 tickFormatter={(date) => format(new Date(date), 'MMM d')}
-                tick={{ fontSize: 12, fill: '#64748B' }}
+                tick={{ fontSize: 12, fill: '#475569', fontWeight: 600 }}
                 axisLine={false}
                 tickLine={false}
                 dy={10}
               />
               <YAxis 
-                tick={{ fontSize: 12, fill: '#64748B' }}
+                tick={{ fontSize: 12, fill: '#475569', fontWeight: 600 }}
                 tickFormatter={(value) => `${value}`}
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '4 4' }} />
-              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px', color: '#64748B' }} iconType="circle" />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#64748B', strokeWidth: 1, strokeDasharray: '4 4' }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px', color: '#475569', fontWeight: 600 }} iconType="circle" />
               
               {/* Area under the line */}
               <Area
@@ -259,23 +259,23 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
         {/* Statistics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Avg Deficit</div>
-            <div className="text-2xl font-bold text-slate-900">{stats.averageDeficit} <span className="text-xs font-normal text-slate-400">kcal</span></div>
+            <div className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Avg Deficit</div>
+            <div className="text-2xl font-bold text-slate-900">{stats.averageDeficit} <span className="text-xs font-normal text-slate-500">kcal</span></div>
           </div>
 
           <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Days Logged</div>
+            <div className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Days Logged</div>
              <div className="text-2xl font-bold text-slate-900">{stats.daysCount}</div>
           </div>
 
           <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Best Day</div>
-             <div className="text-2xl font-bold text-slate-900">{stats.maxDeficit} <span className="text-xs font-normal text-slate-400">kcal</span></div>
+            <div className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Best Day</div>
+             <div className="text-2xl font-bold text-slate-900">{stats.maxDeficit} <span className="text-xs font-normal text-slate-500">kcal</span></div>
           </div>
 
           <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Total Deficit</div>
-             <div className="text-2xl font-bold text-slate-900">{stats.totalDeficit.toLocaleString()} <span className="text-xs font-normal text-slate-400">kcal</span></div>
+            <div className="text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Total Deficit</div>
+             <div className="text-2xl font-bold text-slate-900">{stats.totalDeficit.toLocaleString()} <span className="text-xs font-normal text-slate-500">kcal</span></div>
           </div>
         </div>
 
@@ -287,13 +287,13 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
             </div>
             <div className="flex-1">
               <h4 className="text-base font-semibold text-slate-900 mb-1">Monthly Projection</h4>
-              <p className="text-slate-500 text-sm mb-4">
-                Based on your {range !== 'all' ? `${range}-day` : 'total'} average deficit of <span className="font-medium text-slate-900">{stats.averageDeficit} kcal</span>.
+              <p className="text-slate-600 text-sm mb-4">
+                Based on your {range !== 'all' ? `${range}-day` : 'total'} average deficit of <span className="font-bold text-slate-900">{stats.averageDeficit} kcal</span>.
               </p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-slate-900">{stats.projectedWeightLossKg}</span>
-                <span className="text-xl font-medium text-slate-500">kg</span>
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-wide ml-1">weight loss / month</span>
+                <span className="text-xl font-medium text-slate-600">kg</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">weight loss / month</span>
               </div>
             </div>
           </div>

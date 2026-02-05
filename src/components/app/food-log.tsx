@@ -45,11 +45,11 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
     <div className="group flex items-center justify-between py-3 px-4 bg-card border-b last:border-0 hover:bg-slate-50 transition-colors">
         <div className="flex flex-col gap-0.5">
             <span className="font-medium text-slate-900">{item.productName}</span>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-medium text-slate-500">{item.grams}g</span>
+            <div className="flex items-center gap-2 text-xs text-slate-600">
+                <span className="font-medium">{item.grams}g</span>
                 {timeLabel && (
                     <>
-                        <span>•</span>
+                        <span className="text-slate-400">•</span>
                         <span>{timeLabel}</span>
                     </>
                 )}
@@ -59,18 +59,18 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
         <div className="flex items-center gap-4">
              <div className="text-right">
                 <div className="text-sm font-bold text-slate-900">{item.calories}</div>
-                <div className="text-[10px] text-muted-foreground">kcal</div>
+                <div className="text-[10px] text-slate-500">kcal</div>
             </div>
 
             <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {!isAiItem && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600" onClick={() => onEdit(item)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-800" onClick={() => onEdit(item)}>
                     <Pencil className="h-4 w-4" />
                 </Button>
                 )}
                 <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/5">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-destructive hover:bg-destructive/5">
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </AlertDialogTrigger>
@@ -197,14 +197,14 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center px-1">
-        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
+        <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wide">
             Today's Log
         </h2>
       </div>
 
       {isLoading && (
          <div className="flex justify-center p-12">
-             <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
+             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
          </div>
       )}
 
@@ -222,7 +222,7 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
           {/* Activities Section */}
           {sortedActivities.length > 0 && (
             <div className="border-t border-slate-100">
-               <div className="bg-slate-50/50 px-4 py-2 text-xs font-bold uppercase text-slate-400 tracking-wider">
+               <div className="bg-slate-50/50 px-4 py-2 text-xs font-bold uppercase text-slate-600 tracking-wider">
                     Activities
                </div>
               <div className="divide-y divide-slate-100">
@@ -241,7 +241,7 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
                  <Soup className="h-6 w-6" />
             </div>
             <h3 className="text-sm font-semibold text-slate-900">No logs yet</h3>
-            <p className="text-sm text-slate-500 mb-6">Start tracking your meals for today.</p>
+            <p className="text-sm text-slate-600 mb-6">Start tracking your meals for today.</p>
             <Button onClick={onAddFood} variant="outline" size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Log Food
