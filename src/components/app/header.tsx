@@ -84,29 +84,28 @@ function UserNav() {
 export function AppHeader({ userProfile }: { userProfile?: UserProfile | null }) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md">
-      <div className="container mx-auto flex h-20 max-w-5xl items-center px-4 justify-between">
-        <Link href="/" className='flex items-center gap-3 group'>
-            <div className="relative w-10 h-10 transition-transform duration-500 group-hover:rotate-12">
-               <Image src="/logo-green.svg" alt="byeFat Logo" fill className="object-contain" />
+      <div className="container mx-auto flex h-16 max-w-5xl items-center px-4 justify-between">
+        <Link href="/" className='flex items-center gap-2 group'>
+            {/* Logo Icon */}
+            <div className="relative w-8 h-8 transition-transform duration-500 group-hover:rotate-12">
+               <Image src="/app-icon.svg" alt="byeFat Logo" fill className="object-contain" priority />
             </div>
-            {userProfile ? (
-                <div className="hidden sm:block">
-                    <h1 className="text-lg font-black text-slate-900 leading-none">
-                        {userProfile.name || 'Hello!'}
-                    </h1>
-                    <span className="text-xs font-bold text-green-600 uppercase tracking-wide">Let's crush today's goals.</span>
-                </div>
-            ) : (
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight">byeFat</h1>
-            )}
-        </Link>
 
-        {/* Mobile: Name shown only if space permits or hidden */}
-        {userProfile && (
-             <div className="sm:hidden text-right mr-3">
-                <span className="text-xs font-bold text-green-600 uppercase tracking-wide block">Goals</span>
-             </div>
-        )}
+            {/* Brand Name - Always Visible */}
+            <div className="flex flex-col justify-center">
+                <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">byeFat</h1>
+                {/* Desktop Slogan */}
+                {userProfile ? (
+                    <span className="hidden sm:block text-[0.65rem] font-bold text-green-600 uppercase tracking-wider leading-none mt-0.5">
+                        Let's crush it, {userProfile.name?.split(' ')[0] || 'Friend'}
+                    </span>
+                ) : (
+                     <span className="hidden sm:block text-[0.65rem] font-bold text-slate-400 uppercase tracking-wider leading-none mt-0.5">
+                        Deficit Tracker
+                    </span>
+                )}
+            </div>
+        </Link>
 
         <div className="flex items-center gap-2">
           <UserNav />
