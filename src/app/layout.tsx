@@ -4,14 +4,7 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Rajdhani, Inter } from 'next/font/google';
-
-const rajdhani = Rajdhani({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-rajdhani',
-  display: 'swap',
-});
+import { Inter } from 'next/font/google';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'byeFat - RPG Calorie Tracker',
-  description: 'Level up your health. Track calories, gain XP, and complete your daily quests.',
+  title: 'byeFat',
+  description: 'Your personal calorie and deficit tracker.',
   manifest: '/manifest.json',
   themeColor: '#ffffff',
   icons: {
@@ -36,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${rajdhani.variable} ${inter.variable}`}>
-      <body className="font-body antialiased bg-background text-foreground">
+    <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
+      <body className="font-sans antialiased bg-background text-foreground">
         <ThemeProvider
             attribute="class"
             defaultTheme="light"

@@ -1,7 +1,7 @@
 import type {Config} from 'tailwindcss';
 
 export default {
-  darkMode: 'class', // Keep class strategy but we won't toggle it
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -17,10 +17,12 @@ export default {
     },
     extend: {
       fontFamily: {
+        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Remapped legacy fonts to sans to prevent crashes if I missed any specific class usages
         body: ['var(--font-inter)', 'sans-serif'],
-        serif: ['var(--font-rajdhani)', 'serif'],
-        headline: ['var(--font-rajdhani)', 'sans-serif'],
-        code: ['monospace'],
+        serif: ['var(--font-inter)', 'sans-serif'],
+        headline: ['var(--font-inter)', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',

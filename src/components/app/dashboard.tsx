@@ -5,7 +5,7 @@ import { User } from 'firebase/auth';
 import { collection, query, doc, updateDoc } from 'firebase/firestore';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { DailyLog, DailyLogItem, DailyLogActivity, UserProfile } from '@/lib/types';
-import { HeroStatusCard } from './hero-status-card';
+import { ActivitySummary } from './activity-summary';
 import { FoodLog } from './food-log';
 import { Button } from '../ui/button';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
@@ -80,28 +80,28 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
 
   return (
     <>
-      <div className="container mx-auto max-w-5xl p-4 md:p-8">
+      <div className="container mx-auto max-w-4xl p-4 md:p-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground uppercase tracking-tight">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Dashboard
           </h1>
-          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg border border-border">
+          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border shadow-sm">
             <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-md hover:bg-background"
+                className="rounded-md h-8 w-8 hover:bg-slate-50"
                 onClick={() => setSelectedDate(subDays(selectedDate, 1))}
             >
                 <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2 px-4 font-mono font-bold text-sm min-w-[120px] justify-center">
+            <div className="flex items-center gap-2 px-4 font-medium text-sm min-w-[120px] justify-center text-slate-600">
                 <CalendarDays className="h-4 w-4 opacity-50" />
                 {dateLabel}
             </div>
             <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-md hover:bg-background"
+                className="rounded-md h-8 w-8 hover:bg-slate-50"
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
                 disabled={isToday(selectedDate)}
             >
@@ -109,23 +109,25 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
             </Button>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-12 lg:col-span-7">
-                <HeroStatusCard
+
+        <div className="space-y-8">
+            <section>
+                <ActivitySummary
                   foodItems={foodItems}
                   activities={activities}
                   userProfile={userProfile}
                   selectedLog={selectedLog}
                 />
-            </div>
-            <div className="md:col-span-12 lg:col-span-5">
+            </section>
+
+            <section>
                 <FoodLog
                   items={foodItems}
                   activities={activities}
                   selectedDate={selectedDateString}
                   onAddFood={() => setIsAddFoodSheetOpen(true)}
                 />
-            </div>
+            </section>
         </div>
       </div>
 

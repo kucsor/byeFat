@@ -1,7 +1,7 @@
 {
-  "name": "byeFat - RPG Calorie Tracker",
+  "name": "byeFat",
   "short_name": "byeFat",
-  "description": "Level up your health. Track calories, gain XP, and complete your daily quests.",
+  "description": "Smart calorie tracking for a healthier you.",
   "icons": [
     {
       "src": "/app-icon.svg",
@@ -19,7 +19,7 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#3B82F6",
+  "theme_color": "#2563EB",
   "background_color": "#F8FAFC",
   "start_url": "/",
   "display": "standalone",

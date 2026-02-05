@@ -159,11 +159,11 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
 
   if (!stats || deficitData.length === 0) {
     return (
-      <Card className="rpg-card">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Card className="fitness-card shadow-sm border-0 bg-white">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
           <div>
-            <CardTitle className="font-headline">Evoluție Deficit Caloric</CardTitle>
-            <CardDescription>Încă nu există suficiente date pentru a calcula deficitul.</CardDescription>
+            <CardTitle className="text-base font-semibold text-slate-900">Caloric Deficit Trend</CardTitle>
+            <CardDescription>Not enough data yet.</CardDescription>
           </div>
           <RangeSelector />
         </CardHeader>
@@ -172,15 +172,15 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
   }
 
   return (
-    <Card className="rpg-card">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <Card className="fitness-card shadow-sm border-0 bg-white">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <CardTitle className="text-2xl font-headline flex items-center gap-2">
-            <TrendingDown className="h-6 w-6 text-primary" />
-            Evoluție Deficit Caloric
+          <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
+            <TrendingDown className="h-5 w-5 text-blue-600" />
+            Caloric Deficit Trend
           </CardTitle>
-          <CardDescription className="text-xs uppercase font-bold tracking-widest">
-            Urmărește deficitul caloric zilnic și proiecția de slăbire
+          <CardDescription className="text-slate-500">
+            Daily deficit and weight loss projection
           </CardDescription>
         </div>
         <RangeSelector />
@@ -190,41 +190,49 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={deficitData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(date) => format(new Date(date), 'd MMM')}
-                tick={{ fontSize: 10, fontWeight: 'bold' }}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickFormatter={(date) => format(new Date(date), 'MMM d')}
+                tick={{ fontSize: 12, fill: '#64748B' }}
+                axisLine={false}
+                tickLine={false}
+                dy={10}
               />
               <YAxis 
-                tick={{ fontSize: 10, fontWeight: 'bold' }}
+                tick={{ fontSize: 12, fill: '#64748B' }}
                 tickFormatter={(value) => `${value}`}
-                axisLine={{ stroke: 'hsl(var(--border))' }}
+                axisLine={false}
+                tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', paddingTop: '10px' }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '4 4' }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px', color: '#64748B' }} iconType="circle" />
               
               {/* Area under the line */}
               <Area
                 type="monotone"
                 dataKey="deficit"
-                name="Deficit Zilnic"
+                name="Daily Deficit"
                 stroke="none"
-                fill="hsl(var(--primary))"
-                fillOpacity={0.05}
+                fill="url(#deficitGradient)"
+                fillOpacity={0.8}
               />
+              <defs>
+                <linearGradient id="deficitGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563EB" stopOpacity={0.1}/>
+                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
               
               {/* Main deficit line */}
               <Line
                 type="monotone"
                 dataKey="deficit"
-                name="Deficit Zilnic"
-                stroke="hsl(var(--primary))"
-                strokeWidth={3}
-                strokeDasharray="5 5"
-                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 3 }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
+                name="Daily Deficit"
+                stroke="#2563EB"
+                strokeWidth={2}
+                dot={{ fill: '#2563EB', strokeWidth: 0, r: 4 }}
+                activeDot={{ r: 6, strokeWidth: 0, fill: '#1E40AF' }}
               />
               
               {/* Average line */}
@@ -250,66 +258,42 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
 
         {/* Statistics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Target className="h-4 w-4 text-primary opacity-60" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Deficit Mediu</span>
-            </div>
-            <div className="text-2xl font-mono font-bold text-primary">{stats.averageDeficit}</div>
-            <div className="text-[10px] font-bold uppercase text-muted-foreground/60">kcal/zi</div>
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Avg Deficit</div>
+            <div className="text-2xl font-bold text-slate-900">{stats.averageDeficit} <span className="text-xs font-normal text-slate-400">kcal</span></div>
           </div>
 
-          <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Calendar className="h-4 w-4 text-secondary opacity-60" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Zile Logate</span>
-            </div>
-            <div className="text-2xl font-mono font-bold text-secondary">{stats.daysCount}</div>
-            <div className="text-[10px] font-bold uppercase text-muted-foreground/60">{range === 'all' ? 'în total' : `în ultimele ${range} zile`}</div>
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Days Logged</div>
+             <div className="text-2xl font-bold text-slate-900">{stats.daysCount}</div>
           </div>
 
-          <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <TrendingDown className="h-4 w-4 text-accent opacity-60" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cel Mai Bun</span>
-            </div>
-            <div className="text-2xl font-mono font-bold text-accent">{stats.maxDeficit}</div>
-            <div className="text-[10px] font-bold uppercase text-muted-foreground/60">kcal deficit</div>
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Best Day</div>
+             <div className="text-2xl font-bold text-slate-900">{stats.maxDeficit} <span className="text-xs font-normal text-slate-400">kcal</span></div>
           </div>
 
-          <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Scale className="h-4 w-4 text-primary opacity-60" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Deficit</span>
-            </div>
-            <div className="text-2xl font-mono font-bold text-primary">{stats.totalDeficit.toLocaleString()}</div>
-            <div className="text-[10px] font-bold uppercase text-muted-foreground/60">kcal</div>
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Total Deficit</div>
+             <div className="text-2xl font-bold text-slate-900">{stats.totalDeficit.toLocaleString()} <span className="text-xs font-normal text-slate-400">kcal</span></div>
           </div>
         </div>
 
         {/* Projection Card */}
-        <div className="bg-primary/5 rounded-lg p-6 border-l-4 border-l-primary relative overflow-hidden shadow-sm">
-          <div className="absolute top-0 right-0 p-4 opacity-5">
-            <TrendingDown className="w-24 h-24 text-primary" />
-          </div>
-          <div className="flex items-start gap-4 relative z-10">
-            <div className="bg-primary rounded p-3 shadow-sm">
-              <Scale className="h-6 w-6 text-primary-foreground" />
+        <div className="bg-blue-50/50 rounded-lg p-6 border border-blue-100">
+          <div className="flex items-start gap-4">
+            <div className="bg-blue-100 rounded-full p-2.5">
+              <Scale className="h-5 w-5 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h4 className="text-xl font-headline font-bold mb-1">Proiecție Lunară</h4>
-              <p className="text-muted-foreground text-sm mb-4">
-                Menținând media {range !== 'all' ? `din ultimele ${range} zile` : 'totală'} de <span className="font-bold text-foreground">{stats.averageDeficit} kcal/zi</span>:
+              <h4 className="text-base font-semibold text-slate-900 mb-1">Monthly Projection</h4>
+              <p className="text-slate-500 text-sm mb-4">
+                Based on your {range !== 'all' ? `${range}-day` : 'total'} average deficit of <span className="font-medium text-slate-900">{stats.averageDeficit} kcal</span>.
               </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-mono font-bold text-primary">{stats.projectedWeightLossKg}</span>
-                <span className="text-2xl font-headline font-bold text-muted-foreground">kg</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">pe lună</span>
-              </div>
-              <div className="mt-4 pt-4 border-t border-primary/10">
-                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Echivalentul a <span className="text-foreground">{stats.projectedWeightLossGrams}g</span> de grăsime pură
-                 </p>
+                <span className="text-3xl font-bold text-slate-900">{stats.projectedWeightLossKg}</span>
+                <span className="text-xl font-medium text-slate-500">kg</span>
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wide ml-1">weight loss / month</span>
               </div>
             </div>
           </div>
