@@ -27,7 +27,6 @@ import { collection, doc, serverTimestamp, increment } from 'firebase/firestore'
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { PlateCutlery } from './animated-icons';
-import { updateUserXP } from '@/firebase/xp-actions';
 
 const manualLogSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -95,10 +94,6 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
 
     addDocumentNonBlocking(logItemsCollection, newLogItem);
     updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
-
-    // XP Update:
-    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
-    updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
 
     triggerHapticFeedback();
     setIsOpen(false);

@@ -15,9 +15,6 @@ export type UserProfile = {
   dailyProtein?: number;
   dailyCarbs?: number;
   dailyFat?: number;
-  // Gamification
-  xp?: number;
-  level?: number;
 };
 
 export type Product = {

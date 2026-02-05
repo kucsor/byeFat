@@ -19,7 +19,6 @@ import { Input } from '../ui/input';
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { BarcodeScanner } from './barcode-scanner';
-import { updateUserXP } from '@/firebase/xp-actions';
 
 type BarcodeScannerSheetProps = {
   isOpen: boolean;
@@ -126,10 +125,6 @@ export function BarcodeScannerSheet({ isOpen, setIsOpen, selectedDate, userProfi
         addDocumentNonBlocking(logItemsCollection, newLogItem);
         updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
         
-        // XP Update:
-        const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
-        updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
-
         triggerHapticFeedback();
         setIsOpen(false);
     } catch (e) {

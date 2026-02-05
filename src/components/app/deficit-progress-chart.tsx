@@ -194,19 +194,19 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
               <XAxis 
                 dataKey="date" 
                 tickFormatter={(date) => format(new Date(date), 'MMM d')}
-                tick={{ fontSize: 12, fill: '#475569', fontWeight: 600 }}
-                axisLine={false}
-                tickLine={false}
+                tick={{ fontSize: 12, fill: '#000000', fontWeight: 700 }}
+                axisLine={{ stroke: '#000000', strokeWidth: 1 }}
+                tickLine={{ stroke: '#000000' }}
                 dy={10}
               />
               <YAxis 
-                tick={{ fontSize: 12, fill: '#475569', fontWeight: 600 }}
+                tick={{ fontSize: 12, fill: '#000000', fontWeight: 700 }}
                 tickFormatter={(value) => `${value}`}
-                axisLine={false}
-                tickLine={false}
+                axisLine={{ stroke: '#000000', strokeWidth: 1 }}
+                tickLine={{ stroke: '#000000' }}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#64748B', strokeWidth: 1, strokeDasharray: '4 4' }} />
-              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px', color: '#475569', fontWeight: 600 }} iconType="circle" />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#000000', strokeWidth: 1, strokeDasharray: '4 4' }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px', color: '#000000', fontWeight: 700 }} iconType="square" />
               
               {/* Area under the line */}
               <Area

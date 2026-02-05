@@ -26,7 +26,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { collection, doc, serverTimestamp, increment } from 'firebase/firestore';
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
-import { updateUserXP } from '@/firebase/xp-actions';
 import { useMemo, useState } from 'react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -94,12 +93,6 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
       ...values,
       createdAt: serverTimestamp(),
     });
-
-    // XP Update:
-    // If first log of day, add Maintenance XP too.
-    // Activity adds to deficit -> +XP
-    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
-    updateUserXP(firestore, user.uid, maintenanceXP + values.calories);
     
     triggerHapticFeedback();
     setIsOpen(false);

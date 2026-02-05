@@ -29,7 +29,6 @@ import { collection, doc, query, serverTimestamp, increment } from 'firebase/fir
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { triggerHapticFeedback } from '@/lib/haptics';
-import { updateUserXP } from '@/firebase/xp-actions';
 
 const logItemSchema = z.object({
   productId: z.string().min(1, { message: "Please select a product."}),
@@ -113,12 +112,6 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
     addDocumentNonBlocking(logItemsCollection, newLogItem);
     updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
     
-    // XP Update:
-    // If this is the first log of the day (no selectedLog), we implicitly "gain" the Maintenance XP.
-    // Then we subtract the food calories.
-    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
-    updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
-
     triggerHapticFeedback();
     
     setIsOpen(false);

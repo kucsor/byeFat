@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { triggerHapticFeedback } from '@/lib/haptics';
-import { updateUserXP } from '@/firebase/xp-actions';
 
 
 const formSchema = z.object({
@@ -122,10 +121,6 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
     addDocumentNonBlocking(logItemsCollection, newLogItem);
     updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
     
-    // XP Update:
-    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
-    updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
-
     triggerHapticFeedback();
     
     setResult(null);
