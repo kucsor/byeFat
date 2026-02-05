@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Label,
+  LabelList
 } from 'recharts';
 import { format } from 'date-fns';
 import { AppHeader } from '@/components/app/header';
@@ -59,8 +60,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div className="flex flex-col space-y-1">
             <span className="text-[0.7rem] uppercase text-slate-500 font-bold">{label ? format(new Date(label), 'MMM d') : ''}</span>
             {payload.map((pld: any) => (
-                <span key={pld.dataKey} className="font-bold text-slate-900">
-                    {pld.value} kg
+                <span key={pld.dataKey} className="font-bold text-slate-900" style={{ color: pld.color }}>
+                    {pld.name === 'weight' ? 'Weight' : '7-Day Trend'}: {pld.value} kg
                 </span>
             ))}
         </div>
@@ -70,11 +71,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const getBmiCategory = (bmi: number): string => {
-    if (bmi < 18.5) return "Underweight";
-    if (bmi < 25) return "Normal";
-    if (bmi < 30) return "Overweight";
-    return "Obese";
+// Custom Label to show value at the end of the line
+const EndLabel = (props: any) => {
+    const { x, y, stroke, value, index, chartWidth } = props;
+    // We can't easily access data length here without passing it, but LabelList passes `index` and the full `data` array usually?
+    // Actually, LabelList passes `index` and `value`.
+    // To ensure it's the last one, we can check if it's near the right edge or pass the data length.
+    // However, a simpler way is to just render it if it's the last item in the data array passed to Line.
+
+    // Workaround: render standard LabelList but filter in the parent or use a custom content function that checks index.
+    return (
+        <text x={x} y={y} dy={-10} dx={10} fill={stroke} fontSize={12} fontWeight="900" textAnchor="start">
+            {value}
+        </text>
+    );
 };
 
 
@@ -197,17 +207,18 @@ export default function ProgressPage() {
     return dataWithTrend;
   }, [dailyLogs, weightHistory, isLogsLoading, isWeightLoading]);
 
-  const lastTrendValue = useMemo(() => {
-    if (!chartData || chartData.length === 0) return null;
-    const lastPoint = chartData[chartData.length - 1];
-    return lastPoint.weightTrend;
+  // Clean data for chart: remove points with no weight and no trend if needed, but we usually want continuous lines.
+  // Actually for Recharts, nulls break the line unless connectNulls is true.
+  const chartDisplayData = useMemo(() => {
+     return chartData.filter(d => d.weight !== null || d.weightTrend !== null);
   }, [chartData]);
-  
+
+
   if (isWeightLoading || isLogsLoading) {
     return <Loading />;
   }
 
-  const noData = !chartData || chartData.length === 0 || (chartData.every(d => !d.weight) && chartData.every(d => !d.goalCalories));
+  const noData = !chartData || chartData.length === 0;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-slate-50">
@@ -259,59 +270,90 @@ export default function ProgressPage() {
         ) : (
             <div className="space-y-6">
                 {/* Weight Chart - Compact */}
-                <Card className="shadow-sm border-slate-200 bg-white">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-base font-bold text-slate-900">Weight Trend</CardTitle>
-                        <CardDescription className="text-slate-500 text-xs">7-day moving average</CardDescription>
+                <Card className="shadow-sm border-slate-200 bg-white overflow-hidden">
+                    <CardHeader className="pb-2 border-b border-slate-50">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-base font-bold text-slate-900">Weight Trend</CardTitle>
+                                <CardDescription className="text-slate-500 text-xs">Actual vs 7-day average</CardDescription>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs font-bold">
+                                <div className="flex items-center gap-1 text-slate-400">
+                                    <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                                    Actual
+                                </div>
+                                <div className="flex items-center gap-1 text-blue-600">
+                                    <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                                    Trend
+                                </div>
+                            </div>
+                        </div>
                     </CardHeader>
-                    <CardContent className="h-64">
+                    <CardContent className="h-72 w-full pt-4 pr-6">
                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData.filter(d => d.weight || d.weightTrend)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                            <LineChart data={chartDisplayData} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                                 <XAxis
                                     dataKey="date"
                                     tickFormatter={(date) => format(new Date(date), 'MMM d')}
-                                    tick={{ fontSize: 10, fill: '#64748B', fontWeight: 600 }}
+                                    tick={{ fontSize: 10, fill: '#94A3B8', fontWeight: 600 }}
                                     axisLine={false}
                                     tickLine={false}
                                     dy={10}
+                                    minTickGap={30}
                                 />
                                 <YAxis
-                                    domain={['dataMin - 1', 'dataMax + 1']}
+                                    domain={['auto', 'auto']}
                                     unit="kg"
-                                    tick={{ fontSize: 10, fill: '#64748B', fontWeight: 600 }}
+                                    tick={{ fontSize: 10, fill: '#94A3B8', fontWeight: 600 }}
                                     axisLine={false}
                                     tickLine={false}
+                                    width={40}
                                 />
-                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#94A3B8', strokeWidth: 1 }} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '3 3' }} />
+
+                                {/* Actual Weight Line */}
                                 <Line
                                     type="monotone"
                                     dataKey="weight"
                                     stroke="#CBD5E1"
                                     strokeWidth={2}
-                                    dot={{ fill: '#CBD5E1', r: 2, strokeWidth: 0 }}
-                                    activeDot={{ r: 4, strokeWidth: 0 }}
+                                    dot={{ fill: '#CBD5E1', r: 3, strokeWidth: 0 }}
+                                    activeDot={{ r: 5, strokeWidth: 0, fill: '#64748B' }}
+                                    connectNulls
                                 />
+
+                                {/* Trend Line */}
                                 <Line
                                     type="monotone"
                                     dataKey="weightTrend"
                                     stroke="#2563EB"
                                     strokeWidth={3}
                                     dot={false}
+                                    activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
                                     animationDuration={1500}
-                                />
-                                {lastTrendValue && (
-                                    <ReferenceLine y={lastTrendValue} stroke="#2563EB" strokeDasharray="3 3" strokeOpacity={0.5}>
-                                        <Label
-                                            value={`${lastTrendValue}`}
-                                            position="right"
-                                            fill="#2563EB"
-                                            fontSize={10}
-                                            fontWeight="bold"
-                                            className="bg-white px-1"
-                                        />
-                                    </ReferenceLine>
-                                )}
+                                    connectNulls
+                                >
+                                    <LabelList
+                                        dataKey="weightTrend"
+                                        position="right"
+                                        content={(props: any) => {
+                                            const { x, y, value, index } = props;
+                                            // Only show label for the very last data point
+                                            if (index === chartDisplayData.length - 1) {
+                                                return (
+                                                    <g>
+                                                        <rect x={x + 5} y={y - 10} width="40" height="20" rx="4" fill="#2563EB" />
+                                                        <text x={x + 25} y={y + 4} fill="white" fontSize={10} fontWeight="bold" textAnchor="middle">
+                                                            {value}
+                                                        </text>
+                                                    </g>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                </Line>
                             </LineChart>
                         </ResponsiveContainer>
                     </CardContent>
