@@ -1,7 +1,7 @@
 import type {Config} from 'tailwindcss';
 
 export default {
-  darkMode: ['class'],
+  darkMode: 'class', // Keep class strategy but we won't toggle it
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -17,9 +17,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['var(--font-quicksand)', 'sans-serif'],
-        serif: ['var(--font-fredoka)', 'serif'],
-        headline: ['var(--font-fredoka)', 'serif'],
+        body: ['var(--font-inter)', 'sans-serif'],
+        serif: ['var(--font-rajdhani)', 'serif'],
+        headline: ['var(--font-rajdhani)', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -75,9 +75,9 @@ export default {
         },
       },
       borderRadius: {
-        lg: '2rem',
-        md: '1.5rem',
-        sm: '1rem',
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
         'accordion-down': {
@@ -96,20 +96,10 @@ export default {
             height: '0',
           },
         },
-        'goal-pulse': {
-          '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.05)' },
-        },
-        'heartbeat': {
-          '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.05)' },
-        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'goal-pulse': 'goal-pulse 1.5s ease-in-out',
-        'heartbeat': 'heartbeat 1.5s ease-in-out infinite',
       },
     },
   },

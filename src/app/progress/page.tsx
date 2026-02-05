@@ -13,6 +13,7 @@ import {
   BarChart,
   Bar,
   ReferenceLine,
+  Label,
   Cell,
 } from 'recharts';
 import { format } from 'date-fns';
@@ -265,6 +266,12 @@ export default function ProgressPage() {
     
     return dataWithTrend;
   }, [dailyLogs, weightHistory, isLogsLoading, isWeightLoading]);
+
+  const lastTrendValue = useMemo(() => {
+    if (!chartData || chartData.length === 0) return null;
+    const lastPoint = chartData[chartData.length - 1];
+    return lastPoint.weightTrend;
+  }, [chartData]);
   
   if (isWeightLoading || isLogsLoading) {
     return <Loading />;
@@ -278,11 +285,11 @@ export default function ProgressPage() {
       <main className="container mx-auto max-w-5xl flex-1 space-y-8 p-4 pb-24 md:p-8 md:pb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight text-primary">Progresul Tău</h1>
+            <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">Progresul Tău</h1>
             <p className="text-muted-foreground font-medium">Călătoria ta spre o viață mai sănătoasă.</p>
           </div>
           <AddWeightEntrySheet>
-              <Button size="lg" className="rounded-2xl shadow-lg border-b-4 border-primary/20 active:border-b-0 active:translate-y-1 transition-all">
+              <Button size="lg" className="rounded-lg shadow-md border-b-4 border-primary/20 active:border-b-0 active:translate-y-1 transition-all">
                   <Plus className="mr-2 h-5 w-5" />
                   Adaugă Greutate
               </Button>
@@ -291,48 +298,48 @@ export default function ProgressPage() {
 
         {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <Card className="border-2 border-primary/10 bg-card/50 backdrop-blur-sm shadow-md">
+                <Card className="rpg-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
                         <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Greutate Actuală</CardTitle>
                         <Scale className="h-4 w-4 text-primary opacity-50" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
-                        <div className="text-3xl font-serif font-bold text-foreground">{stats.currentWeight?.toFixed(1)} <span className="text-sm font-sans font-bold text-muted-foreground">kg</span></div>
+                        <div className="text-3xl font-mono font-bold text-foreground">{stats.currentWeight?.toFixed(1)} <span className="text-sm font-sans font-bold text-muted-foreground">kg</span></div>
                     </CardContent>
                 </Card>
-                <Card className="border-2 border-primary/10 bg-card/50 backdrop-blur-sm shadow-md">
+                <Card className="rpg-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
                         <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Evoluție</CardTitle>
                          {stats.weightChange <= 0 ? <TrendingDown className="h-4 w-4 text-primary opacity-50" /> : <TrendingUp className="h-4 w-4 text-destructive opacity-50" />}
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
                         <div className={cn(
-                            "text-3xl font-serif font-bold",
+                            "text-3xl font-mono font-bold",
                             stats.weightChange > 0 ? "text-destructive" : "text-primary"
                         )}>
                             {stats.weightChange > 0 ? '+' : ''}{stats.weightChange.toFixed(1)} <span className="text-sm font-sans font-bold opacity-70">kg</span>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-2 border-primary/10 bg-card/50 backdrop-blur-sm shadow-md">
+                <Card className="rpg-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
                         <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">BMI Actual</CardTitle>
                         <HeartPulse className="h-4 w-4 text-primary opacity-50" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
-                        <div className="text-3xl font-serif font-bold text-foreground">{stats.bmi ? stats.bmi.toFixed(1) : 'N/A'}</div>
+                        <div className="text-3xl font-mono font-bold text-foreground">{stats.bmi ? stats.bmi.toFixed(1) : 'N/A'}</div>
                         <div className="text-[10px] font-bold uppercase text-muted-foreground truncate">
                             {stats.bmi ? getBmiCategory(stats.bmi) : 'Setează înălțimea'}
                         </div>
                     </CardContent>
                 </Card>
-                 <Card className="border-2 border-primary/10 bg-card/50 backdrop-blur-sm shadow-md">
+                 <Card className="rpg-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
                         <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Serie Activă</CardTitle>
                         <Flame className="h-4 w-4 text-accent opacity-50" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
-                        <div className="text-3xl font-serif font-bold text-accent">{streak} <span className="text-sm font-sans font-bold text-muted-foreground">zile</span></div>
+                        <div className="text-3xl font-mono font-bold text-accent">{streak} <span className="text-sm font-sans font-bold text-muted-foreground">zile</span></div>
                     </CardContent>
                 </Card>
             </div>
@@ -353,27 +360,26 @@ export default function ProgressPage() {
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 {/* Weight Chart - Large */}
-                <Card className="md:col-span-12 lg:col-span-8 shadow-lg border-2 border-primary/5 bg-card relative overflow-hidden">
-                    <div className="absolute inset-0 pointer-events-none opacity-5 bg-[radial-gradient(#8b5a2b_1px,transparent_1px)] [background-size:20px_20px]" />
+                <Card className="md:col-span-12 lg:col-span-8 rpg-card">
                     <CardHeader>
-                        <CardTitle className="text-2xl font-serif">Greutate în Timp</CardTitle>
+                        <CardTitle className="text-2xl font-headline">Greutate în Timp</CardTitle>
                         <CardDescription className="text-xs uppercase font-bold tracking-widest">Fluctuații zilnice și trendul pe 7 zile</CardDescription>
                     </CardHeader>
                     <CardContent className="h-80 pt-4">
                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData.filter(d => d.weight || d.weightTrend)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="hsl(var(--primary))" strokeOpacity={0.1} />
+                            <LineChart data={chartData.filter(d => d.weight || d.weightTrend)} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="hsl(var(--border))" />
                                 <XAxis
                                     dataKey="date"
                                     tickFormatter={(date) => format(new Date(date), 'd MMM')}
                                     tick={{ fontSize: 10, fontWeight: 'bold' }}
-                                    axisLine={{ stroke: 'hsl(var(--primary))', strokeOpacity: 0.2 }}
+                                    axisLine={{ stroke: 'hsl(var(--border))' }}
                                 />
                                 <YAxis
                                     domain={['dataMin - 2', 'dataMax + 2']}
                                     unit="kg"
                                     tick={{ fontSize: 10, fontWeight: 'bold' }}
-                                    axisLine={{ stroke: 'hsl(var(--primary))', strokeOpacity: 0.2 }}
+                                    axisLine={{ stroke: 'hsl(var(--border))' }}
                                 />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Legend wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', paddingTop: '10px' }} />
@@ -397,6 +403,18 @@ export default function ProgressPage() {
                                     dot={false}
                                     animationDuration={2000}
                                 />
+                                {lastTrendValue && (
+                                    <ReferenceLine y={lastTrendValue} stroke="hsl(var(--primary))" strokeDasharray="3 3" strokeOpacity={0.5}>
+                                        <Label
+                                            value={`${lastTrendValue} kg`}
+                                            position="right"
+                                            fill="hsl(var(--primary))"
+                                            fontSize={12}
+                                            fontWeight="bold"
+                                            className="bg-background px-1"
+                                        />
+                                    </ReferenceLine>
+                                )}
                             </LineChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -404,19 +422,19 @@ export default function ProgressPage() {
 
                 {/* Personal Records - Bento Side */}
                 <div className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-6">
-                    <Card className="shadow-md border-2 border-accent/20 bg-accent/5 relative overflow-hidden">
+                    <Card className="rpg-card border-l-4 border-l-accent">
                          <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12">
                             <TrendingDown className="w-24 h-24 text-accent" />
                         </div>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-serif">Record Personal</CardTitle>
+                            <CardTitle className="text-lg font-headline">Record Personal</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-4xl font-serif font-bold text-accent mb-1">
+                            <div className="text-4xl font-mono font-bold text-accent mb-1">
                             {stats?.weightChange && stats.weightChange < 0 ? Math.abs(stats.weightChange).toFixed(1) : '0.0'} kg
                             </div>
                             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Total Slăbit</p>
-                            <div className="mt-4 pt-4 border-t border-accent/10 flex items-center gap-2">
+                            <div className="mt-4 pt-4 border-t border-border flex items-center gap-2">
                                 <div className="p-1.5 rounded-lg bg-accent/20">
                                     <Target className="h-4 w-4 text-accent" />
                                 </div>
@@ -427,17 +445,17 @@ export default function ProgressPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="shadow-md border-2 border-primary/20 bg-primary/5 relative overflow-hidden">
+                    <Card className="rpg-card border-l-4 border-l-primary">
                         <div className="absolute -right-4 -bottom-4 opacity-10 -rotate-12">
                             <Flame className="w-24 h-24 text-primary" />
                         </div>
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-serif">Consistență</CardTitle>
+                            <CardTitle className="text-lg font-headline">Consistență</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-4xl font-serif font-bold text-primary mb-1">{streak}</div>
+                            <div className="text-4xl font-mono font-bold text-primary mb-1">{streak}</div>
                             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Zile Consecutive</p>
-                             <div className="mt-4 pt-4 border-t border-primary/10 flex items-center gap-2">
+                             <div className="mt-4 pt-4 border-t border-border flex items-center gap-2">
                                 <div className="p-1.5 rounded-lg bg-primary/20">
                                     <TrendingUp className="h-4 w-4 text-primary" />
                                 </div>

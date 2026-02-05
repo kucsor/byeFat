@@ -4,27 +4,29 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Fredoka, Quicksand } from 'next/font/google';
+import { Rajdhani, Inter } from 'next/font/google';
 
-const fredoka = Fredoka({
+const rajdhani = Rajdhani({
   subsets: ['latin'],
-  variable: '--font-fredoka',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-rajdhani',
   display: 'swap',
 });
 
-const quicksand = Quicksand({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-quicksand',
+  variable: '--font-inter',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'byeFat - Calorie Tracker',
-  description: 'Track your calorie intake with ease. Snap a photo of a nutrition label and let AI do the work.',
+  title: 'byeFat - RPG Calorie Tracker',
+  description: 'Level up your health. Track calories, gain XP, and complete your daily quests.',
   manifest: '/manifest.json',
-  themeColor: '#ffb6c1',
+  themeColor: '#ffffff',
   icons: {
-    apple: '/icon-192x192.png',
+    icon: '/app-icon.svg',
+    apple: '/app-icon.svg',
   },
 };
 
@@ -34,12 +36,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${fredoka.variable} ${quicksand.variable}`}>
-      <body className="font-body antialiased">
+    <html lang="en" suppressHydrationWarning className={`${rajdhani.variable} ${inter.variable}`}>
+      <body className="font-body antialiased bg-background text-foreground">
         <ThemeProvider
             attribute="class"
             defaultTheme="light"
-            enableSystem
+            enableSystem={false}
             disableTransitionOnChange
         >
             <FirebaseClientProvider>

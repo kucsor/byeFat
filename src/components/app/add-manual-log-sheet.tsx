@@ -27,6 +27,7 @@ import { collection, doc, serverTimestamp, increment } from 'firebase/firestore'
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { PlateCutlery } from './animated-icons';
+import { updateUserXP } from '@/firebase/xp-actions';
 
 const manualLogSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -43,9 +44,10 @@ type AddManualLogSheetProps = {
   selectedDate: string;
   userProfile: UserProfile;
   selectedLog: DailyLog | null;
+  isLogLoading?: boolean;
 }
 
-export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog }: AddManualLogSheetProps) {
+export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog, isLogLoading }: AddManualLogSheetProps) {
   const { firestore, user } = useFirebase();
   const isMobile = useIsMobile();
 
@@ -93,6 +95,10 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
 
     addDocumentNonBlocking(logItemsCollection, newLogItem);
     updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
+
+    // XP Update:
+    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
+    updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
 
     triggerHapticFeedback();
     setIsOpen(false);
@@ -207,7 +213,7 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
             </Form>
           </div>
           <SheetFooter className="bg-card p-6 mt-4 border-t">
-            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full h-12 rounded-full text-lg font-bold bouncy-hover">
+            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full h-12 rounded-full text-lg font-bold bouncy-hover" disabled={isLogLoading}>
               Salvează Masă
             </Button>
           </SheetFooter>

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Loader2 } from 'lucide-react';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { updateUserXP } from '@/firebase/xp-actions';
 
 const editLogItemSchema = z.object({
   grams: z.coerce.number().min(1, { message: 'Grams must be greater than 0.' }),
@@ -77,6 +78,13 @@ export function EditFoodLogItemSheet({ isOpen, setIsOpen, item, selectedDate }: 
     updateDocumentNonBlocking(logItemRef, updatedLogItem);
     updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(calorieDifference) });
     
+    // XP Update:
+    // If calorieDifference is POSITIVE (ate more), deficit decreases -> XP decreases.
+    // So we subtract calorieDifference.
+    // Example: Old 500, New 700. Difference +200. Deficit drops 200. XP drops 200.
+    // Example: Old 500, New 300. Difference -200. Deficit rises 200. XP rises 200.
+    updateUserXP(firestore, user.uid, -calorieDifference);
+
     triggerHapticFeedback();
     
     setIsOpen(false);

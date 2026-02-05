@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { updateUserXP } from '@/firebase/xp-actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,18 +43,18 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
   }, [item.createdAt]);
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md group">
+    <Card className="rpg-card group hover:shadow-lg transition-all border-l-4 border-l-slate-200">
       <CardHeader className="flex flex-row items-center justify-between gap-4 p-4">
         <div className="flex flex-col gap-1">
-          <CardTitle className="text-lg font-serif leading-tight">{item.productName}</CardTitle>
+          <CardTitle className="text-lg font-headline leading-tight text-slate-800">{item.productName}</CardTitle>
           <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="font-bold uppercase tracking-widest text-[10px]">{item.grams}g</span>
+            <span className="font-bold font-mono text-xs">{item.grams}g</span>
             {timeLabel && (
               <>
-                <span className="text-[10px]">•</span>
+                <span className="text-[10px] text-slate-300">•</span>
                 <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    <span className="font-bold uppercase tracking-widest text-[10px]">{timeLabel}</span>
+                    <span className="font-bold font-mono text-xs">{timeLabel}</span>
                 </div>
               </>
             )}
@@ -61,7 +62,7 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
         </div>
         <div className="flex items-center gap-3">
             <div className="text-right">
-              <div className="font-serif font-bold text-xl text-primary leading-none">{item.calories}</div>
+              <div className="font-mono font-bold text-xl text-primary leading-none">{item.calories}</div>
               <div className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">kcal</div>
             </div>
             {!isAiItem && (
@@ -98,15 +99,15 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
 
 const ActivityItemCard = memo(function ActivityItemCard({ item, onDelete }: { item: DailyLogActivity, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void }) {
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md group">
+    <Card className="rpg-card group hover:shadow-lg transition-all border-l-4 border-l-orange-400">
       <CardHeader className="flex flex-row items-center justify-between gap-4 p-4">
         <div className="flex items-center gap-4">
-          <div className="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/30">
-            <Flame className="h-6 w-6 text-orange-500" />
+          <div className="p-2 rounded bg-orange-100">
+            <Flame className="h-6 w-6 text-orange-600" />
           </div>
           <div className='space-y-0.5'>
-            <CardTitle className="text-lg font-serif">{item.name}</CardTitle>
-            <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-orange-500">+{item.calories} kcal active</CardDescription>
+            <CardTitle className="text-lg font-headline text-slate-800">{item.name}</CardTitle>
+            <CardDescription className="font-mono font-bold text-xs uppercase tracking-wider text-orange-600">+{item.calories} XP (Burned)</CardDescription>
           </div>
         </div>
         <AlertDialog>
@@ -175,8 +176,12 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
 
     if (type === 'items') {
          updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(-calories) });
+         // Removing food increases deficit -> Add XP
+         updateUserXP(firestore, user.uid, calories);
     } else if (type === 'activities') {
          updateDocumentNonBlocking(dailyLogRef, { activeCalories: increment(-calories) });
+         // Removing activity decreases deficit -> Subtract XP
+         updateUserXP(firestore, user.uid, -calories);
     }
     
     deleteDocumentNonBlocking(docRef);
@@ -189,7 +194,9 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center px-2">
-        <h2 className="text-3xl font-serif font-bold tracking-tight text-primary">Jurnal Zilnic</h2>
+        <h2 className="text-2xl font-headline font-bold text-foreground flex items-center gap-2">
+            <span className="text-primary">Inventory</span> / Logs
+        </h2>
       </div>
 
       {isLoading && (

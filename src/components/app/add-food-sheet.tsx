@@ -29,6 +29,7 @@ import { collection, doc, query, serverTimestamp, increment } from 'firebase/fir
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { updateUserXP } from '@/firebase/xp-actions';
 
 const logItemSchema = z.object({
   productId: z.string().min(1, { message: "Please select a product."}),
@@ -41,9 +42,10 @@ type AddFoodSheetProps = {
   selectedDate: string;
   userProfile: UserProfile;
   selectedLog: DailyLog | null;
+  isLogLoading?: boolean;
 }
 
-export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog }: AddFoodSheetProps) {
+export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog, isLogLoading }: AddFoodSheetProps) {
   const [searchValue, setSearchValue] = useState('');
   const { firestore, user } = useFirebase();
   const isMobile = useIsMobile();
@@ -111,6 +113,12 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
     addDocumentNonBlocking(logItemsCollection, newLogItem);
     updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
     
+    // XP Update:
+    // If this is the first log of the day (no selectedLog), we implicitly "gain" the Maintenance XP.
+    // Then we subtract the food calories.
+    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
+    updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
+
     triggerHapticFeedback();
     
     setIsOpen(false);
@@ -224,7 +232,7 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
             </Form>
           </div>
           <SheetFooter className="bg-card p-6 mt-4 border-t">
-            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full" disabled={!selectedProduct}>
+            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full" disabled={!selectedProduct || isLogLoading}>
               Add to Log
             </Button>
           </SheetFooter>

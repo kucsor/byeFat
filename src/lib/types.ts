@@ -15,6 +15,9 @@ export type UserProfile = {
   dailyProtein?: number;
   dailyCarbs?: number;
   dailyFat?: number;
+  // Gamification
+  xp?: number;
+  level?: number;
 };
 
 export type Product = {
@@ -71,4 +74,3 @@ export type WeightEntry = {
     date: string; // YYYY-MM-DD
     weight: number;
 }
-    

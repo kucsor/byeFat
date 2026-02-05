@@ -19,6 +19,7 @@ import { Input } from '../ui/input';
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { BarcodeScanner } from './barcode-scanner';
+import { updateUserXP } from '@/firebase/xp-actions';
 
 type BarcodeScannerSheetProps = {
   isOpen: boolean;
@@ -26,9 +27,10 @@ type BarcodeScannerSheetProps = {
   selectedDate: string;
   userProfile: UserProfile;
   selectedLog: DailyLog | null;
+  isLogLoading?: boolean;
 }
 
-export function BarcodeScannerSheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog }: BarcodeScannerSheetProps) {
+export function BarcodeScannerSheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog, isLogLoading }: BarcodeScannerSheetProps) {
   const [detectedBarcode, setDetectedBarcode] = useState<string | null>(null);
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -124,6 +126,10 @@ export function BarcodeScannerSheet({ isOpen, setIsOpen, selectedDate, userProfi
         addDocumentNonBlocking(logItemsCollection, newLogItem);
         updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
         
+        // XP Update:
+        const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
+        updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
+
         triggerHapticFeedback();
         setIsOpen(false);
     } catch (e) {
@@ -171,7 +177,7 @@ export function BarcodeScannerSheet({ isOpen, setIsOpen, selectedDate, userProfi
                     <div className="flex justify-between"><span>Fat:</span> <span>{calculatedMacros.fat} g</span></div>
                     <div className="flex justify-between"><span>Carbs:</span> <span>{calculatedMacros.carbs} g</span></div>
                 </div>
-                 <Button onClick={handleAddToLog} className="w-full" disabled={isSaving}>
+                 <Button onClick={handleAddToLog} className="w-full" disabled={isSaving || isLogLoading}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Add to Log
                 </Button>
