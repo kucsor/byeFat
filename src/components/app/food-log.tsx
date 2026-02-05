@@ -11,7 +11,6 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { triggerHapticFeedback } from '@/lib/haptics';
-import { updateUserXP } from '@/firebase/xp-actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -179,12 +178,8 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
 
     if (type === 'items') {
          updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(-calories) });
-         // Removing food increases deficit -> Add XP
-         updateUserXP(firestore, user.uid, calories);
     } else if (type === 'activities') {
          updateDocumentNonBlocking(dailyLogRef, { activeCalories: increment(-calories) });
-         // Removing activity decreases deficit -> Subtract XP
-         updateUserXP(firestore, user.uid, -calories);
     }
     
     deleteDocumentNonBlocking(docRef);
