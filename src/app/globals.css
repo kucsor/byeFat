@@ -4,74 +4,50 @@
 
 @layer base {
   :root {
-    --background: 260 30% 98%;
-    --foreground: 260 20% 20%;
+    /* Clean RPG Palette - Light Mode Forced */
+    --background: 210 20% 98%; /* Very light slate */
+    --foreground: 222 47% 11%; /* Dark slate blue */
+
     --card: 0 0% 100%;
-    --card-foreground: 260 20% 20%;
+    --card-foreground: 222 47% 11%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 260 20% 20%;
-    --primary: 350 70% 85%;
-    --primary-foreground: 350 40% 30%;
-    --secondary: 160 60% 85%;
-    --secondary-foreground: 160 40% 30%;
-    --muted: 260 20% 92%;
-    --muted-foreground: 260 10% 40%;
-    --accent: 45 90% 85%;
-    --accent-foreground: 45 40% 30%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 221 83% 53%; /* Royal Blue - Mana/Energy */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 48 96% 53%; /* Gold/Amber - XP/Level */
+    --secondary-foreground: 26 83% 14%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 262 83% 58%; /* Purple - Epic items/Magic */
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 260 20% 90%;
-    --input: 260 20% 95%;
-    --ring: 350 70% 85%;
-    --chart-1: 350 70% 85%;
-    --chart-2: 160 60% 85%;
-    --chart-3: 45 90% 85%;
-    --chart-4: 200 70% 85%;
-    --chart-5: 280 70% 85%;
-    --radius: 2rem;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 260 20% 20%;
-    --sidebar-primary: 350 70% 85%;
-    --sidebar-primary-foreground: 350 40% 30%;
-    --sidebar-accent: 45 90% 85%;
-    --sidebar-accent-foreground: 45 40% 30%;
-    --sidebar-border: 260 20% 90%;
-    --sidebar-ring: 350 70% 85%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%; /* Emerald - Health */
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.5rem; /* Sharper corners for RPG UI */
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  .dark {
-    --background: 260 25% 12%;
-    --foreground: 260 20% 95%;
-    --card: 260 25% 18%;
-    --card-foreground: 260 20% 95%;
-    --popover: 260 25% 15%;
-    --popover-foreground: 260 20% 95%;
-    --primary: 350 60% 65%;
-    --primary-foreground: 350 20% 15%;
-    --secondary: 160 50% 65%;
-    --secondary-foreground: 160 20% 15%;
-    --muted: 260 20% 25%;
-    --muted-foreground: 260 10% 70%;
-    --accent: 45 80% 65%;
-    --accent-foreground: 45 20% 15%;
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 260 20% 25%;
-    --input: 260 20% 20%;
-    --ring: 350 60% 65%;
-    --chart-1: 350 60% 65%;
-    --chart-2: 160 50% 65%;
-    --chart-3: 45 80% 65%;
-    --chart-4: 200 60% 65%;
-    --chart-5: 280 60% 65%;
-    --sidebar-background: 260 25% 15%;
-    --sidebar-foreground: 260 20% 95%;
-    --sidebar-primary: 350 60% 65%;
-    --sidebar-primary-foreground: 350 20% 15%;
-    --sidebar-accent: 45 80% 65%;
-    --sidebar-accent-foreground: 45 20% 15%;
-    --sidebar-border: 260 20% 25%;
-    --sidebar-ring: 350 60% 65%;
-  }
+
+  /* Removed Dark Mode Layer Completely */
 }
 
 @layer base {
@@ -87,19 +63,20 @@
 }
 
 @layer components {
+  /* RPG UI Utilities */
+  .rpg-card {
+    @apply bg-card border border-border shadow-md rounded-lg relative overflow-hidden;
+  }
+
+  .rpg-card-header {
+    @apply bg-muted/30 p-4 border-b border-border;
+  }
+
+  .rpg-shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
   .glass {
-    @apply bg-white/40 backdrop-blur-lg border border-white/40 shadow-xl;
-  }
-
-  .glass-dark {
-    @apply bg-black/20 backdrop-blur-lg border border-white/10 shadow-xl;
-  }
-
-  .cartoon-shadow {
-    box-shadow: 0 8px 0 0 rgba(0, 0, 0, 0.05);
-  }
-
-  .bouncy-hover {
-    @apply transition-transform duration-300 hover:scale-105 active:scale-95;
+    @apply bg-white/60 backdrop-blur-md border border-white/40 shadow-lg;
   }
 }

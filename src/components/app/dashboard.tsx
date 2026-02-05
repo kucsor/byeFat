@@ -5,10 +5,10 @@ import { User } from 'firebase/auth';
 import { collection, query, doc, updateDoc } from 'firebase/firestore';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { DailyLog, DailyLogItem, DailyLogActivity, UserProfile } from '@/lib/types';
-import { DailySummary } from './daily-summary';
+import { HeroStatusCard } from './hero-status-card';
 import { FoodLog } from './food-log';
 import { Button } from '../ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { format, isToday, isYesterday, addDays, subDays } from 'date-fns';
 import dynamic from 'next/dynamic';
 import { FabMenu } from './fab-menu';
@@ -26,7 +26,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
   const { firestore } = useFirebase();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  // State for all sheets is now centralized here
+  // State for all sheets
   const [isAiCalculatorOpen, setIsAiCalculatorOpen] = useState(false);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
   const [isAddFoodSheetOpen, setIsAddFoodSheetOpen] = useState(false);
@@ -40,7 +40,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
     return doc(firestore, `users/${user.uid}/dailyLogs`, selectedDateString);
   }, [user, firestore, selectedDateString]);
 
-  const { data: selectedLog } = useDoc<DailyLog>(dailyLogDocRef);
+  const { data: selectedLog, isLoading: isLogLoading } = useDoc<DailyLog>(dailyLogDocRef);
 
   const foodItemsQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -56,87 +56,62 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
 
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
 
-  // Sync activeCalories to DailyLog if mismatch (Lazy Fix for historical data)
+  // Sync activeCalories logic (preserved)
   useEffect(() => {
-    // Only proceed if both selectedLog and activities are loaded
     if (!selectedLog || !activities) return;
-
-    // Calculate what the active calories SHOULD be based on the subcollection (source of truth)
     const totalActiveFromActivities = activities.reduce((acc, curr) => acc + curr.calories, 0);
-
-    // Compare with what is stored in the parent document
     const storedActive = selectedLog.activeCalories || 0;
 
-    // If there is a mismatch, update the parent document
-    // This fixes historical data discrepancies when the user views the day
     if (totalActiveFromActivities !== storedActive && dailyLogDocRef) {
-      console.log(`Fixing data consistency for ${selectedDateString}: Active Calories ${storedActive} -> ${totalActiveFromActivities}`);
       updateDoc(dailyLogDocRef, {
         activeCalories: totalActiveFromActivities
       }).catch(err => {
         console.error("Failed to sync active calories:", err);
       });
     }
-  }, [activities, selectedLog, dailyLogDocRef, selectedDateString]);
-  
-  const getGreeting = () => {
-    if (!userProfile?.name) return "Today's Dashboard";
-    const hour = new Date().getHours();
-    const firstName = userProfile.name.split(' ')[0];
-
-    if (hour >= 5 && hour < 12) {
-      return `Bună dimineața, ${firstName}!`;
-    } else if (hour >= 12 && hour < 18) {
-      return `Bună ziua, ${firstName}!`;
-    } else {
-      return `Bună seara, ${firstName}!`;
-    }
-  };
+  }, [activities, selectedLog, dailyLogDocRef]);
   
   const dateLabel = useMemo(() => {
     if (isToday(selectedDate)) return 'Today';
     if (isYesterday(selectedDate)) return 'Yesterday';
-    return format(selectedDate, 'PPP');
+    return format(selectedDate, 'MMM d');
   }, [selectedDate]);
 
 
   return (
     <>
       <div className="container mx-auto max-w-5xl p-4 md:p-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8"
-        >
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-primary-foreground drop-shadow-sm">
-            {getGreeting()}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <h1 className="text-3xl md:text-5xl font-headline font-bold text-foreground uppercase tracking-tight">
+            Dashboard
           </h1>
-          <div className="flex items-center gap-2 bg-white/50 backdrop-blur-sm p-1.5 rounded-full border-2 border-primary/20 shadow-sm">
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-lg border border-border">
             <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full hover:bg-primary/20"
+                className="rounded-md hover:bg-background"
                 onClick={() => setSelectedDate(subDays(selectedDate, 1))}
             >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" className="px-6 rounded-full font-bold hover:bg-primary/20" onClick={() => setSelectedDate(new Date())}>
+            <div className="flex items-center gap-2 px-4 font-mono font-bold text-sm min-w-[120px] justify-center">
+                <CalendarDays className="h-4 w-4 opacity-50" />
                 {dateLabel}
-            </Button>
+            </div>
             <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full hover:bg-primary/20"
+                className="rounded-md hover:bg-background"
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
                 disabled={isToday(selectedDate)}
             >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </motion.div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             <div className="md:col-span-12 lg:col-span-7">
-                <DailySummary
+                <HeroStatusCard
                   foodItems={foodItems}
                   activities={activities}
                   userProfile={userProfile}
@@ -167,14 +142,16 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
         setIsOpen={setIsBarcodeScannerOpen}
         selectedDate={selectedDateString} 
         userProfile={userProfile} 
-        selectedLog={selectedLog} 
+        selectedLog={selectedLog}
+        isLogLoading={isLogLoading}
       />
       <AiPortionCalculator 
         isOpen={isAiCalculatorOpen}
         setIsOpen={setIsAiCalculatorOpen}
         selectedDate={selectedDateString}
         userProfile={userProfile}
-        selectedLog={selectedLog} 
+        selectedLog={selectedLog}
+        isLogLoading={isLogLoading}
       />
        <AddFoodSheet
         isOpen={isAddFoodSheetOpen}
@@ -182,6 +159,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
         selectedDate={selectedDateString}
         userProfile={userProfile}
         selectedLog={selectedLog}
+        isLogLoading={isLogLoading}
       />
       <AddActivitySheet 
         isOpen={isActivitySheetOpen} 
@@ -189,6 +167,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
         selectedDate={selectedDateString}
         userProfile={userProfile}
         selectedLog={selectedLog}
+        isLogLoading={isLogLoading}
        />
        <AddManualLogSheet
         isOpen={isManualLogOpen}
@@ -196,6 +175,7 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
         selectedDate={selectedDateString}
         userProfile={userProfile}
         selectedLog={selectedLog}
+        isLogLoading={isLogLoading}
        />
     </>
   );

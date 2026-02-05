@@ -26,6 +26,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { collection, doc, serverTimestamp, increment } from 'firebase/firestore';
 import type { DailyLog, UserProfile } from '@/lib/types';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { updateUserXP } from '@/firebase/xp-actions';
 import { useMemo, useState } from 'react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -45,9 +46,10 @@ type AddActivitySheetProps = {
     selectedDate: string;
     userProfile: UserProfile;
     selectedLog: DailyLog | null;
+    isLogLoading?: boolean;
 }
 
-export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog }: AddActivitySheetProps) {
+export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog, isLogLoading }: AddActivitySheetProps) {
   const [searchValue, setSearchValue] = useState('');
   const { firestore, user } = useFirebase();
   const isMobile = useIsMobile();
@@ -92,6 +94,12 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
       ...values,
       createdAt: serverTimestamp(),
     });
+
+    // XP Update:
+    // If first log of day, add Maintenance XP too.
+    // Activity adds to deficit -> +XP
+    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
+    updateUserXP(firestore, user.uid, maintenanceXP + values.calories);
     
     triggerHapticFeedback();
     setIsOpen(false);
@@ -189,7 +197,7 @@ export function AddActivitySheet({ isOpen, setIsOpen, selectedDate, userProfile,
             </Form>
           </div>
           <SheetFooter className="bg-card p-6 mt-4 border-t">
-            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full" disabled={!selectedActivityName}>
+            <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full" disabled={!selectedActivityName || isLogLoading}>
               Log Activity
             </Button>
           </SheetFooter>

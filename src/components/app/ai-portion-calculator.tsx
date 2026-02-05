@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { updateUserXP } from '@/firebase/xp-actions';
 
 
 const formSchema = z.object({
@@ -41,9 +42,10 @@ type AiPortionCalculatorProps = {
   selectedDate: string;
   userProfile: UserProfile;
   selectedLog: DailyLog | null;
+  isLogLoading?: boolean;
 }
 
-export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog }: AiPortionCalculatorProps) {
+export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog, isLogLoading }: AiPortionCalculatorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +122,10 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
     addDocumentNonBlocking(logItemsCollection, newLogItem);
     updateDocumentNonBlocking(dailyLogRef, { consumedCalories: increment(newLogItem.calories) });
     
+    // XP Update:
+    const maintenanceXP = (!selectedLog && userProfile.maintenanceCalories) ? userProfile.maintenanceCalories : 0;
+    updateUserXP(firestore, user.uid, maintenanceXP - newLogItem.calories);
+
     triggerHapticFeedback();
     
     setResult(null);
@@ -229,7 +235,7 @@ export function AiPortionCalculator({ isOpen, setIsOpen, selectedDate, userProfi
                                 </div>
                             )}
                         </div>
-                        <Button onClick={handleAddToLog} className="mt-4 w-full">
+                        <Button onClick={handleAddToLog} className="mt-4 w-full" disabled={isLogLoading}>
                             <Plus className="mr-2 h-4 w-4" />
                             Add to Log
                         </Button>
