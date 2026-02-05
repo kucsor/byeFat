@@ -5,12 +5,13 @@ import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } fro
 import type { DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Trash2, Loader2, Flame, Pencil, Plus, Soup, Clock } from 'lucide-react';
+import { Trash2, Loader2, Flame, Pencil, Plus, Soup, Clock, ChevronUp } from 'lucide-react';
 import { doc, increment } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { Drawer } from 'vaul';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,14 +42,14 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
   }, [item.createdAt]);
 
   return (
-    <div className="group flex items-center justify-between py-3 px-4 bg-card border-b last:border-0 hover:bg-slate-50 transition-colors">
+    <div className="group flex items-center justify-between py-3 px-4 bg-white border-b border-slate-100 last:border-0">
         <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-slate-900">{item.productName}</span>
-            <div className="flex items-center gap-2 text-xs text-slate-600">
-                <span className="font-medium">{item.grams}g</span>
+            <span className="font-bold text-slate-900">{item.productName}</span>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span className="font-medium text-slate-700">{item.grams}g</span>
                 {timeLabel && (
                     <>
-                        <span className="text-slate-400">•</span>
+                        <span className="text-slate-300">•</span>
                         <span>{timeLabel}</span>
                     </>
                 )}
@@ -57,19 +58,19 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
 
         <div className="flex items-center gap-4">
              <div className="text-right">
-                <div className="text-sm font-bold text-slate-900">{item.calories}</div>
-                <div className="text-[10px] text-slate-500">kcal</div>
+                <div className="text-sm font-black text-slate-900">{item.calories}</div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase">kcal</div>
             </div>
 
-            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center">
                 {!isAiItem && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-800" onClick={() => onEdit(item)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" onClick={() => onEdit(item)}>
                     <Pencil className="h-4 w-4" />
                 </Button>
                 )}
                 <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-destructive hover:bg-destructive/5">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-600">
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </AlertDialogTrigger>
@@ -82,7 +83,7 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(item.id, 'items', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogAction onClick={() => onDelete(item.id, 'items', item.calories)} className="bg-destructive text-white hover:bg-destructive/90">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
                 </AlertDialog>
@@ -91,52 +92,6 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
     </div>
   )
 });
-
-const ActivityItemCard = memo(function ActivityItemCard({ item, onDelete }: { item: DailyLogActivity, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void }) {
-  return (
-    <div className="group flex items-center justify-between py-3 px-4 bg-card border-b last:border-0 hover:bg-slate-50 transition-colors">
-        <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                <Flame className="h-4 w-4" />
-            </div>
-            <div className="flex flex-col gap-0.5">
-                <span className="font-medium text-slate-900">{item.name}</span>
-                <span className="text-xs text-orange-600 font-medium">Burned</span>
-            </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-             <div className="text-right">
-                <div className="text-sm font-bold text-slate-900">{item.calories}</div>
-                <div className="text-[10px] text-muted-foreground">kcal</div>
-            </div>
-
-            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/5">
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Activity?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Remove "{item.name}" from your log.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(item.id, 'activities', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-                </AlertDialog>
-            </div>
-        </div>
-    </div>
-  )
-});
-
 
 export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLogProps) {
   const { firestore, user } = useFirebase();
@@ -148,7 +103,6 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     setIsEditSheetOpen(true);
   }, []);
 
-  // Sort items by time (newest first)
   const sortedItems = useMemo(() => {
     if (!items) return [];
     return [...items].sort((a, b) => {
@@ -159,21 +113,9 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     });
   }, [items]);
 
-  const sortedActivities = useMemo(() => {
-    if (!activities) return [];
-    return [...activities].sort((a, b) => {
-      if (a.createdAt && b.createdAt) {
-        return b.createdAt.toMillis() - a.createdAt.toMillis();
-      }
-      return 0;
-    });
-  }, [activities]);
-
   const handleDelete = useCallback((itemId: string, type: 'items' | 'activities', calories: number) => {
     if (!user || !selectedDate) return;
     const docRef = doc(firestore, `users/${user.uid}/dailyLogs/${selectedDate}/${type}`, itemId);
-    
-    // We update the daily log document to reflect the removed calories
     const dailyLogRef = doc(firestore, `users/${user.uid}/dailyLogs`, selectedDate);
 
     if (type === 'items') {
@@ -186,70 +128,70 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     triggerHapticFeedback();
   }, [user, selectedDate, firestore]);
 
-  const hasAnyItems = sortedItems.length > 0 || sortedActivities.length > 0;
-  const isLoading = items === undefined || activities === undefined;
+  const totalItems = (items?.length || 0) + (activities?.length || 0);
+  const totalCalories = (items?.reduce((acc, i) => acc + i.calories, 0) || 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center px-1">
-        <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wide">
-            Today's Log
-        </h2>
-      </div>
+    <>
+        {/* Peek / Summary View (Always Visible) */}
+        <div className="fixed bottom-24 left-4 right-4 z-10 md:static md:z-0 md:mx-auto md:w-full">
+            <Drawer.Root shouldScaleBackground>
+                <Drawer.Trigger asChild>
+                    <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-xl flex items-center justify-between cursor-pointer active:scale-95 transition-transform border border-slate-700">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-slate-800 p-2 rounded-full">
+                                <ChevronUp className="h-5 w-5 text-slate-400" />
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold">Today's Log</div>
+                                <div className="text-xs text-slate-400">{totalItems} items • {totalCalories} kcal</div>
+                            </div>
+                        </div>
+                        <Button size="sm" variant="secondary" className="h-8 rounded-full px-4 font-bold text-xs bg-white text-black hover:bg-slate-200">
+                            View List
+                        </Button>
+                    </div>
+                </Drawer.Trigger>
+                <Drawer.Portal>
+                    <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50" />
+                    <Drawer.Content className="bg-slate-50 flex flex-col rounded-t-[10px] h-[85vh] mt-24 fixed bottom-0 left-0 right-0 z-50 outline-none">
+                        <div className="p-4 bg-white rounded-t-[10px] flex-1 overflow-auto">
+                            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-slate-300 mb-6" />
+                            <div className="max-w-md mx-auto">
+                                <Drawer.Title className="font-black text-2xl mb-4 text-slate-900">Today's Log</Drawer.Title>
 
-      {isLoading && (
-         <div className="flex justify-center p-12">
-             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-         </div>
-      )}
+                                <div className="space-y-4 pb-24">
+                                    {sortedItems.length === 0 && (
+                                        <div className="text-center py-10 text-slate-500">
+                                            No food logged yet.
+                                        </div>
+                                    )}
 
-      {hasAnyItems && (
-        <Card className="fitness-card overflow-hidden border-0 shadow-sm bg-white">
-          {/* Food Items List */}
-          {sortedItems.length > 0 && (
-            <div className="divide-y divide-slate-100">
-                {sortedItems.map((item) => (
-                    <FoodItemCard key={`food-${item.id}`} item={item} onDelete={handleDelete} onEdit={handleEdit} />
-                ))}
-            </div>
-          )}
+                                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                                        {sortedItems.map((item) => (
+                                            <FoodItemCard key={`food-${item.id}`} item={item} onDelete={handleDelete} onEdit={handleEdit} />
+                                        ))}
+                                    </div>
 
-          {/* Activities Section */}
-          {sortedActivities.length > 0 && (
-            <div className="border-t border-slate-100">
-               <div className="bg-slate-50/50 px-4 py-2 text-xs font-bold uppercase text-slate-600 tracking-wider">
-                    Activities
-               </div>
-              <div className="divide-y divide-slate-100">
-                  {sortedActivities.map((item) => (
-                    <ActivityItemCard key={`activity-${item.id}`} item={item} onDelete={handleDelete} />
-                  ))}
-              </div>
-            </div>
-          )}
-        </Card>
-      )}
+                                    <div className="flex justify-center mt-4">
+                                        <Button onClick={onAddFood} className="rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-bold px-8">
+                                            <Plus className="mr-2 h-4 w-4" /> Add Food
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Drawer.Content>
+                </Drawer.Portal>
+            </Drawer.Root>
+        </div>
 
-      {!isLoading && !hasAnyItems && (
-        <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 bg-transparent shadow-none">
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
-                 <Soup className="h-6 w-6" />
-            </div>
-            <h3 className="text-sm font-semibold text-slate-900">No logs yet</h3>
-            <p className="text-sm text-slate-600 mb-6">Start tracking your meals for today.</p>
-            <Button onClick={onAddFood} variant="outline" size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Log Food
-            </Button>
-        </Card>
-      )}
-
-      <EditFoodLogItemSheet 
-        isOpen={isEditSheetOpen}
-        setIsOpen={setIsEditSheetOpen}
-        item={itemToEdit}
-        selectedDate={selectedDate}
-      />
-    </div>
+        <EditFoodLogItemSheet
+            isOpen={isEditSheetOpen}
+            setIsOpen={setIsEditSheetOpen}
+            item={itemToEdit}
+            selectedDate={selectedDate}
+        />
+    </>
   );
 }

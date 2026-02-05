@@ -1,6 +1,6 @@
 'use client';
 
-import { Leaf, LogOut, User as UserIcon, LineChart, Sun, Moon } from 'lucide-react';
+import { LogOut, User as UserIcon, LineChart } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { Button } from '../ui/button';
 import {
@@ -14,23 +14,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { getAuth, signOut } from 'firebase/auth';
 import Link from 'next/link';
-import { useTheme } from 'next-themes';
-
-function ThemeToggle() {
-    const { setTheme, theme } = useTheme()
-
-    return (
-        <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-        >
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-        </Button>
-    )
-}
+import Image from 'next/image';
+import type { UserProfile } from '@/lib/types';
 
 function UserNav() {
   const { user, userProfile } = useFirebase();
@@ -56,10 +41,10 @@ function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-9 w-9">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full border border-slate-200">
+          <Avatar className="h-10 w-10">
             <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+            <AvatarFallback className="bg-slate-100 text-slate-700 font-bold">{getInitials(user.displayName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -96,20 +81,34 @@ function UserNav() {
   );
 }
 
-export function AppHeader() {
+export function AppHeader({ userProfile }: { userProfile?: UserProfile | null }) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b-4 border-primary/20 bg-white/70 backdrop-blur-xl shadow-sm">
-      <div className="container mx-auto flex h-20 max-w-5xl items-center px-4">
-        <Link href="/" className='flex items-center group gap-2'>
-            <div className="p-2 rounded-2xl bg-primary/20 group-hover:scale-110 transition-transform duration-300 shadow-inner">
-              <Leaf className="h-7 w-7 text-primary-foreground" />
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md">
+      <div className="container mx-auto flex h-20 max-w-5xl items-center px-4 justify-between">
+        <Link href="/" className='flex items-center gap-3 group'>
+            <div className="relative w-10 h-10 transition-transform duration-500 group-hover:rotate-12">
+               <Image src="/logo-green.svg" alt="byeFat Logo" fill className="object-contain" />
             </div>
-            <h1 className="text-3xl font-black text-primary-foreground tracking-tight drop-shadow-sm">
-            byeFat
-            </h1>
+            {userProfile ? (
+                <div className="hidden sm:block">
+                    <h1 className="text-lg font-black text-slate-900 leading-none">
+                        {userProfile.name || 'Hello!'}
+                    </h1>
+                    <span className="text-xs font-bold text-green-600 uppercase tracking-wide">Let's crush today's goals.</span>
+                </div>
+            ) : (
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight">byeFat</h1>
+            )}
         </Link>
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
+
+        {/* Mobile: Name shown only if space permits or hidden */}
+        {userProfile && (
+             <div className="sm:hidden text-right mr-3">
+                <span className="text-xs font-bold text-green-600 uppercase tracking-wide block">Goals</span>
+             </div>
+        )}
+
+        <div className="flex items-center gap-2">
           <UserNav />
         </div>
       </div>

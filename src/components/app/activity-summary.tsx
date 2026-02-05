@@ -51,19 +51,6 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
 
   return (
     <div className="space-y-6">
-      {/* User Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-lg font-black text-black">
-            {userProfile.name?.charAt(0) || 'U'}
-        </div>
-        <div>
-            <h2 className="text-xl font-black text-black leading-tight">
-                {userProfile.name}
-            </h2>
-            <span className="text-sm font-bold text-slate-500">Let's crush today's goals.</span>
-        </div>
-      </div>
-
       {/* 3D Ring Card */}
       <Card className="fitness-card p-6 relative overflow-hidden bg-white">
          <div className="flex flex-col items-center justify-center gap-6">

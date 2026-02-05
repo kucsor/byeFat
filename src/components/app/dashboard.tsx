@@ -13,6 +13,7 @@ import { format, isToday, isYesterday, addDays, subDays } from 'date-fns';
 import dynamic from 'next/dynamic';
 import { FabMenu } from './fab-menu';
 import { motion } from 'framer-motion';
+import { AppHeader } from './header';
 
 // Lazy load all the sheets
 const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then(mod => mod.AiPortionCalculator));
@@ -80,28 +81,26 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
 
   return (
     <>
-      <div className="container mx-auto max-w-4xl p-4 md:p-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            Dashboard
-          </h1>
-          <div className="flex items-center gap-1 bg-white p-1 rounded-lg border shadow-sm">
+      <AppHeader userProfile={userProfile} />
+      <div className="container mx-auto max-w-xl p-4 md:p-8 pb-32">
+        <div className="flex justify-center mb-6">
+          <div className="flex items-center gap-1 bg-white p-1 rounded-full border shadow-sm">
             <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-md h-8 w-8 hover:bg-slate-50"
+                className="rounded-full h-8 w-8 hover:bg-slate-50"
                 onClick={() => setSelectedDate(subDays(selectedDate, 1))}
             >
                 <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2 px-4 font-medium text-sm min-w-[120px] justify-center text-slate-600">
+            <div className="flex items-center gap-2 px-4 font-bold text-sm min-w-[120px] justify-center text-slate-700">
                 <CalendarDays className="h-4 w-4 opacity-50" />
                 {dateLabel}
             </div>
             <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-md h-8 w-8 hover:bg-slate-50"
+                className="rounded-full h-8 w-8 hover:bg-slate-50"
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
                 disabled={isToday(selectedDate)}
             >
@@ -110,24 +109,21 @@ export function Dashboard({ user, userProfile }: { user: User, userProfile: User
           </div>
         </div>
 
-        <div className="space-y-8">
-            <section>
-                <ActivitySummary
-                  foodItems={foodItems}
-                  activities={activities}
-                  userProfile={userProfile}
-                  selectedLog={selectedLog}
-                />
-            </section>
+        <div className="space-y-6">
+            <ActivitySummary
+                foodItems={foodItems}
+                activities={activities}
+                userProfile={userProfile}
+                selectedLog={selectedLog}
+            />
 
-            <section>
-                <FoodLog
-                  items={foodItems}
-                  activities={activities}
-                  selectedDate={selectedDateString}
-                  onAddFood={() => setIsAddFoodSheetOpen(true)}
-                />
-            </section>
+            {/* The Food Log is now handled by the bottom Peek Drawer inside FoodLog component */}
+            <FoodLog
+                items={foodItems}
+                activities={activities}
+                selectedDate={selectedDateString}
+                onAddFood={() => setIsAddFoodSheetOpen(true)}
+            />
         </div>
       </div>
 
