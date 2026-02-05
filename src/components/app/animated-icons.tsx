@@ -2,201 +2,152 @@
 
 import { motion } from 'framer-motion';
 
-export const DancingApple = () => (
-  <motion.svg
-    width="40"
-    height="40"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    animate={{
-      y: [0, -4, 0],
-      rotate: [0, -5, 5, 0],
-      scaleY: [1, 0.9, 1.1, 1],
-    }}
-    transition={{
-      duration: 2,
-      repeat: Infinity,
-      ease: "easeInOut",
-    }}
-  >
-    <path
-      d="M12 5C10 3 6 3 4 5C2 7 2 11 4 15C6 19 10 21 12 21C14 21 18 19 20 15C22 11 22 7 20 5C18 3 14 3 12 5Z"
-      fill="#FFB6C1"
-      stroke="#FF69B4"
-      strokeWidth="2"
-    />
-    <path
-      d="M12 5V3"
-      stroke="#4ade80"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M12 5C13 4 15 4 16 3"
-      stroke="#4ade80"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </motion.svg>
-);
+// --- FUTURISTIC ICONS SET ---
 
-export const PlayfulFlame = () => (
+export const CyberFlame = () => (
   <motion.svg
-    width="40"
-    height="40"
+    width="48"
+    height="48"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    animate={{
-      scale: [1, 1.1, 0.9, 1.05, 1],
-      y: [0, -2, 0],
-    }}
-    transition={{
-      duration: 1.5,
-      repeat: Infinity,
-      ease: "easeInOut",
-    }}
+    className="drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]"
   >
+    <defs>
+      <linearGradient id="flameGradient" x1="12" y1="2" x2="12" y2="22">
+        <stop offset="0%" stopColor="#F59E0B" />
+        <stop offset="100%" stopColor="#EF4444" />
+      </linearGradient>
+    </defs>
     <motion.path
-      d="M12 2C12 2 7 6 7 11C7 15.5 10.5 19 12 22C13.5 19 17 15.5 17 11C17 6 12 2 12 2Z"
-      fill="#FFE082"
-      stroke="#F59E0B"
-      strokeWidth="2"
-      animate={{
-        d: [
-            "M12 2C12 2 7 6 7 11C7 15.5 10.5 19 12 22C13.5 19 17 15.5 17 11C17 6 12 2 12 2Z",
-            "M12 3C12 3 8 7 8 11.5C8 15 10.5 18 12 21C13.5 18 16 15 16 11.5C16 7 12 3 12 3Z",
-            "M12 2C12 2 7 6 7 11C7 15.5 10.5 19 12 22C13.5 19 17 15.5 17 11C17 6 12 2 12 2Z"
-        ]
-      }}
-      transition={{ duration: 1, repeat: Infinity }}
-    />
-    <path
-      d="M12 11C12 11 10 13 10 15C10 17 11 18 12 19C13 18 14 17 14 15C14 13 12 11 12 11Z"
-      fill="#F59E0B"
-    />
-  </motion.svg>
-);
-
-export const BouncyActivity = () => (
-  <motion.svg
-    width="40"
-    height="40"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    animate={{
-      scale: [1, 1.1, 1],
-    }}
-    transition={{
-      duration: 1,
-      repeat: Infinity,
-      ease: "easeInOut",
-    }}
-  >
-    <path
-      d="M13 15C13 15 11.5 13 10 13C8.5 13 7.5 14.5 7.5 16C7.5 17.5 9 19 11 19H17C19 19 21 17.5 21 15.5C21 13.5 19.5 12 17.5 12C16.5 12 15.5 12.5 15 13.5"
-      stroke="#0d9488"
+      d="M12 2C12 2 8 7 8 12C8 16.5 10.5 19 12 22C13.5 19 16 16.5 16 12C16 7 12 2 12 2Z"
+      stroke="url(#flameGradient)"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      fill="#99f6e4"
-    />
-    <motion.path
-      d="M15 13.5C15 13.5 15 10 13 8C11 6 8 6 8 6"
-      stroke="#0d9488"
-      strokeWidth="2"
-      strokeLinecap="round"
+      fill="url(#flameGradient)"
+      fillOpacity="0.2"
       animate={{
         d: [
-          "M15 13.5C15 13.5 15 10 13 8C11 6 8 6 8 6",
-          "M15 13.5C15 13.5 17 10 16 8C15 6 13 6 13 6",
-          "M15 13.5C15 13.5 15 10 13 8C11 6 8 6 8 6"
-        ]
+            "M12 2C12 2 8 7 8 12C8 16.5 10.5 19 12 22C13.5 19 16 16.5 16 12C16 7 12 2 12 2Z",
+            "M12 3C12 3 8.5 7.5 8.5 12C8.5 15.5 10.5 18 12 21C13.5 18 15.5 15.5 15.5 12C15.5 7.5 12 3 12 3Z",
+            "M12 2C12 2 8 7 8 12C8 16.5 10.5 19 12 22C13.5 19 16 16.5 16 12C16 7 12 2 12 2Z"
+        ],
+        filter: ["brightness(1)", "brightness(1.3)", "brightness(1)"]
       }}
-      transition={{ duration: 1, repeat: Infinity }}
+      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.path
+        d="M12 12L12 16"
+        stroke="#FCD34D"
+        strokeWidth="2"
+        strokeLinecap="round"
+        animate={{ height: [4, 6, 4], opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1, repeat: Infinity }}
     />
   </motion.svg>
 );
 
-export const HappyStar = () => (
+export const NeonPulse = () => (
   <motion.svg
-    width="40"
-    height="40"
+    width="48"
+    height="48"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    animate={{
-      scale: [1, 1.2, 1],
-      rotate: [0, 10, -10, 0],
-    }}
-    transition={{
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut",
-    }}
+    className="drop-shadow-[0_0_8px_rgba(0,102,255,0.6)]"
   >
     <path
-      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-      fill="#FEF08A"
-      stroke="#EAB308"
+      d="M3 12H6L9 3L13 21L17 12H21"
+      stroke="#0066FF"
       strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
+      strokeOpacity="0.2"
     />
-    <circle cx="9" cy="11" r="1" fill="#854d0e" />
-    <circle cx="15" cy="11" r="1" fill="#854d0e" />
-    <path d="M10 14C10 14 11 15 12 15C13 15 14 14 14 14" stroke="#854d0e" strokeWidth="1.5" strokeLinecap="round" />
+    <motion.path
+      d="M3 12H6L9 3L13 21L17 12H21"
+      stroke="#0066FF"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      initial={{ pathLength: 0, opacity: 0 }}
+      animate={{ pathLength: 1, opacity: 1 }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+    />
   </motion.svg>
 );
 
-export const PlateCutlery = () => (
+export const QuantumFood = () => (
   <motion.svg
-    width="40"
-    height="40"
+    width="48"
+    height="48"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    animate={{
-      scale: [1, 1.05, 1],
-      rotate: [0, 2, -2, 0],
-    }}
-    transition={{
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut",
-    }}
   >
-    {/* Plate */}
-    <circle cx="12" cy="12" r="9" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="2" />
-    <circle cx="12" cy="12" r="6" stroke="#bae6fd" strokeWidth="1" strokeDasharray="2 2" />
+    <defs>
+      <linearGradient id="appleGradient" x1="0" y1="0" x2="24" y2="24">
+        <stop offset="0%" stopColor="#34D399" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+    </defs>
+    <motion.circle
+        cx="12" cy="13" r="8"
+        stroke="url(#appleGradient)"
+        strokeWidth="2"
+        fill="url(#appleGradient)"
+        fillOpacity="0.1"
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 3, repeat: Infinity }}
+    />
+    <path d="M12 5V2" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+    <path d="M12 5C14 4 16 4 17 3" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
 
-    {/* Knife */}
+    {/* Digital Grid Overlay */}
+    <rect x="8" y="9" width="2" height="2" fill="#10B981" fillOpacity="0.5" />
+    <rect x="14" y="9" width="2" height="2" fill="#10B981" fillOpacity="0.5" />
+    <rect x="8" y="15" width="2" height="2" fill="#10B981" fillOpacity="0.5" />
+    <rect x="14" y="15" width="2" height="2" fill="#10B981" fillOpacity="0.5" />
+  </motion.svg>
+);
+
+export const DataShield = () => (
+  <motion.svg
+    width="48"
+    height="48"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="drop-shadow-[0_0_10px_rgba(0,217,255,0.4)]"
+  >
     <motion.path
-      d="M17 8V16"
-      stroke="#94a3b8"
+      d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z"
+      stroke="#00D9FF"
       strokeWidth="2"
       strokeLinecap="round"
-      animate={{ y: [0, -1, 0] }}
-      transition={{ duration: 1.5, repeat: Infinity }}
+      strokeLinejoin="round"
+      fill="#00D9FF"
+      fillOpacity="0.05"
+      animate={{ strokeOpacity: [0.5, 1, 0.5] }}
+      transition={{ duration: 2, repeat: Infinity }}
     />
     <motion.path
-      d="M17 16V18"
-      stroke="#64748b"
+      d="M9 12L11 14L15 10"
+      stroke="#00D9FF"
       strokeWidth="2"
       strokeLinecap="round"
-      animate={{ y: [0, -1, 0] }}
-      transition={{ duration: 1.5, repeat: Infinity }}
-    />
-
-    {/* Fork */}
-    <motion.path
-      d="M7 8V12M7 12V18M5 8V11M9 8V11"
-      stroke="#94a3b8"
-      strokeWidth="2"
-      strokeLinecap="round"
-      animate={{ y: [0, 1, 0] }}
-      transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+      strokeLinejoin="round"
+      initial={{ pathLength: 0 }}
+      animate={{ pathLength: 1 }}
+      transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
     />
   </motion.svg>
 );
+
+// --- COMPATIBILITY EXPORTS (Aliasing old names to new icons temporarily) ---
+export const DancingApple = QuantumFood;
+export const PlayfulFlame = CyberFlame;
+export const BouncyActivity = NeonPulse;
+export const HappyStar = DataShield; // Approximate mapping
+export const PlateCutlery = QuantumFood;
