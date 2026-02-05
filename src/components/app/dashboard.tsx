@@ -1,180 +1,150 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
-import { User } from 'firebase/auth';
-import { collection, query, doc, updateDoc } from 'firebase/firestore';
-import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { DailyLog, DailyLogItem, DailyLogActivity, UserProfile } from '@/lib/types';
-import { ActivitySummary } from './activity-summary';
-import { FoodLog } from './food-log';
-import { Button } from '../ui/button';
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
-import { format, isToday, isYesterday, addDays, subDays } from 'date-fns';
-import dynamic from 'next/dynamic';
-import { FabMenu } from './fab-menu';
-import { motion } from 'framer-motion';
 import { AppHeader } from './header';
+import { DailySummary } from './daily-summary';
+import { FoodLog } from './food-log';
+import { BottomNav } from './bottom-nav';
+import { AddFoodSheet } from './add-food-sheet';
+import { AddActivitySheet } from './add-activity-sheet';
+import { BarcodeScannerSheet } from './barcode-scanner-sheet';
+import { AddManualLogSheet } from './add-manual-log-sheet';
+import { ProductFormSheet } from './product-form-sheet';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { Button } from '@/components/ui/button';
+import { Utensils, Dumbbell } from 'lucide-react';
+import { FabMenu } from './fab-menu';
+import { useState } from 'react';
+import { UserLevelCard } from './user-level-card';
+import { format } from 'date-fns';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
 
-// Lazy load all the sheets
-const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then(mod => mod.AiPortionCalculator));
-const BarcodeScannerSheet = dynamic(() => import('./barcode-scanner-sheet').then(mod => mod.BarcodeScannerSheet));
-const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
-const AddActivitySheet = dynamic(() => import('./add-activity-sheet').then(mod => mod.AddActivitySheet));
-const AddManualLogSheet = dynamic(() => import('./add-manual-log-sheet').then(mod => mod.AddManualLogSheet));
-
-
-export function Dashboard({ user, userProfile }: { user: User, userProfile: UserProfile }) {
-  const { firestore } = useFirebase();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-
-  // State for all sheets
-  const [isAiCalculatorOpen, setIsAiCalculatorOpen] = useState(false);
+export default function Dashboard() {
+  const { userProfile, firestore, user } = useFirebase();
+  const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
+  const [isAddActivityOpen, setIsAddActivityOpen] = useState(false);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
-  const [isAddFoodSheetOpen, setIsAddFoodSheetOpen] = useState(false);
-  const [isActivitySheetOpen, setIsActivitySheetOpen] = useState(false);
   const [isManualLogOpen, setIsManualLogOpen] = useState(false);
+  const [isAiCalculatorOpen, setIsAiCalculatorOpen] = useState(false);
 
-  const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
+  const today = format(new Date(), 'yyyy-MM-dd');
 
-  const dailyLogDocRef = useMemoFirebase(() => {
-    if (!user) return null;
-    return doc(firestore, `users/${user.uid}/dailyLogs`, selectedDateString);
-  }, [user, firestore, selectedDateString]);
+  // Fetch Daily Log Document (for goals/aggregated stats)
+  const dailyLogQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, `users/${user.uid}/dailyLogs`),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
 
-  const { data: selectedLog, isLoading: isLogLoading } = useDoc<DailyLog>(dailyLogDocRef);
+  const { data: dailyLogs, isLoading: isLogLoading } = useCollection<DailyLog>(dailyLogQuery);
+  const selectedLog = dailyLogs?.[0] || null;
 
-  const foodItemsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/items`));
-  }, [user, firestore, selectedDateString]);
+  // Fetch Items Subcollection
+  const itemsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, `users/${user.uid}/dailyLogs/${today}/items`),
+      orderBy('createdAt', 'desc')
+    );
+  }, [firestore, user, today]);
 
-  const { data: foodItems } = useCollection<DailyLogItem>(foodItemsQuery);
+  const { data: items } = useCollection<DailyLogItem>(itemsQuery);
 
+  // Fetch Activities Subcollection
   const activitiesQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/activities`));
-    }, [user, firestore, selectedDateString]);
+    if (!firestore || !user) return null;
+    return query(
+        collection(firestore, `users/${user.uid}/dailyLogs/${today}/activities`),
+        orderBy('createdAt', 'desc')
+    );
+  }, [firestore, user, today]);
 
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
 
-  // Sync activeCalories logic (preserved)
-  useEffect(() => {
-    if (!selectedLog || !activities) return;
-    const totalActiveFromActivities = activities.reduce((acc, curr) => acc + curr.calories, 0);
-    const storedActive = selectedLog.activeCalories || 0;
-
-    if (totalActiveFromActivities !== storedActive && dailyLogDocRef) {
-      updateDoc(dailyLogDocRef, {
-        activeCalories: totalActiveFromActivities
-      }).catch(err => {
-        console.error("Failed to sync active calories:", err);
-      });
-    }
-  }, [activities, selectedLog, dailyLogDocRef]);
-  
-  const dateLabel = useMemo(() => {
-    if (isToday(selectedDate)) return 'Today';
-    if (isYesterday(selectedDate)) return 'Yesterday';
-    return format(selectedDate, 'MMM d');
-  }, [selectedDate]);
-
-
   return (
-    <>
+    <div className="flex min-h-screen w-full flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-white pb-24 md:pb-8">
       <AppHeader userProfile={userProfile} />
-      <div className="container mx-auto max-w-xl p-4 md:p-8 pb-32">
-        <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-1 bg-white p-1 rounded-full border shadow-sm">
+
+      <main className="container mx-auto max-w-xl flex-1 space-y-6 p-4">
+        {/* User Level Card - Gamification */}
+        <UserLevelCard />
+
+        {/* Daily Summary */}
+        <DailySummary />
+
+        {/* Actions Grid */}
+        <div className="grid grid-cols-2 gap-3">
             <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full h-8 w-8 hover:bg-slate-50"
-                onClick={() => setSelectedDate(subDays(selectedDate, 1))}
+                variant="outline"
+                className="h-24 flex flex-col gap-2 rounded-2xl border-dashed border-2 hover:border-primary hover:bg-primary/5 glass-card"
+                onClick={() => setIsAddFoodOpen(true)}
             >
-                <ChevronLeft className="h-4 w-4" />
+                <div className="p-2 rounded-full bg-primary/10 text-primary">
+                    <Utensils className="h-6 w-6" />
+                </div>
+                <span className="font-bold text-xs uppercase tracking-wider">Log Food</span>
             </Button>
-            <div className="flex items-center gap-2 px-4 font-bold text-sm min-w-[120px] justify-center text-slate-700">
-                <CalendarDays className="h-4 w-4 opacity-50" />
-                {dateLabel}
-            </div>
+
             <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full h-8 w-8 hover:bg-slate-50"
-                onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-                disabled={isToday(selectedDate)}
+                variant="outline"
+                className="h-24 flex flex-col gap-2 rounded-2xl border-dashed border-2 hover:border-accent hover:bg-accent/5 glass-card"
+                onClick={() => setIsAddActivityOpen(true)}
             >
-                <ChevronRight className="h-4 w-4" />
+                <div className="p-2 rounded-full bg-accent/10 text-accent">
+                    <Dumbbell className="h-6 w-6" />
+                </div>
+                <span className="font-bold text-xs uppercase tracking-wider">Log Activity</span>
             </Button>
-          </div>
         </div>
 
+        {/* Logs */}
         <div className="space-y-6">
-            <ActivitySummary
-                foodItems={foodItems}
+            <FoodLog
+                items={items}
                 activities={activities}
+                selectedDate={today}
+                onAddFood={() => setIsAddFoodOpen(true)}
+            />
+        </div>
+      </main>
+
+      {/* Sheets */}
+      {userProfile && (
+        <>
+            <AddFoodSheet
+                isOpen={isAddFoodOpen}
+                setIsOpen={setIsAddFoodOpen}
+                selectedDate={today}
                 userProfile={userProfile}
                 selectedLog={selectedLog}
+                isLogLoading={isLogLoading}
             />
 
-            {/* The Food Log is now handled by the bottom Peek Drawer inside FoodLog component */}
-            <FoodLog
-                items={foodItems}
-                activities={activities}
-                selectedDate={selectedDateString}
-                onAddFood={() => setIsAddFoodSheetOpen(true)}
+            <AddActivitySheet
+                isOpen={isAddActivityOpen}
+                setIsOpen={setIsAddActivityOpen}
+                selectedDate={today}
+                userProfile={userProfile}
+                selectedLog={selectedLog}
+                isLogLoading={isLogLoading}
             />
-        </div>
+        </>
+      )}
+
+      {/* Floating Action Button Menu (Mobile) */}
+      <div className="md:hidden">
+          <FabMenu
+             onAddFood={() => setIsAddFoodOpen(true)}
+             onLogActivity={() => setIsAddActivityOpen(true)}
+             onScanBarcode={() => setIsBarcodeScannerOpen(true)}
+             onAiCalculator={() => setIsAiCalculatorOpen(true)}
+             onManualLog={() => setIsManualLogOpen(true)}
+          />
       </div>
 
-      <FabMenu 
-        onAddFood={() => setIsAddFoodSheetOpen(true)}
-        onLogActivity={() => setIsActivitySheetOpen(true)}
-        onScanBarcode={() => setIsBarcodeScannerOpen(true)}
-        onAiCalculator={() => setIsAiCalculatorOpen(true)}
-        onManualLog={() => setIsManualLogOpen(true)}
-      />
-
-      <BarcodeScannerSheet 
-        isOpen={isBarcodeScannerOpen}
-        setIsOpen={setIsBarcodeScannerOpen}
-        selectedDate={selectedDateString} 
-        userProfile={userProfile} 
-        selectedLog={selectedLog}
-        isLogLoading={isLogLoading}
-      />
-      <AiPortionCalculator 
-        isOpen={isAiCalculatorOpen}
-        setIsOpen={setIsAiCalculatorOpen}
-        selectedDate={selectedDateString}
-        userProfile={userProfile}
-        selectedLog={selectedLog}
-        isLogLoading={isLogLoading}
-      />
-       <AddFoodSheet
-        isOpen={isAddFoodSheetOpen}
-        setIsOpen={setIsAddFoodSheetOpen}
-        selectedDate={selectedDateString}
-        userProfile={userProfile}
-        selectedLog={selectedLog}
-        isLogLoading={isLogLoading}
-      />
-      <AddActivitySheet 
-        isOpen={isActivitySheetOpen} 
-        setIsOpen={setIsActivitySheetOpen} 
-        selectedDate={selectedDateString}
-        userProfile={userProfile}
-        selectedLog={selectedLog}
-        isLogLoading={isLogLoading}
-       />
-       <AddManualLogSheet
-        isOpen={isManualLogOpen}
-        setIsOpen={setIsManualLogOpen}
-        selectedDate={selectedDateString}
-        userProfile={userProfile}
-        selectedLog={selectedLog}
-        isLogLoading={isLogLoading}
-       />
-    </>
+      <BottomNav />
+    </div>
   );
 }
