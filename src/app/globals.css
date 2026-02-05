@@ -4,45 +4,47 @@
 
 @layer base {
   :root {
-    /* Modern Fitness Palette - Apple Health Inspired */
-    --background: 240 5% 96%; /* Very subtle cool gray (almost white) for page bg */
-    --foreground: 240 10% 3.9%; /* Sharp black/gray text */
+    /* High Contrast "Solid" Theme */
+    --background: 240 5% 98%; /* Almost white */
+    --foreground: 0 0% 0%; /* Pure Black */
 
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 221 83% 53%; /* Royal Blue - Active/Action */
-    --primary-foreground: 0 0% 98%;
+    /* High Saturation Accents */
+    --primary: 221 83% 40%; /* Deep Royal Blue */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4.8% 95.9%; /* Subtle gray for secondary actions */
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 240 5% 90%; /* Visible Light Gray */
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 5% 35%; /* Darker gray for better contrast */
+    --muted: 240 5% 90%;
+    --muted-foreground: 240 4% 30%; /* Dark Gray (Gray-700 equivalent) */
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 240 5% 90%;
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 142 70% 45%; /* Green for goals met */
-    --warning: 38 92% 50%; /* Amber for close calls */
+    --success: 142 76% 30%; /* Deep Green */
+    --warning: 38 92% 40%; /* Deep Amber */
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5% 64.9%;
+    --border: 240 5% 80%; /* Visible Border */
+    --input: 240 5% 80%;
+    --ring: 221 83% 40%;
 
-    --radius: 0.75rem; /* Modern standard radius */
+    --radius: 0.5rem;
 
-    --chart-1: 221 83% 53%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* Chart colors - High Saturation */
+    --chart-1: 221 83% 40%;
+    --chart-2: 173 58% 30%;
+    --chart-3: 197 37% 20%;
+    --chart-4: 43 74% 50%;
+    --chart-5: 27 87% 50%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -65,9 +67,9 @@
 }
 
 @layer components {
-  /* Utility for consistent card styling */
+  /* Utility for consistent card styling with visible borders */
   .fitness-card {
-    @apply bg-card rounded-xl border border-border/50 shadow-sm;
+    @apply bg-white rounded-lg border border-slate-300 shadow-sm;
   }
 
   .fitness-card-header {
@@ -75,14 +77,10 @@
   }
 
   .fitness-card-title {
-    @apply text-sm font-medium text-muted-foreground uppercase tracking-wide;
+    @apply text-sm font-bold text-slate-700 uppercase tracking-wide;
   }
 
   .fitness-card-value {
-    @apply text-2xl font-bold;
-  }
-
-  .fitness-shadow {
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    @apply text-2xl font-black text-black;
   }
 }

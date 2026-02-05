@@ -92,23 +92,23 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
       <div className="flex items-center justify-between">
          <div className="flex items-center gap-3">
             <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-lg font-bold text-slate-700">
+                <div className="w-12 h-12 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-lg font-black text-black">
                     {userProfile.name?.charAt(0) || 'U'}
                 </div>
-                 <div className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white">
+                 <div className="absolute -bottom-1 -right-1 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white">
                     {xpStats.currentLevel}
                 </div>
             </div>
             <div>
-                <h2 className="text-lg font-bold text-slate-900 leading-tight">
+                <h2 className="text-lg font-black text-black leading-tight">
                     {userProfile.name}
                 </h2>
                 <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-slate-600">{xpStats.xpInLevel} / {xpStats.xpRequired} XP</span>
+                    <span className="text-xs font-bold text-slate-700">{xpStats.xpInLevel} / {xpStats.xpRequired} XP</span>
                      {/* Mini XP Bar */}
-                    <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-20 h-2 bg-slate-200 rounded-full overflow-hidden border border-slate-300">
                         <div
-                            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                            className="h-full bg-blue-700 rounded-full transition-all duration-500"
                             style={{ width: `${xpStats.progressPercent}%` }}
                         />
                     </div>
@@ -118,19 +118,19 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
       </div>
 
       {/* Main Activity Card */}
-      <Card className="fitness-card p-6 relative overflow-hidden bg-white shadow-sm border-slate-200">
+      <Card className="fitness-card p-6 relative overflow-hidden bg-white">
          <div className="flex flex-col md:flex-row gap-8 items-center">
             {/* Left: Ring Chart */}
             <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
                  {/* SVG Ring */}
-                 <svg className="w-full h-full -rotate-90 drop-shadow-sm" viewBox="0 0 100 100">
+                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                     {/* Background Circle */}
                     <circle
                         cx="50" cy="50" r="45"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="8"
-                        className="text-slate-100"
+                        className="text-slate-200"
                     />
 
                     {/* Ring 1: Base Blue */}
@@ -140,7 +140,7 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
                         stroke="currentColor"
                         strokeWidth="8"
                         strokeLinecap="round"
-                        className="text-blue-600"
+                        className="text-blue-700"
                         strokeDasharray={circumference}
                         initial={{ strokeDashoffset: circumference }}
                         animate={{ strokeDashoffset: ring1Offset }}
@@ -155,7 +155,7 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
                             stroke="currentColor"
                             strokeWidth="8"
                             strokeLinecap="round"
-                            className="text-amber-500"
+                            className="text-amber-600"
                             strokeDasharray={circumference}
                             initial={{ strokeDashoffset: circumference }}
                             animate={{ strokeDashoffset: ring2Offset }}
@@ -171,7 +171,7 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
                             stroke="currentColor"
                             strokeWidth="8"
                             strokeLinecap="round"
-                            className="text-purple-600"
+                            className="text-purple-700"
                             strokeDasharray={circumference}
                             initial={{ strokeDashoffset: circumference }}
                             animate={{ strokeDashoffset: ring3Offset }}
@@ -181,47 +181,47 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
                  </svg>
 
                  <div className="absolute flex flex-col items-center">
-                    <span className="text-xs font-bold uppercase text-slate-500 tracking-wider">Deficit</span>
-                    <span className={cn("text-3xl font-black tabular-nums tracking-tight", displayColorClass)}>
+                    <span className="text-xs font-black uppercase text-slate-600 tracking-wider">Deficit</span>
+                    <span className={cn("text-3xl font-black tabular-nums tracking-tight", isDoubleOverachiever ? "text-purple-700" : isOverachiever ? "text-amber-600" : "text-blue-700")}>
                         {currentDeficit.toFixed(0)}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400">kcal</span>
+                    <span className="text-[10px] font-bold text-slate-500">kcal</span>
                  </div>
             </div>
 
             {/* Right: Metrics Grid */}
             <div className="flex-1 grid grid-cols-2 gap-x-8 gap-y-6 w-full">
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-slate-500 mb-1">
-                        <Zap className="h-4 w-4 text-orange-500" />
+                    <div className="flex items-center gap-2 text-slate-700 mb-1">
+                        <Zap className="h-4 w-4 text-orange-600" />
                         <span className="text-xs font-bold uppercase tracking-wide">Active</span>
                     </div>
-                    <div className="text-2xl font-bold tabular-nums text-slate-900">
-                        {totals.active} <span className="text-sm font-medium text-slate-400">kcal</span>
+                    <div className="text-2xl font-black tabular-nums text-black">
+                        {totals.active} <span className="text-sm font-bold text-slate-500">kcal</span>
                     </div>
                 </div>
 
                 <div className="space-y-1">
-                     <div className="flex items-center gap-2 text-slate-500 mb-1">
-                        <Apple className="h-4 w-4 text-emerald-500" />
+                     <div className="flex items-center gap-2 text-slate-700 mb-1">
+                        <Apple className="h-4 w-4 text-emerald-600" />
                         <span className="text-xs font-bold uppercase tracking-wide">Food</span>
                     </div>
-                    <div className="text-2xl font-bold tabular-nums text-slate-900">
-                        {totals.food} <span className="text-sm font-medium text-slate-400">kcal</span>
+                    <div className="text-2xl font-black tabular-nums text-black">
+                        {totals.food} <span className="text-sm font-bold text-slate-500">kcal</span>
                     </div>
                 </div>
 
-                <div className="space-y-2 col-span-2 border-t border-slate-100 pt-4">
+                <div className="space-y-2 col-span-2 border-t border-slate-200 pt-4">
                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-600 font-bold">Goal Progress</span>
-                        <span className={cn("font-black tabular-nums", displayColorClass)}>
+                        <span className="text-slate-800 font-bold">Goal Progress</span>
+                        <span className={cn("font-black tabular-nums", isDoubleOverachiever ? "text-purple-700" : isOverachiever ? "text-amber-600" : "text-blue-700")}>
                             {Math.round(rawPercentage)}%
                         </span>
                      </div>
-                     <div className="relative h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                     <div className="relative h-3 w-full bg-slate-200 rounded-full overflow-hidden border border-slate-300">
                         {/* Layer 1 Progress */}
                         <motion.div
-                            className="absolute top-0 left-0 h-full bg-blue-600 rounded-full"
+                            className="absolute top-0 left-0 h-full bg-blue-700 rounded-full"
                             initial={{ width: 0 }}
                             animate={{ width: `${ring1Percent}%` }}
                         />
@@ -244,7 +244,7 @@ export function ActivitySummary({ foodItems, activities, userProfile, selectedLo
                             />
                         )}
                      </div>
-                     <p className="text-xs text-slate-400 text-right">Target: {deficitTarget} kcal</p>
+                     <p className="text-xs text-slate-600 font-bold text-right">Target: {deficitTarget} kcal</p>
                 </div>
             </div>
          </div>
