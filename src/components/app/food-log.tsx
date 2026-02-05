@@ -36,102 +36,105 @@ type DailyLogProps = {
 const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void, onEdit: (item: DailyLogItem) => void }) {
   const isAiItem = item.productId.startsWith('ai-');
 
-  // Format the time from Firestore Timestamp
   const timeLabel = useMemo(() => {
     if (!item.createdAt || !item.createdAt.toDate) return '';
     return item.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, [item.createdAt]);
 
   return (
-    <Card className="rpg-card group hover:shadow-lg transition-all border-l-4 border-l-slate-200">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 p-4">
-        <div className="flex flex-col gap-1">
-          <CardTitle className="text-lg font-headline leading-tight text-slate-800">{item.productName}</CardTitle>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="font-bold font-mono text-xs">{item.grams}g</span>
-            {timeLabel && (
-              <>
-                <span className="text-[10px] text-slate-300">•</span>
-                <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span className="font-bold font-mono text-xs">{timeLabel}</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="font-mono font-bold text-xl text-primary leading-none">{item.calories}</div>
-              <div className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">kcal</div>
+    <div className="group flex items-center justify-between py-3 px-4 bg-card border-b last:border-0 hover:bg-slate-50 transition-colors">
+        <div className="flex flex-col gap-0.5">
+            <span className="font-medium text-slate-900">{item.productName}</span>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-medium text-slate-500">{item.grams}g</span>
+                {timeLabel && (
+                    <>
+                        <span>•</span>
+                        <span>{timeLabel}</span>
+                    </>
+                )}
             </div>
-            {!isAiItem && (
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
-                  <Pencil className="h-4 w-4" />
-                  <span className="sr-only">Edit</span>
-              </Button>
-            )}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete the entry for &quot;{item.productName}&quot;. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(item.id, 'items', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
         </div>
-      </CardHeader>
-    </Card>
+
+        <div className="flex items-center gap-4">
+             <div className="text-right">
+                <div className="text-sm font-bold text-slate-900">{item.calories}</div>
+                <div className="text-[10px] text-muted-foreground">kcal</div>
+            </div>
+
+            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {!isAiItem && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600" onClick={() => onEdit(item)}>
+                    <Pencil className="h-4 w-4" />
+                </Button>
+                )}
+                <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/5">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Remove "{item.productName}" from your log.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDelete(item.id, 'items', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </div>
+    </div>
   )
 });
 
 const ActivityItemCard = memo(function ActivityItemCard({ item, onDelete }: { item: DailyLogActivity, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void }) {
   return (
-    <Card className="rpg-card group hover:shadow-lg transition-all border-l-4 border-l-orange-400">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 p-4">
-        <div className="flex items-center gap-4">
-          <div className="p-2 rounded bg-orange-100">
-            <Flame className="h-6 w-6 text-orange-600" />
-          </div>
-          <div className='space-y-0.5'>
-            <CardTitle className="text-lg font-headline text-slate-800">{item.name}</CardTitle>
-            <CardDescription className="font-mono font-bold text-xs uppercase tracking-wider text-orange-600">+{item.calories} XP (Burned)</CardDescription>
-          </div>
+    <div className="group flex items-center justify-between py-3 px-4 bg-card border-b last:border-0 hover:bg-slate-50 transition-colors">
+        <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                <Flame className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+                <span className="font-medium text-slate-900">{item.name}</span>
+                <span className="text-xs text-orange-600 font-medium">Burned</span>
+            </div>
         </div>
-        <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete</span>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete the activity &quot;{item.name}&quot;. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(item.id, 'activities', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-      </CardHeader>
-    </Card>
+
+        <div className="flex items-center gap-4">
+             <div className="text-right">
+                <div className="text-sm font-bold text-slate-900">{item.calories}</div>
+                <div className="text-[10px] text-muted-foreground">kcal</div>
+            </div>
+
+            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/5">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Activity?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Remove "{item.name}" from your log.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDelete(item.id, 'activities', item.calories)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </div>
+    </div>
   )
 });
 
@@ -192,93 +195,57 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
   const isLoading = items === undefined || activities === undefined;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center px-2">
-        <h2 className="text-2xl font-headline font-bold text-foreground flex items-center gap-2">
-            <span className="text-primary">Inventory</span> / Logs
+    <div className="space-y-4">
+      <div className="flex justify-between items-center px-1">
+        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
+            Today's Log
         </h2>
       </div>
 
       {isLoading && (
-         <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
-             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-         </Card>
+         <div className="flex justify-center p-12">
+             <Loader2 className="h-6 w-6 animate-spin text-slate-300" />
+         </div>
       )}
 
       {hasAnyItems && (
-        <div className="space-y-6">
-          {/* Food Items List - Flat List without categories */}
+        <Card className="fitness-card overflow-hidden border-0 shadow-sm bg-white">
+          {/* Food Items List */}
           {sortedItems.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-2"
-            >
-              <AnimatePresence mode='popLayout'>
+            <div className="divide-y divide-slate-100">
                 {sortedItems.map((item) => (
-                  <motion.div
-                    key={`food-${item.id}`}
-                    layout
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                  >
-                    <FoodItemCard item={item} onDelete={handleDelete} onEdit={handleEdit} />
-                  </motion.div>
+                    <FoodItemCard key={`food-${item.id}`} item={item} onDelete={handleDelete} onEdit={handleEdit} />
                 ))}
-              </AnimatePresence>
-            </motion.div>
+            </div>
           )}
 
           {/* Activities Section */}
           {sortedActivities.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-3 pt-4 border-t"
-            >
-              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-orange-50 dark:bg-orange-950/30">
-                <div className="flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-orange-500" />
-                  <span className="font-semibold text-orange-500">Activități</span>
-                </div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  +{sortedActivities.reduce((sum, item) => sum + item.calories, 0)} kcal
-                </span>
-              </div>
-              <div className="space-y-2">
-                <AnimatePresence>
+            <div className="border-t border-slate-100">
+               <div className="bg-slate-50/50 px-4 py-2 text-xs font-bold uppercase text-slate-400 tracking-wider">
+                    Activities
+               </div>
+              <div className="divide-y divide-slate-100">
                   {sortedActivities.map((item) => (
-                    <motion.div
-                      key={`activity-${item.id}`}
-                      layout
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                    >
-                      <ActivityItemCard item={item} onDelete={handleDelete} />
-                    </motion.div>
+                    <ActivityItemCard key={`activity-${item.id}`} item={item} onDelete={handleDelete} />
                   ))}
-                </AnimatePresence>
               </div>
-            </motion.div>
+            </div>
           )}
-        </div>
+        </Card>
       )}
 
       {!isLoading && !hasAnyItems && (
-        <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
-            <CardHeader className="items-center">
-                <Soup className="h-12 w-12 text-muted-foreground mb-4" />
-                <CardTitle>Niciun aliment înregistrat</CardTitle>
-                <CardDescription>Jurnalul pentru această zi este gol. Începe acum.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Button onClick={onAddFood} size="lg">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adaugă primul aliment
-                </Button>
-            </CardContent>
+        <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed border-2 bg-transparent shadow-none">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-400">
+                 <Soup className="h-6 w-6" />
+            </div>
+            <h3 className="text-sm font-semibold text-slate-900">No logs yet</h3>
+            <p className="text-sm text-slate-500 mb-6">Start tracking your meals for today.</p>
+            <Button onClick={onAddFood} variant="outline" size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Log Food
+            </Button>
         </Card>
       )}
 

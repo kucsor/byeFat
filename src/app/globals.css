@@ -4,38 +4,45 @@
 
 @layer base {
   :root {
-    /* Clean RPG Palette - Light Mode Forced */
-    --background: 210 20% 98%; /* Very light slate */
-    --foreground: 222 47% 11%; /* Dark slate blue */
+    /* Modern Fitness Palette - Apple Health Inspired */
+    --background: 240 5% 96%; /* Very subtle cool gray (almost white) for page bg */
+    --foreground: 240 10% 3.9%; /* Sharp black/gray text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 240 10% 3.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: 221 83% 53%; /* Royal Blue - Mana/Energy */
-    --primary-foreground: 210 40% 98%;
+    --primary: 221 83% 53%; /* Royal Blue - Active/Action */
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 48 96% 53%; /* Gold/Amber - XP/Level */
-    --secondary-foreground: 26 83% 14%;
+    --secondary: 240 4.8% 95.9%; /* Subtle gray for secondary actions */
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 262 83% 58%; /* Purple - Epic items/Magic */
-    --accent-foreground: 210 40% 98%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --success: 142 76% 36%; /* Emerald - Health */
+    --success: 142 70% 45%; /* Green for goals met */
+    --warning: 38 92% 50%; /* Amber for close calls */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5% 64.9%;
 
-    --radius: 0.5rem; /* Sharper corners for RPG UI */
+    --radius: 0.75rem; /* Modern standard radius */
+
+    --chart-1: 221 83% 53%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -46,8 +53,6 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-
-  /* Removed Dark Mode Layer Completely */
 }
 
 @layer base {
@@ -55,28 +60,29 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
 @layer components {
-  /* RPG UI Utilities */
-  .rpg-card {
-    @apply bg-card border border-border shadow-md rounded-lg relative overflow-hidden;
+  /* Utility for consistent card styling */
+  .fitness-card {
+    @apply bg-card rounded-xl border border-border/50 shadow-sm;
   }
 
-  .rpg-card-header {
-    @apply bg-muted/30 p-4 border-b border-border;
+  .fitness-card-header {
+    @apply flex flex-row items-center justify-between space-y-0 pb-2;
   }
 
-  .rpg-shadow {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  .fitness-card-title {
+    @apply text-sm font-medium text-muted-foreground uppercase tracking-wide;
   }
 
-  .glass {
-    @apply bg-white/60 backdrop-blur-md border border-white/40 shadow-lg;
+  .fitness-card-value {
+    @apply text-2xl font-bold;
+  }
+
+  .fitness-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
 }

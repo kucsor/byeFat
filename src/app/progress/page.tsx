@@ -297,49 +297,46 @@ export default function ProgressPage() {
         </div>
 
         {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                <Card className="rpg-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-                        <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Greutate Actuală</CardTitle>
-                        <Scale className="h-4 w-4 text-primary opacity-50" />
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                        <div className="text-3xl font-mono font-bold text-foreground">{stats.currentWeight?.toFixed(1)} <span className="text-sm font-sans font-bold text-muted-foreground">kg</span></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="shadow-sm border-0 bg-white">
+                    <CardContent className="p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Current Weight</div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-bold text-slate-900">{stats.currentWeight?.toFixed(1)}</span>
+                            <span className="text-sm text-slate-400">kg</span>
+                        </div>
                     </CardContent>
                 </Card>
-                <Card className="rpg-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-                        <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Evoluție</CardTitle>
-                         {stats.weightChange <= 0 ? <TrendingDown className="h-4 w-4 text-primary opacity-50" /> : <TrendingUp className="h-4 w-4 text-destructive opacity-50" />}
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
+                <Card className="shadow-sm border-0 bg-white">
+                    <CardContent className="p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Change</div>
                         <div className={cn(
-                            "text-3xl font-mono font-bold",
-                            stats.weightChange > 0 ? "text-destructive" : "text-primary"
+                            "text-2xl font-bold flex items-center gap-1",
+                            stats.weightChange > 0 ? "text-rose-500" : "text-emerald-500"
                         )}>
-                            {stats.weightChange > 0 ? '+' : ''}{stats.weightChange.toFixed(1)} <span className="text-sm font-sans font-bold opacity-70">kg</span>
+                            {stats.weightChange > 0 ? '+' : ''}{stats.weightChange.toFixed(1)}
+                            <span className="text-sm text-slate-400 font-normal">kg</span>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rpg-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-                        <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">BMI Actual</CardTitle>
-                        <HeartPulse className="h-4 w-4 text-primary opacity-50" />
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                        <div className="text-3xl font-mono font-bold text-foreground">{stats.bmi ? stats.bmi.toFixed(1) : 'N/A'}</div>
-                        <div className="text-[10px] font-bold uppercase text-muted-foreground truncate">
-                            {stats.bmi ? getBmiCategory(stats.bmi) : 'Setează înălțimea'}
+                <Card className="shadow-sm border-0 bg-white">
+                    <CardContent className="p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">BMI</div>
+                        <div className="flex flex-col">
+                            <span className="text-2xl font-bold text-slate-900">{stats.bmi ? stats.bmi.toFixed(1) : 'N/A'}</span>
+                            <span className="text-[10px] font-medium text-slate-400 truncate">
+                                {stats.bmi ? getBmiCategory(stats.bmi) : 'Set Height'}
+                            </span>
                         </div>
                     </CardContent>
                 </Card>
-                 <Card className="rpg-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-                        <CardTitle className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Serie Activă</CardTitle>
-                        <Flame className="h-4 w-4 text-accent opacity-50" />
-                    </CardHeader>
-                    <CardContent className="px-4 pb-4">
-                        <div className="text-3xl font-mono font-bold text-accent">{streak} <span className="text-sm font-sans font-bold text-muted-foreground">zile</span></div>
+                 <Card className="shadow-sm border-0 bg-white">
+                    <CardContent className="p-4">
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Streak</div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-bold text-orange-500">{streak}</span>
+                            <span className="text-sm text-slate-400">days</span>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -360,58 +357,62 @@ export default function ProgressPage() {
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 {/* Weight Chart - Large */}
-                <Card className="md:col-span-12 lg:col-span-8 rpg-card">
+                <Card className="md:col-span-12 lg:col-span-8 shadow-sm border-0 bg-white">
                     <CardHeader>
-                        <CardTitle className="text-2xl font-headline">Greutate în Timp</CardTitle>
-                        <CardDescription className="text-xs uppercase font-bold tracking-widest">Fluctuații zilnice și trendul pe 7 zile</CardDescription>
+                        <CardTitle className="text-lg font-semibold text-slate-900">Weight History</CardTitle>
+                        <CardDescription className="text-slate-500">Daily fluctuations and 7-day trend line.</CardDescription>
                     </CardHeader>
                     <CardContent className="h-80 pt-4">
                          <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={chartData.filter(d => d.weight || d.weightTrend)} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="hsl(var(--border))" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                 <XAxis
                                     dataKey="date"
-                                    tickFormatter={(date) => format(new Date(date), 'd MMM')}
-                                    tick={{ fontSize: 10, fontWeight: 'bold' }}
-                                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                                    tickFormatter={(date) => format(new Date(date), 'MMM d')}
+                                    tick={{ fontSize: 12, fill: '#64748B' }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    dy={10}
                                 />
                                 <YAxis
                                     domain={['dataMin - 2', 'dataMax + 2']}
                                     unit="kg"
-                                    tick={{ fontSize: 10, fontWeight: 'bold' }}
-                                    axisLine={{ stroke: 'hsl(var(--border))' }}
+                                    tick={{ fontSize: 12, fill: '#64748B' }}
+                                    axisLine={false}
+                                    tickLine={false}
                                 />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Legend wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', paddingTop: '10px' }} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px', color: '#64748B' }} iconType="circle" />
                                 <Line
                                     type="monotone"
                                     dataKey="weight"
-                                    name="Greutate Zilnică"
-                                    stroke="hsl(var(--muted-foreground))"
+                                    name="Daily Weight"
+                                    stroke="#CBD5E1"
                                     strokeWidth={2}
                                     strokeDasharray="5 5"
                                     unit="kg"
-                                    dot={{ fill: 'hsl(var(--muted-foreground))', r: 2 }}
+                                    dot={{ fill: '#CBD5E1', r: 3, strokeWidth: 0 }}
+                                    activeDot={{ r: 5, strokeWidth: 0 }}
                                 />
                                 <Line
                                     type="monotone"
                                     dataKey="weightTrend"
-                                    name="Trend 7 Zile"
-                                    stroke="hsl(var(--primary))"
+                                    name="7-Day Trend"
+                                    stroke="#2563EB"
                                     strokeWidth={3}
                                     unit="kg"
                                     dot={false}
-                                    animationDuration={2000}
+                                    animationDuration={1500}
                                 />
                                 {lastTrendValue && (
-                                    <ReferenceLine y={lastTrendValue} stroke="hsl(var(--primary))" strokeDasharray="3 3" strokeOpacity={0.5}>
+                                    <ReferenceLine y={lastTrendValue} stroke="#2563EB" strokeDasharray="3 3" strokeOpacity={0.5}>
                                         <Label
                                             value={`${lastTrendValue} kg`}
                                             position="right"
-                                            fill="hsl(var(--primary))"
+                                            fill="#2563EB"
                                             fontSize={12}
                                             fontWeight="bold"
-                                            className="bg-background px-1"
+                                            className="bg-white px-1"
                                         />
                                     </ReferenceLine>
                                 )}
@@ -420,49 +421,27 @@ export default function ProgressPage() {
                     </CardContent>
                 </Card>
 
-                {/* Personal Records - Bento Side */}
+                {/* Personal Records - Simple Cards */}
                 <div className="md:col-span-12 lg:col-span-4 grid grid-cols-1 gap-6">
-                    <Card className="rpg-card border-l-4 border-l-accent">
-                         <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12">
-                            <TrendingDown className="w-24 h-24 text-accent" />
-                        </div>
+                    <Card className="shadow-sm border-0 bg-white">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-headline">Record Personal</CardTitle>
+                            <CardTitle className="text-base font-semibold text-slate-900">Total Lost</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-4xl font-mono font-bold text-accent mb-1">
-                            {stats?.weightChange && stats.weightChange < 0 ? Math.abs(stats.weightChange).toFixed(1) : '0.0'} kg
+                            <div className="text-4xl font-bold text-emerald-600 mb-1">
+                            {stats?.weightChange && stats.weightChange < 0 ? Math.abs(stats.weightChange).toFixed(1) : '0.0'} <span className="text-lg text-emerald-600/60 font-medium">kg</span>
                             </div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Total Slăbit</p>
-                            <div className="mt-4 pt-4 border-t border-border flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-accent/20">
-                                    <Target className="h-4 w-4 text-accent" />
-                                </div>
-                                <div className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
-                                    De la începutul călătoriei
-                                </div>
-                            </div>
+                            <p className="text-xs text-slate-400">Since start of journey</p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rpg-card border-l-4 border-l-primary">
-                        <div className="absolute -right-4 -bottom-4 opacity-10 -rotate-12">
-                            <Flame className="w-24 h-24 text-primary" />
-                        </div>
+                    <Card className="shadow-sm border-0 bg-white">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-headline">Consistență</CardTitle>
+                            <CardTitle className="text-base font-semibold text-slate-900">Consistency</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-4xl font-mono font-bold text-primary mb-1">{streak}</div>
-                            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Zile Consecutive</p>
-                             <div className="mt-4 pt-4 border-t border-border flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-primary/20">
-                                    <TrendingUp className="h-4 w-4 text-primary" />
-                                </div>
-                                <div className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">
-                                    Excelent! Continuă tot așa.
-                                </div>
-                            </div>
+                            <div className="text-4xl font-bold text-orange-500 mb-1">{streak} <span className="text-lg text-orange-500/60 font-medium">days</span></div>
+                            <p className="text-xs text-slate-400">Current streak</p>
                         </CardContent>
                     </Card>
                 </div>
