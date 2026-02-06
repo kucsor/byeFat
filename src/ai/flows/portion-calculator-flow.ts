@@ -11,7 +11,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const PortionCalculatorInputSchema = z.object({
-  query: z.string().describe('The user\'s text describing the food, weights, and nutritional info.'),
+  query: z.string().max(1000).describe('The user\'s text describing the food, weights, and nutritional info.'),
 });
 export type PortionCalculatorInput = z.infer<typeof PortionCalculatorInputSchema>;
 

@@ -67,6 +67,18 @@ const ChartContainer = React.forwardRef<
 })
 ChartContainer.displayName = "Chart"
 
+// Validator for CSS values to prevent injection
+// Allows: alphanumeric, spaces, commas, parenthesis, hash, percent, dot, dash.
+// Disallows: semicolon, braces, quotes, backslashes which could break out of the style attribute/block.
+function isValidCssValue(value: string) {
+  return /^[a-zA-Z0-9\s,()#%\-\.]+$/.test(value);
+}
+
+// Validator for ID to ensure it matches typical HTML id / class patterns
+function isValidId(value: string) {
+  return /^[a-zA-Z0-9\-_]+$/.test(value);
+}
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color
@@ -74,6 +86,11 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
   if (!colorConfig.length) {
     return null
+  }
+
+  // Strictly validate ID to prevent selector injection
+  if (!isValidId(id)) {
+    return null;
   }
 
   return (
@@ -85,10 +102,20 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
+    // Validate key to ensure it's a safe CSS variable name suffix
+    if (!isValidId(key)) {
+        return null;
+    }
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+
+    // Validate color value to prevent CSS injection
+    if (!color || !isValidCssValue(color)) {
+        return null;
+    }
+
+    return `  --color-${key}: ${color};`
   })
   .join("\n")}
 }
