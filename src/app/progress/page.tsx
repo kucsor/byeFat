@@ -21,7 +21,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { AddWeightEntrySheet } from '@/components/app/add-weight-entry-sheet';
 import { Plus, Trash2, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -48,6 +47,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { BottomNav } from '@/components/app/bottom-nav';
+import { DeficitProgressChart, ChartDataPoint } from '@/components/app/deficit-progress-chart';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -95,35 +95,17 @@ export default function ProgressPage() {
 
   const { data: dailyLogs, isLoading: isLogsLoading } = useCollection<DailyLog>(dailyLogsQuery);
 
-  // New Stats Logic
-  const stats = useMemo(() => {
-    if (!dailyLogs) return null;
+  // Prepare data for Deficit Chart
+  const deficitChartData: ChartDataPoint[] = useMemo(() => {
+    return dailyLogs?.map(log => ({
+        date: log.date,
+        consumedCalories: log.consumedCalories,
+        activeCalories: log.activeCalories,
+        maintenanceCalories: log.maintenanceCalories,
+        goalCalories: log.goalCalories,
+    })) || [];
+  }, [dailyLogs]);
 
-    const loggedDays = dailyLogs.filter(log => (log.consumedCalories || 0) > 0);
-    const daysLoggedCount = loggedDays.length;
-
-    let totalDeficit = 0;
-    let maxDeficit = 0;
-
-    loggedDays.forEach(log => {
-        const maintenance = log.maintenanceCalories || userProfile?.maintenanceCalories || 2000;
-        const active = log.activeCalories || 0;
-        const consumed = log.consumedCalories || 0;
-        const deficit = (maintenance + active) - consumed;
-
-        totalDeficit += deficit;
-        if (deficit > maxDeficit) maxDeficit = deficit;
-    });
-
-    const avgDeficit = daysLoggedCount > 0 ? Math.round(totalDeficit / daysLoggedCount) : 0;
-
-    return {
-        daysLogged: daysLoggedCount,
-        totalDeficit: Math.round(totalDeficit),
-        avgDeficit,
-        bestDay: Math.round(maxDeficit),
-    };
-  }, [dailyLogs, userProfile]);
   
   const handleDeleteWeightEntry = (id: string) => {
     if (!user) return;
@@ -192,7 +174,7 @@ export default function ProgressPage() {
     return <Loading />;
   }
 
-  const noData = !chartData || chartData.length === 0;
+  const noWeightData = !chartData || chartData.length === 0;
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pb-32 md:pb-8">
@@ -210,38 +192,17 @@ export default function ProgressPage() {
           </AddWeightEntrySheet>
         </div>
 
-        {/* Stats Grid Card */}
-        <Card className="border-border/50 shadow-sm bg-card">
-            <CardContent className="p-6">
-                <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                    <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Deficit</span>
-                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.avgDeficit.toLocaleString()}</span>
-                        <span className="text-[10px] text-muted-foreground">kcal / day</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Days Logged</span>
-                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.daysLogged}</span>
-                        <span className="text-[10px] text-muted-foreground">total days</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Best Day</span>
-                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.bestDay.toLocaleString()}</span>
-                        <span className="text-[10px] text-muted-foreground">kcal deficit</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Deficit</span>
-                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.totalDeficit.toLocaleString()}</span>
-                        <span className="text-[10px] text-muted-foreground">lifetime kcal</span>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+        {/* Deficit Chart & Stats */}
+        <DeficitProgressChart
+            chartData={deficitChartData}
+            maintenanceCalories={userProfile?.maintenanceCalories}
+        />
 
-        {noData ? (
+        {/* Weight Trend Section */}
+        {noWeightData ? (
              <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed bg-transparent shadow-none border-2 border-border/50">
                 <CardHeader>
-                    <CardTitle className="text-foreground font-bold">No Data Yet</CardTitle>
+                    <CardTitle className="text-foreground font-bold">No Weight Data Yet</CardTitle>
                     <CardDescription className="text-muted-foreground font-medium">Start logging your weight to see trends.</CardDescription>
                 </CardHeader>
             </Card>
