@@ -1,19 +1,24 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+const ALLOWED_ORIGINS = [
+  'http://localhost:9002',
+  'https://bye-fat.vercel.app',
+  // Add other production domains here if needed
+];
+
 export function middleware(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
 
-  // CSP:
-  // - script-src: 'unsafe-inline' allowed because Next.js App Router internal scripts do not yet support automatic nonces without experimental flags or breaking changes.
-  // - style-src: 'unsafe-inline' allowed for CSS-in-JS and dynamic chart styles.
-  // - unsafe-eval: Required for Next.js hot reloading in development.
+  // CSP: Strict Nonce-based policy.
+  // We allow 'unsafe-eval' in dev for HMR, but strict 'nonce-...' in production.
+  // We use 'credentialless' for COEP to allow loading external images (like Unsplash) without them needing CORP headers.
   const isDev = process.env.NODE_ENV === 'development';
 
   const cspHeader = `
     default-src 'self';
-    script-src 'self' https: ${isDev ? "'unsafe-eval'" : ''} 'unsafe-inline';
-    style-src 'self' 'unsafe-inline';
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: ${isDev ? "'unsafe-eval'" : ''};
+    style-src 'self' 'nonce-${nonce}';
     img-src 'self' blob: data: https://placehold.co https://images.unsplash.com https://picsum.photos https://lh3.googleusercontent.com;
     font-src 'self';
     object-src 'none';
@@ -39,12 +44,33 @@ export function middleware(request: NextRequest) {
     },
   });
 
+  // Security Headers
   response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue);
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+
+  // Advanced Isolation
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+  response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+  response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
+
+  // Permissions Policy: Camera allowed for BarcodeScanner, others disabled.
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(self), microphone=(), geolocation=(), payment=(), usb=()'
+  );
+
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+
+  // Strict CORS
+  const origin = request.headers.get('origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET,DELETE,PATCH,POST,PUT');
+    response.headers.set('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  }
 
   return response;
 }

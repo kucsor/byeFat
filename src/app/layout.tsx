@@ -5,6 +5,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Inter } from 'next/font/google';
+import { headers } from 'next/headers';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -23,11 +24,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read the nonce from the request headers set by middleware
+  const nonce = (await headers()).get('x-nonce') || '';
+
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <body className="font-sans antialiased bg-background text-foreground">
@@ -36,6 +40,7 @@ export default function RootLayout({
             defaultTheme="light"
             enableSystem={false}
             disableTransitionOnChange
+            nonce={nonce}
         >
             <FirebaseClientProvider>
                 <FirebaseErrorListener />
