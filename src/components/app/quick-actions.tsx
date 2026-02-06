@@ -28,6 +28,7 @@ export function QuickActions({
             variant="outline"
             size="icon"
             onClick={onAiCalculator}
+            aria-label="AI Calculator"
             className="h-14 w-14 rounded-full border-2 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary hover:scale-105 transition-all shadow-sm"
           >
             <Scan className="h-6 w-6 text-primary" strokeWidth={2} />
@@ -41,6 +42,7 @@ export function QuickActions({
             variant="outline"
             size="icon"
             onClick={onLogActivity}
+            aria-label="Log Activity"
             className="h-14 w-14 rounded-full border-2 border-orange-100 bg-white hover:bg-orange-50 hover:border-orange-500 hover:scale-105 transition-all shadow-sm"
           >
             <Flame className="h-6 w-6 text-orange-500" strokeWidth={2} />
@@ -53,6 +55,7 @@ export function QuickActions({
           <Button
             size="icon"
             onClick={onAddFood}
+            aria-label="Add Food"
             className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90 hover:scale-110 shadow-lg shadow-primary/30 transition-all border-4 border-white/50"
           >
             <Plus className="h-8 w-8 text-white" strokeWidth={3} />
@@ -66,6 +69,7 @@ export function QuickActions({
             variant="outline"
             size="icon"
             onClick={onScanBarcode}
+            aria-label="Scan Barcode"
             className="h-14 w-14 rounded-full border-2 border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-400 hover:scale-105 transition-all shadow-sm"
           >
             <Barcode className="h-6 w-6 text-slate-600" strokeWidth={2} />
@@ -79,6 +83,7 @@ export function QuickActions({
             variant="outline"
             size="icon"
             onClick={onManualLog}
+            aria-label="Manual Log"
             className="h-14 w-14 rounded-full border-2 border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-400 hover:scale-105 transition-all shadow-sm"
           >
             <Edit3 className="h-6 w-6 text-slate-600" strokeWidth={2} />

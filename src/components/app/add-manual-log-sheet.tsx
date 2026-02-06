@@ -111,11 +111,13 @@ export function AddManualLogSheet({ isOpen, setIsOpen, selectedDate, userProfile
       <Sheet open={isOpen} onOpenChange={handleSheetOpen}>
         <SheetContent side={isMobile ? 'bottom' : 'right'} className="flex flex-col gap-0 p-0">
           <SheetHeader className="p-6 pb-2">
-            <div className="flex items-center gap-2">
-                <PlateCutlery />
-                <SheetTitle>Logare Manuală</SheetTitle>
+            <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                    <PlateCutlery className="h-6 w-6 text-emerald-600" />
+                </div>
+                <SheetTitle className="text-xl text-primary">Logare Manuală</SheetTitle>
             </div>
-            <SheetDescription>
+            <SheetDescription className="pt-2 text-muted-foreground">
               Introdu detaliile mesei tale. Această intrare este privată și nu va apărea în lista publică.
             </SheetDescription>
           </SheetHeader>
