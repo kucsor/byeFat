@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, memo, useCallback, useMemo } from 'react';
 import { collection, query, doc, updateDoc, increment, arrayUnion, arrayRemove, limit } from 'firebase/firestore';
 import { useFirebase, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from '@/firebase';
 import type { Product, UserProfile } from '@/lib/types';
@@ -26,7 +26,7 @@ import { FixedSizeList as List } from 'react-window';
 
 const ProductFormSheet = dynamic(() => import('./product-form-sheet').then(mod => mod.ProductFormSheet));
 
-function ProductCard({ product, onEdit, userProfile }: { product: Product, onEdit: (product: Product) => void, userProfile: UserProfile }) {
+const ProductCard = memo(function ProductCard({ product, onEdit, userProfile }: { product: Product, onEdit: (product: Product) => void, userProfile: UserProfile }) {
   const { firestore } = useFirebase();
 
   const handleDelete = () => {
@@ -120,8 +120,24 @@ function ProductCard({ product, onEdit, userProfile }: { product: Product, onEdi
       </CardContent>
     </Card>
   );
+});
+
+interface ItemData {
+  products: Product[];
+  onEdit: (product: Product) => void;
+  userProfile: UserProfile;
 }
 
+const Row = memo(({ index, style, data }: { index: number; style: React.CSSProperties, data: ItemData }) => {
+    const { products, onEdit, userProfile } = data;
+    const product = products[index];
+    if (!product) return null;
+    return (
+      <div style={style} className="py-1">
+        <ProductCard product={product} onEdit={onEdit} userProfile={userProfile} />
+      </div>
+    );
+});
 
 export function ProductsList({ userProfile }: { userProfile: UserProfile }) {
   const { firestore } = useFirebase();
@@ -154,21 +170,16 @@ export function ProductsList({ userProfile }: { userProfile: UserProfile }) {
     setIsSheetOpen(true);
   }
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = useCallback((product: Product) => {
     setEditingProduct(product);
     setIsSheetOpen(true);
-  }
+  }, []);
   
-  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
-    if (!products) return null;
-    const product = products[index];
-    return (
-      <div style={style} className="py-1">
-        <ProductCard product={product} onEdit={handleEditProduct} userProfile={userProfile} />
-      </div>
-    );
-  };
-
+  const itemData = useMemo(() => ({
+    products: products || [],
+    onEdit: handleEditProduct,
+    userProfile
+  }), [products, handleEditProduct, userProfile]);
 
   return (
     <Card>
@@ -207,6 +218,7 @@ export function ProductsList({ userProfile }: { userProfile: UserProfile }) {
                         itemSize={125}
                         width="100%"
                         onItemsRendered={onItemsRendered}
+                        itemData={itemData}
                     >
                         {Row}
                     </List>
