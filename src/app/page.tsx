@@ -2,12 +2,18 @@
 
 import { AppHeader } from '@/components/app/header';
 import { useFirebase } from '@/firebase';
-import { LoginPage } from '@/components/app/login-page';
 import Loading from './loading';
-import Dashboard from '@/components/app/dashboard';
 import { CreateUsernameDialog } from '@/components/app/create-username-dialog';
 import { TempDataSeeder } from '@/components/app/temp-data-seeder';
-import { BottomNav } from '@/components/app/bottom-nav';
+import dynamic from 'next/dynamic';
+
+const LoginPage = dynamic(() => import('@/components/app/login-page').then(mod => mod.LoginPage), {
+  loading: () => <Loading />,
+});
+
+const Dashboard = dynamic(() => import('@/components/app/dashboard'), {
+  loading: () => <Loading />,
+});
 
 export default function Home() {
   const { user, isUserLoading, userProfile, isUserProfileLoading } = useFirebase();
