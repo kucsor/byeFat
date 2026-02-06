@@ -4,11 +4,6 @@ import { AppHeader } from './header';
 import { DailySummary } from './daily-summary';
 import { FoodLog } from './food-log';
 import { BottomNav } from './bottom-nav';
-import { AddFoodSheet } from './add-food-sheet';
-import { AddActivitySheet } from './add-activity-sheet';
-import { BarcodeScannerSheet } from './barcode-scanner-sheet';
-import { AddManualLogSheet } from './add-manual-log-sheet';
-import { AiPortionCalculator } from './ai-portion-calculator';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -16,6 +11,13 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { DateNavigator } from './date-navigator';
 import { QuickActions } from './quick-actions';
+import dynamic from 'next/dynamic';
+
+const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
+const AddActivitySheet = dynamic(() => import('./add-activity-sheet').then(mod => mod.AddActivitySheet));
+const BarcodeScannerSheet = dynamic(() => import('./barcode-scanner-sheet').then(mod => mod.BarcodeScannerSheet));
+const AddManualLogSheet = dynamic(() => import('./add-manual-log-sheet').then(mod => mod.AddManualLogSheet));
+const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then(mod => mod.AiPortionCalculator));
 
 export default function Dashboard() {
   const { userProfile, firestore, user } = useFirebase();
