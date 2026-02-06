@@ -8,16 +8,14 @@ import { AddFoodSheet } from './add-food-sheet';
 import { AddActivitySheet } from './add-activity-sheet';
 import { BarcodeScannerSheet } from './barcode-scanner-sheet';
 import { AddManualLogSheet } from './add-manual-log-sheet';
-import { ProductFormSheet } from './product-form-sheet';
+import { AiPortionCalculator } from './ai-portion-calculator';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { Button } from '@/components/ui/button';
-import { Utensils, Dumbbell } from 'lucide-react';
-import { FabMenu } from './fab-menu';
 import { useState } from 'react';
-import { UserLevelCard } from './user-level-card';
 import { format } from 'date-fns';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
+import { DateNavigator } from './date-navigator';
+import { QuickActions } from './quick-actions';
 
 export default function Dashboard() {
   const { userProfile, firestore, user } = useFirebase();
@@ -27,16 +25,17 @@ export default function Dashboard() {
   const [isManualLogOpen, setIsManualLogOpen] = useState(false);
   const [isAiCalculatorOpen, setIsAiCalculatorOpen] = useState(false);
 
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
   // Fetch Daily Log Document (for goals/aggregated stats)
   const dailyLogQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
       collection(firestore, `users/${user.uid}/dailyLogs`),
-      where('date', '==', today)
+      where('date', '==', selectedDateString)
     );
-  }, [firestore, user, today]);
+  }, [firestore, user, selectedDateString]);
 
   const { data: dailyLogs, isLoading: isLogLoading } = useCollection<DailyLog>(dailyLogQuery);
   const selectedLog = dailyLogs?.[0] || null;
@@ -45,10 +44,10 @@ export default function Dashboard() {
   const itemsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
-      collection(firestore, `users/${user.uid}/dailyLogs/${today}/items`),
+      collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/items`),
       orderBy('createdAt', 'desc')
     );
-  }, [firestore, user, today]);
+  }, [firestore, user, selectedDateString]);
 
   const { data: items } = useCollection<DailyLogItem>(itemsQuery);
 
@@ -56,58 +55,40 @@ export default function Dashboard() {
   const activitiesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
-        collection(firestore, `users/${user.uid}/dailyLogs/${today}/activities`),
+        collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/activities`),
         orderBy('createdAt', 'desc')
     );
-  }, [firestore, user, today]);
+  }, [firestore, user, selectedDateString]);
 
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-white pb-24 md:pb-8">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-32 md:pb-8">
       <AppHeader userProfile={userProfile} />
 
       <main className="container mx-auto max-w-xl flex-1 space-y-6 p-4">
-        {/* User Level Card - Gamification */}
-        <UserLevelCard />
+        {/* Date Navigator */}
+        <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
-        {/* Daily Summary */}
-        <DailySummary />
+        {/* Daily Summary (Ring Chart) */}
+        <DailySummary date={selectedDate} />
 
-        {/* Actions Grid */}
-        <div className="grid grid-cols-2 gap-3">
-            <Button
-                variant="outline"
-                className="h-24 flex flex-col gap-2 rounded-2xl border-dashed border-2 hover:border-primary hover:bg-primary/5 glass-card"
-                onClick={() => setIsAddFoodOpen(true)}
-            >
-                <div className="p-2 rounded-full bg-primary/10 text-primary">
-                    <Utensils className="h-6 w-6" />
-                </div>
-                <span className="font-bold text-xs uppercase tracking-wider">Log Food</span>
-            </Button>
+        {/* Quick Actions */}
+        <QuickActions
+            onAiCalculator={() => setIsAiCalculatorOpen(true)}
+            onLogActivity={() => setIsAddActivityOpen(true)}
+            onAddFood={() => setIsAddFoodOpen(true)}
+            onScanBarcode={() => setIsBarcodeScannerOpen(true)}
+            onManualLog={() => setIsManualLogOpen(true)}
+        />
 
-            <Button
-                variant="outline"
-                className="h-24 flex flex-col gap-2 rounded-2xl border-dashed border-2 hover:border-accent hover:bg-accent/5 glass-card"
-                onClick={() => setIsAddActivityOpen(true)}
-            >
-                <div className="p-2 rounded-full bg-accent/10 text-accent">
-                    <Dumbbell className="h-6 w-6" />
-                </div>
-                <span className="font-bold text-xs uppercase tracking-wider">Log Activity</span>
-            </Button>
-        </div>
-
-        {/* Logs */}
-        <div className="space-y-6">
-            <FoodLog
-                items={items}
-                activities={activities}
-                selectedDate={today}
-                onAddFood={() => setIsAddFoodOpen(true)}
-            />
-        </div>
+        {/* Today's Log */}
+        <FoodLog
+            items={items}
+            activities={activities}
+            selectedDate={selectedDateString}
+            onAddFood={() => setIsAddFoodOpen(true)}
+        />
       </main>
 
       {/* Sheets */}
@@ -116,7 +97,7 @@ export default function Dashboard() {
             <AddFoodSheet
                 isOpen={isAddFoodOpen}
                 setIsOpen={setIsAddFoodOpen}
-                selectedDate={today}
+                selectedDate={selectedDateString}
                 userProfile={userProfile}
                 selectedLog={selectedLog}
                 isLogLoading={isLogLoading}
@@ -125,24 +106,40 @@ export default function Dashboard() {
             <AddActivitySheet
                 isOpen={isAddActivityOpen}
                 setIsOpen={setIsAddActivityOpen}
-                selectedDate={today}
+                selectedDate={selectedDateString}
+                userProfile={userProfile}
+                selectedLog={selectedLog}
+                isLogLoading={isLogLoading}
+            />
+
+            <BarcodeScannerSheet
+                isOpen={isBarcodeScannerOpen}
+                setIsOpen={setIsBarcodeScannerOpen}
+                selectedDate={selectedDateString}
+                userProfile={userProfile}
+                selectedLog={selectedLog}
+                isLogLoading={isLogLoading}
+            />
+
+            <AddManualLogSheet
+                isOpen={isManualLogOpen}
+                setIsOpen={setIsManualLogOpen}
+                selectedDate={selectedDateString}
+                userProfile={userProfile}
+                selectedLog={selectedLog}
+                isLogLoading={isLogLoading}
+            />
+
+            <AiPortionCalculator
+                isOpen={isAiCalculatorOpen}
+                setIsOpen={setIsAiCalculatorOpen}
+                selectedDate={selectedDateString}
                 userProfile={userProfile}
                 selectedLog={selectedLog}
                 isLogLoading={isLogLoading}
             />
         </>
       )}
-
-      {/* Floating Action Button Menu (Mobile) */}
-      <div className="md:hidden">
-          <FabMenu
-             onAddFood={() => setIsAddFoodOpen(true)}
-             onLogActivity={() => setIsAddActivityOpen(true)}
-             onScanBarcode={() => setIsBarcodeScannerOpen(true)}
-             onAiCalculator={() => setIsAiCalculatorOpen(true)}
-             onManualLog={() => setIsManualLogOpen(true)}
-          />
-      </div>
 
       <BottomNav />
     </div>

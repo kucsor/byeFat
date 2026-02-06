@@ -48,20 +48,18 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { BottomNav } from '@/components/app/bottom-nav';
-import { DeficitProgressChart } from '@/components/app/deficit-progress-chart';
-
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-white/50 bg-white/80 backdrop-blur-xl p-3 shadow-xl">
+      <div className="rounded-xl border border-border/50 bg-card/90 backdrop-blur-xl p-3 shadow-xl">
         <div className="flex flex-col space-y-1">
             <span className="text-[0.7rem] uppercase text-muted-foreground font-black tracking-wider">{label ? format(new Date(label), 'MMM d') : ''}</span>
             {payload.map((pld: any) => (
                 <div key={pld.dataKey} className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: pld.color }}></div>
                     <span className="font-bold text-foreground text-sm">
-                        {pld.name === 'weight' ? 'Weight' : '7-Day Trend'}: <span style={{ color: pld.color }}>{pld.value} kg</span>
+                        {pld.name === 'weight' ? 'Actual' : 'Trend'}: <span style={{ color: pld.color }}>{pld.value} kg</span>
                     </span>
                 </div>
             ))}
@@ -97,28 +95,35 @@ export default function ProgressPage() {
 
   const { data: dailyLogs, isLoading: isLogsLoading } = useCollection<DailyLog>(dailyLogsQuery);
 
+  // New Stats Logic
   const stats = useMemo(() => {
-    if (!weightHistory || weightHistory.length === 0) {
-      return null;
-    }
-    
-    const initialWeight = weightHistory[weightHistory.length - 1]?.weight;
-    const currentWeight = weightHistory[0]?.weight;
-    const weightChange = currentWeight - initialWeight;
+    if (!dailyLogs) return null;
 
-    let bmi = null;
-    if (userProfile?.height && currentWeight) {
-        const heightInMeters = userProfile.height / 100;
-        bmi = currentWeight / (heightInMeters * heightInMeters);
-    }
-    
+    const loggedDays = dailyLogs.filter(log => (log.consumedCalories || 0) > 0);
+    const daysLoggedCount = loggedDays.length;
+
+    let totalDeficit = 0;
+    let maxDeficit = 0;
+
+    loggedDays.forEach(log => {
+        const maintenance = log.maintenanceCalories || userProfile?.maintenanceCalories || 2000;
+        const active = log.activeCalories || 0;
+        const consumed = log.consumedCalories || 0;
+        const deficit = (maintenance + active) - consumed;
+
+        totalDeficit += deficit;
+        if (deficit > maxDeficit) maxDeficit = deficit;
+    });
+
+    const avgDeficit = daysLoggedCount > 0 ? Math.round(totalDeficit / daysLoggedCount) : 0;
+
     return {
-      initialWeight,
-      currentWeight,
-      weightChange,
-      bmi,
+        daysLogged: daysLoggedCount,
+        totalDeficit: Math.round(totalDeficit),
+        avgDeficit,
+        bestDay: Math.round(maxDeficit),
     };
-  }, [weightHistory, userProfile?.height]);
+  }, [dailyLogs, userProfile]);
   
   const handleDeleteWeightEntry = (id: string) => {
     if (!user) return;
@@ -134,41 +139,28 @@ export default function ProgressPage() {
       return [];
     }
     
-    const logMap = new Map(dailyLogs?.map(log => [log.date, { goal: log.goalCalories, consumed: log.consumedCalories, active: log.activeCalories }]) ?? []);
+    // We need dates from both logs and weight history
+    const allDatesSet = new Set<string>();
+    dailyLogs?.forEach(l => allDatesSet.add(l.date));
+    sortedWeightHistory?.forEach(w => allDatesSet.add(w.date));
+
+    const allDates = Array.from(allDatesSet).sort();
     const weightMap = new Map(sortedWeightHistory?.map(entry => [entry.date, entry.weight]) ?? []);
-
-    const datesWithFood = dailyLogs
-      ?.filter(log => (log.consumedCalories || 0) > 0 || (log.activeCalories || 0) > 0)
-      .map(log => log.date) || [];
-
-    if (datesWithFood.length === 0 && weightMap.size === 0) {
-      return [];
-    }
-
-    const allDates = [...new Set([...datesWithFood, ...Array.from(weightMap.keys())])].sort();
 
     let lastSeenWeight: number | null = null;
     
     const mappedData = allDates.map(date => {
-        const log = logMap.get(date);
         const weightOnDate = weightMap.get(date);
-
         if (weightOnDate !== undefined) {
             lastSeenWeight = weightOnDate;
         }
-        
-        const calorieBalance = (log?.goal != null && log?.consumed != null) ? log.goal - log.consumed : null;
-
         return {
             date: date,
-            goalCalories: log?.goal,
-            consumedCalories: log?.consumed,
-            activeCalories: log?.active,
-            calorieBalance,
             weight: lastSeenWeight
         };
-    }).filter(d => d.date);
+    });
 
+    // Calculate Trend
     const dataWithTrend = mappedData.map((dataPoint, index) => {
         const past7DaysWeights: number[] = [];
         for (let i = 0; i < 7; i++) {
@@ -189,13 +181,11 @@ export default function ProgressPage() {
         return { ...dataPoint, weightTrend: null };
     });
     
-    return dataWithTrend;
+    // Filter to show only relevant data range (e.g. where we have weight or trend)
+    // Actually, prompt says "Weight over Time"
+    // Let's return all data points where we have at least one valid value
+    return dataWithTrend.filter(d => d.weight !== null || d.weightTrend !== null);
   }, [dailyLogs, weightHistory, isLogsLoading, isWeightLoading]);
-
-  // Clean data for chart
-  const chartDisplayData = useMemo(() => {
-     return chartData.filter(d => d.weight !== null || d.weightTrend !== null);
-  }, [chartData]);
 
 
   if (isWeightLoading || isLogsLoading) {
@@ -205,63 +195,67 @@ export default function ProgressPage() {
   const noData = !chartData || chartData.length === 0;
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-white">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-32 md:pb-8">
       <AppHeader userProfile={userProfile} />
-      <main className="container mx-auto max-w-xl flex-1 space-y-6 p-4 pb-24 md:p-8 md:pb-8">
+      <main className="container mx-auto max-w-xl flex-1 space-y-6 p-4">
+
+        {/* Header Section */}
         <div className="flex flex-row justify-between items-center">
-          <h1 className="text-3xl font-black text-foreground tracking-tight drop-shadow-sm">Progress</h1>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Progress</h1>
           <AddWeightEntrySheet>
-              <Button size="sm" className="rounded-full shadow-lg shadow-primary/30 bg-primary text-primary-foreground hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 font-bold">
+              <Button size="sm" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold px-6 shadow-lg shadow-primary/20">
                   <Plus className="mr-1 h-4 w-4" />
                   Log Weight
               </Button>
           </AddWeightEntrySheet>
         </div>
 
-        {stats && (
-            <div className="grid grid-cols-2 gap-4">
-                <Card className="glass-card border-white/20">
-                    <CardContent className="p-4 flex flex-col justify-center items-center text-center">
-                        <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Current</span>
-                        <div className="flex items-baseline gap-1 mt-2">
-                            <span className="text-4xl font-black text-foreground drop-shadow-sm">{stats.currentWeight?.toFixed(1)}</span>
-                            <span className="text-sm font-bold text-muted-foreground">kg</span>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="glass-card border-white/20">
-                    <CardContent className="p-4 flex flex-col justify-center items-center text-center">
-                        <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Change</span>
-                        <div className={cn(
-                            "flex items-center gap-1 mt-2 text-4xl font-black drop-shadow-sm",
-                            stats.weightChange > 0 ? "text-rose-500" : "text-emerald-500"
-                        )}>
-                            {stats.weightChange > 0 ? '+' : ''}{stats.weightChange.toFixed(1)}
-                            <span className="text-sm font-bold text-muted-foreground opacity-60">kg</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        )}
+        {/* Stats Grid Card */}
+        <Card className="border-border/50 shadow-sm bg-card">
+            <CardContent className="p-6">
+                <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Deficit</span>
+                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.avgDeficit.toLocaleString()}</span>
+                        <span className="text-[10px] text-muted-foreground">kcal / day</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Days Logged</span>
+                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.daysLogged}</span>
+                        <span className="text-[10px] text-muted-foreground">total days</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Best Day</span>
+                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.bestDay.toLocaleString()}</span>
+                        <span className="text-[10px] text-muted-foreground">kcal deficit</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Deficit</span>
+                        <span className="text-2xl font-bold text-foreground font-mono">{stats?.totalDeficit.toLocaleString()}</span>
+                        <span className="text-[10px] text-muted-foreground">lifetime kcal</span>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
 
         {noData ? (
-             <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed bg-transparent shadow-none border-2 border-slate-200">
+             <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed bg-transparent shadow-none border-2 border-border/50">
                 <CardHeader>
-                    <CardTitle className="text-foreground font-black">No Data Yet</CardTitle>
+                    <CardTitle className="text-foreground font-bold">No Data Yet</CardTitle>
                     <CardDescription className="text-muted-foreground font-medium">Start logging your weight to see trends.</CardDescription>
                 </CardHeader>
             </Card>
         ) : (
             <div className="space-y-6">
-                {/* Weight Chart - Compact */}
-                <Card className="glass-card border-white/20 overflow-visible z-10">
-                    <CardHeader className="pb-2 border-b border-white/10">
+                {/* Weight Trend Chart */}
+                <Card className="border-border/50 shadow-sm bg-card overflow-visible">
+                    <CardHeader className="pb-2 border-b border-border/40">
                         <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle className="text-lg font-black text-foreground">Weight Trend</CardTitle>
-                                <CardDescription className="text-muted-foreground font-medium text-xs">Actual vs 7-day average</CardDescription>
+                                <CardTitle className="text-lg font-bold text-foreground">Weight Trend</CardTitle>
+                                <CardDescription className="text-muted-foreground text-xs">Actual vs 7-day average</CardDescription>
                             </div>
-                            <div className="flex items-center gap-3 text-xs font-bold">
+                            <div className="flex items-center gap-3 text-xs font-medium">
                                 <div className="flex items-center gap-1 text-muted-foreground">
                                     <div className="w-2 h-2 rounded-full bg-slate-300"></div>
                                     Actual
@@ -275,21 +269,21 @@ export default function ProgressPage() {
                     </CardHeader>
                     <CardContent className="h-72 w-full pt-6 pr-6">
                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartDisplayData} margin={{ top: 10, right: 40, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
                                 <XAxis
                                     dataKey="date"
                                     tickFormatter={(date) => format(new Date(date), 'MMM d')}
-                                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))', fontWeight: 700 }}
+                                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }}
                                     axisLine={false}
                                     tickLine={false}
                                     dy={10}
-                                    minTickGap={30}
+                                    minTickGap={40}
                                 />
                                 <YAxis
                                     domain={['auto', 'auto']}
                                     unit="kg"
-                                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))', fontWeight: 700 }}
+                                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))', fontWeight: 500 }}
                                     axisLine={false}
                                     tickLine={false}
                                     width={40}
@@ -300,11 +294,11 @@ export default function ProgressPage() {
                                 <Line
                                     type="monotone"
                                     dataKey="weight"
-                                    stroke="#94A3B8"
+                                    stroke="#CBD5E1"
                                     strokeWidth={2}
-                                    strokeOpacity={0.5}
-                                    dot={{ fill: '#94A3B8', r: 2, strokeWidth: 0, opacity: 0.5 }}
-                                    activeDot={{ r: 4, strokeWidth: 0, fill: '#64748B' }}
+                                    strokeOpacity={0.8}
+                                    dot={{ fill: '#CBD5E1', r: 3, strokeWidth: 0 }}
+                                    activeDot={{ r: 5, strokeWidth: 0, fill: '#94A3B8' }}
                                     connectNulls
                                 />
 
@@ -313,7 +307,7 @@ export default function ProgressPage() {
                                     type="monotone"
                                     dataKey="weightTrend"
                                     stroke="hsl(var(--primary))"
-                                    strokeWidth={4}
+                                    strokeWidth={3}
                                     dot={false}
                                     activeDot={{ r: 6, strokeWidth: 3, stroke: '#fff', fill: 'hsl(var(--primary))' }}
                                     animationDuration={1500}
@@ -324,32 +318,24 @@ export default function ProgressPage() {
                                         position="right"
                                         content={(props: any) => {
                                             const { x, y, value, index } = props;
-                                            // Only show label for the very last data point
-                                            if (index === chartDisplayData.length - 1) {
+                                            if (index === chartData.length - 1 && value) {
                                                 return (
                                                     <g>
-                                                        {/* Styled Bubble */}
                                                         <rect
-                                                            x={x + 8}
-                                                            y={y - 12}
+                                                            x={x - 24}
+                                                            y={y - 30}
                                                             width="48"
                                                             height="24"
-                                                            rx="8"
+                                                            rx="6"
                                                             fill="hsl(var(--primary))"
-                                                            filter="drop-shadow(0px 4px 8px rgba(37, 99, 235, 0.3))"
                                                         />
-                                                        {/* Triangle/Arrow pointing left */}
-                                                        <path d={`M ${x+8} ${y} L ${x+12} ${y-4} L ${x+12} ${y+4} Z`} fill="hsl(var(--primary))" />
-
-                                                        {/* Text Value */}
                                                         <text
-                                                            x={x + 32}
-                                                            y={y + 5}
+                                                            x={x}
+                                                            y={y - 14}
                                                             fill="white"
                                                             fontSize={11}
-                                                            fontWeight="900"
+                                                            fontWeight="bold"
                                                             textAnchor="middle"
-                                                            style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.1)' }}
                                                         >
                                                             {value}
                                                         </text>
@@ -364,59 +350,51 @@ export default function ProgressPage() {
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-
-                {/* Deficit Chart - Full Width */}
-                <div>
-                    <DeficitProgressChart
-                        chartData={chartData}
-                        maintenanceCalories={userProfile?.maintenanceCalories}
-                    />
-                </div>
             </div>
         )}
         
         {weightHistory && weightHistory.length > 0 && (
             <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen} className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                    <h3 className="text-sm font-black text-muted-foreground uppercase tracking-wider">History</h3>
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">History</h3>
                     <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:bg-white/50">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:bg-secondary">
                             <ChevronsUpDown className="h-4 w-4" />
                         </Button>
                     </CollapsibleTrigger>
                 </div>
                 <CollapsibleContent>
-                    <div className="rounded-xl border border-white/20 bg-white/40 backdrop-blur-md overflow-hidden shadow-sm">
+                    <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm">
                         <Table>
                             <TableHeader>
-                                <TableRow className="bg-white/30 hover:bg-white/40 border-b border-white/20">
-                                    <TableHead className="w-[100px] text-xs font-black text-muted-foreground uppercase">Date</TableHead>
-                                    <TableHead className="text-xs font-black text-muted-foreground uppercase">Weight</TableHead>
+                                <TableRow className="bg-secondary/30 border-b border-border/50">
+                                    <TableHead className="w-[100px] text-xs font-bold text-muted-foreground uppercase">Date</TableHead>
+                                    <TableHead className="text-xs font-bold text-muted-foreground uppercase">Weight</TableHead>
                                     <TableHead className="text-right text-xs font-bold text-muted-foreground"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {weightHistory.map((entry) => (
-                                    <TableRow key={entry.id} className="hover:bg-white/50 border-b border-white/20 last:border-0 transition-colors">
-                                        <TableCell className="font-bold text-muted-foreground py-3">{format(new Date(entry.date), 'MMM d, yyyy')}</TableCell>
-                                        <TableCell className="font-black text-foreground py-3">{entry.weight} kg</TableCell>
+                                    <TableRow key={entry.id} className="hover:bg-secondary/20 border-b border-border/50 last:border-0">
+                                        <TableCell className="font-medium text-foreground py-3">{format(new Date(entry.date), 'MMM d, yyyy')}</TableCell>
+                                        <TableCell className="font-bold text-foreground py-3">{entry.weight} kg</TableCell>
                                         <TableCell className="text-right py-3">
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full">
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </AlertDialogTrigger>
-                                                <AlertDialogContent className="glass-card border-white/20">
+                                                <AlertDialogContent>
                                                     <AlertDialogHeader>
-                                                    <AlertDialogTitle className="font-black">Delete Entry?</AlertDialogTitle>
+                                                    <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
                                                     <AlertDialogDescription>
                                                         This action cannot be undone.
                                                     </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                    <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteWeightEntry(entry.id)} className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold shadow-lg shadow-rose-500/20">Delete</AlertDialogAction>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteWeightEntry(entry.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
                                                     </AlertDialogFooter>
                                                 </AlertDialogContent>
                                             </AlertDialog>
