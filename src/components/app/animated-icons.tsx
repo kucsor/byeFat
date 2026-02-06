@@ -1,17 +1,18 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, SVGMotionProps } from 'framer-motion';
 
 // --- FUTURISTIC ICONS SET ---
 
-export const CyberFlame = () => (
+export const CyberFlame = (props: SVGMotionProps<SVGSVGElement>) => (
   <motion.svg
     width="48"
     height="48"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]"
+    {...props}
+    className={`drop-shadow-[0_0_10px_rgba(255,165,0,0.5)] ${props.className || ''}`}
   >
     <defs>
       <linearGradient id="flameGradient" x1="12" y1="2" x2="12" y2="22">
@@ -48,14 +49,15 @@ export const CyberFlame = () => (
   </motion.svg>
 );
 
-export const NeonPulse = () => (
+export const NeonPulse = (props: SVGMotionProps<SVGSVGElement>) => (
   <motion.svg
     width="48"
     height="48"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="drop-shadow-[0_0_8px_rgba(0,102,255,0.6)]"
+    {...props}
+    className={`drop-shadow-[0_0_8px_rgba(0,102,255,0.6)] ${props.className || ''}`}
   >
     <path
       d="M3 12H6L9 3L13 21L17 12H21"
@@ -78,13 +80,14 @@ export const NeonPulse = () => (
   </motion.svg>
 );
 
-export const QuantumFood = () => (
+export const QuantumFood = (props: SVGMotionProps<SVGSVGElement>) => (
   <motion.svg
     width="48"
     height="48"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    {...props}
   >
     <defs>
       <linearGradient id="appleGradient" x1="0" y1="0" x2="24" y2="24">
@@ -112,14 +115,15 @@ export const QuantumFood = () => (
   </motion.svg>
 );
 
-export const DataShield = () => (
+export const DataShield = (props: SVGMotionProps<SVGSVGElement>) => (
   <motion.svg
     width="48"
     height="48"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="drop-shadow-[0_0_10px_rgba(0,217,255,0.4)]"
+    {...props}
+    className={`drop-shadow-[0_0_10px_rgba(0,217,255,0.4)] ${props.className || ''}`}
   >
     <motion.path
       d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z"
