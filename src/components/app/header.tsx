@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, User as UserIcon, LogOut } from 'lucide-react';
+import { User as UserIcon, LogOut } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -86,11 +86,6 @@ export function AppHeader({ userProfile }: { userProfile?: UserProfile | null })
         {/* Right Section */}
         <div className="flex items-center gap-3">
             <UserNav userProfile={userProfile} />
-
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-                <Settings className="h-5 w-5" />
-                <span className="sr-only">Settings</span>
-            </Button>
         </div>
       </div>
     </header>

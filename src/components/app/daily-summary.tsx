@@ -8,6 +8,7 @@ import { Activity, Apple, Zap } from 'lucide-react';
 import type { DailyLog, DailyLogItem } from '@/lib/types';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { MacrosDisplay } from './macros-display';
 
 interface DailySummaryProps {
   date: Date;
@@ -44,6 +45,15 @@ export function DailySummary({ date }: DailySummaryProps) {
       active,
     };
   }, [dailyLog]);
+
+  const macros = useMemo(() => {
+    if (!items) return { fat: 0, protein: 0, carbs: 0 };
+    return items.reduce((acc, item) => ({
+      fat: acc.fat + (item.fat || 0),
+      protein: acc.protein + (item.protein || 0),
+      carbs: acc.carbs + (item.carbs || 0),
+    }), { fat: 0, protein: 0, carbs: 0 });
+  }, [items]);
 
   const maintenance = userProfile?.maintenanceCalories || 2000;
   const deficitTarget = userProfile?.deficitTarget || 500;
@@ -153,6 +163,17 @@ export function DailySummary({ date }: DailySummaryProps) {
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div className="mt-6 w-full flex justify-center">
+             <MacrosDisplay
+                 fat={Math.round(macros.fat)}
+                 protein={Math.round(macros.protein)}
+                 carbohydrates={Math.round(macros.carbs)}
+                 goalFat={userProfile?.dailyFat}
+                 goalProtein={userProfile?.dailyProtein}
+                 goalCarbs={userProfile?.dailyCarbs}
+             />
         </div>
       </CardContent>
     </Card>
