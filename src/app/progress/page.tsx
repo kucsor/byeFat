@@ -203,7 +203,7 @@ export default function ProgressPage() {
                             </TableHeader>
                             <TableBody>
                                 {weightHistory.map((entry) => (
-                                    <TableRow key={entry.id} className="hover:bg-secondary/20 border-b border-border/50 last:border-0">
+                                    <TableRow key={entry.id} className="even:bg-secondary/10 hover:bg-secondary/20 border-b border-border/50 last:border-0">
                                         <TableCell className="font-medium text-foreground py-3">{format(new Date(entry.date), 'MMM d, yyyy')}</TableCell>
                                         <TableCell className="font-bold text-foreground py-3">{entry.weight} kg</TableCell>
                                         <TableCell className="text-right py-3">
