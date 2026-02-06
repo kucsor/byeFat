@@ -25,10 +25,25 @@ service cloud.firestore {
       // Only the creator can delete their own products
       allow delete: if isOwner(resource.data.creatorId);
 
+      function isValidLikeUpdate() {
+        let prevLikedBy = resource.data.likedBy.toSet();
+        let newLikedBy = request.resource.data.likedBy.toSet();
+
+        let added = newLikedBy.difference(prevLikedBy);
+        let removed = prevLikedBy.difference(newLikedBy);
+
+        let likesDiff = request.resource.data.likes - resource.data.likes;
+
+        return (added.size() == 1 && removed.size() == 0 && added.hasAll([request.auth.uid]) && likesDiff == 1) ||
+               (added.size() == 0 && removed.size() == 1 && removed.hasAll([request.auth.uid]) && likesDiff == -1);
+      }
+
       // The owner can update any field.
       // Other signed-in users can only update the 'likes' and 'likedBy' fields.
       allow update: if isOwner(resource.data.creatorId) || 
-                      (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy']));
+                      (isSignedIn() &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy']) &&
+                       isValidLikeUpdate());
     }
 
     // Used to enforce username uniqueness
