@@ -66,13 +66,13 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
 
             <div className="flex items-center">
                 {!isAiItem && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onEdit(item)}>
+                <Button variant="ghost" size="icon" aria-label="Edit food log item" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onEdit(item)}>
                     <Pencil className="h-4 w-4" />
                 </Button>
                 )}
                 <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                    <Button variant="ghost" size="icon" aria-label="Delete food log item" className="h-8 w-8 text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </AlertDialogTrigger>

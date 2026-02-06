@@ -83,7 +83,7 @@ const ProductCard = memo(function ProductCard({ product, onEdit, userProfile }: 
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
                 {!canModify && (
-                    <Button variant="ghost" size="icon" className={`h-8 w-8 ${isLiked ? 'text-primary hover:text-primary' : 'text-muted-foreground'}`} onClick={handleLike}>
+                    <Button variant="ghost" size="icon" aria-label={isLiked ? "Unlike product" : "Like product"} className={`h-8 w-8 ${isLiked ? 'text-primary hover:text-primary' : 'text-muted-foreground'}`} onClick={handleLike}>
                         <ThumbsUp className="h-4 w-4" />
                     </Button>
                 )}
@@ -92,12 +92,12 @@ const ProductCard = memo(function ProductCard({ product, onEdit, userProfile }: 
 
             {canModify && (
                 <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(product)}>
+                    <Button variant="ghost" size="icon" aria-label="Edit product" className="h-8 w-8" onClick={() => onEdit(product)}>
                         <Pencil className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Button variant="ghost" size="icon" aria-label="Delete product" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                         </AlertDialogTrigger>
