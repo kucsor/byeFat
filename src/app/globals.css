@@ -4,89 +4,91 @@
 
 @layer base {
   :root {
-    /* --- FUTURISTIC LIGHT THEME (Neo-Brutalism + Glassmorphism) --- */
+    /* --- PROFESSIONAL & MEDICAL THEME (Clean + Structured) --- */
 
-    /* Base Backgrounds */
-    --background: 240 10% 98%; /* #FAFAFA - Clean White-ish */
-    --foreground: 240 10% 10%; /* #1A1A1E - Sharp Black/Grey */
+    /* Base Backgrounds - Light Gray #F8F9FA */
+    --background: 210 17% 98%;
+    /* Text Main #0F172A */
+    --foreground: 222 47% 11%;
 
-    /* Cards & Surfaces (Glassmorphism Base) */
+    /* Cards - White #FFFFFF */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
+    /* Text Main #0F172A */
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Brand Colors - Electric Blue */
-    --primary: 216 100% 50%; /* #0066FF - Electric Blue */
-    --primary-foreground: 0 0% 100%; /* White text on blue */
-
-    /* Secondary - Cool Grey */
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 5% 10%;
-
-    /* Muted - For suble text */
-    --muted: 240 5% 90%;
-    --muted-foreground: 240 4% 45%;
-
-    /* Accents */
-    --accent: 190 100% 50%; /* #00D9FF - Cyan */
-    --accent-foreground: 240 10% 10%;
-
-    /* Semantic Colors */
-    --destructive: 340 100% 50%; /* Neon Pink/Red */
-    --destructive-foreground: 0 0% 100%;
-
-    --success: 150 100% 40%; /* Digital Green */
-    --warning: 40 100% 50%; /* Digital Amber */
-
-    /* Borders & Inputs */
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 216 100% 50%; /* Matches Primary */
-
-    --radius: 1rem; /* 16px default */
-
-    /* Chart Colors (Neon Palette) */
-    --chart-1: 216 100% 50%; /* Electric Blue */
-    --chart-2: 190 100% 50%; /* Cyan */
-    --chart-3: 280 100% 60%; /* Neon Violet */
-    --chart-4: 340 100% 60%; /* Neon Pink */
-    --chart-5: 40 100% 60%;  /* Amber */
-
-    /* Glassmorphism Utilities */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --glass-blur: 20px;
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-  }
-
-  /* Force Dark Mode to look like Light Mode (Effectively removing it) */
-  .dark {
-    --background: 240 10% 98%;
-    --foreground: 240 10% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    /* Brand Colors - Electric Blue #0066FF */
     --primary: 216 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 5% 10%;
-    --muted: 240 5% 90%;
-    --muted-foreground: 240 4% 45%;
-    --accent: 190 100% 50%;
-    --accent-foreground: 240 10% 10%;
-    --destructive: 340 100% 50%;
+
+    /* Secondary - Light Gray #F1F5F9 (Gray 100) */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted - Gray 400 #94A3B8 */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accents */
+    --accent: 216 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Semantic Colors */
+    --destructive: 0 84% 60%; /* #EF4444 Danger */
     --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
+
+    --success: 161 84% 39%; /* #10B981 Success */
+    --warning: 38 92% 50%; /* #F59E0B Warning */
+
+    /* Borders & Inputs - Gray 200 #E2E8F0 */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 216 100% 50%;
-    --chart-1: 216 100% 50%;
-    --chart-2: 190 100% 50%;
-    --chart-3: 280 100% 60%;
-    --chart-4: 340 100% 60%;
-    --chart-5: 40 100% 60%;
+
+    --radius: 1rem; /* 16px */
+
+    /* Chart Colors */
+    --chart-1: 216 100% 50%; /* Blue */
+    --chart-2: 161 84% 39%; /* Green */
+    --chart-3: 38 92% 50%;  /* Orange */
+    --chart-4: 0 84% 60%;   /* Red */
+    --chart-5: 222 47% 11%; /* Navy */
+  }
+
+  /* Dark Mode Variants */
+  .dark {
+    /* Background #0F0F23 */
+    --background: 240 37% 10%;
+    /* Foreground White */
+    --foreground: 0 0% 100%;
+
+    /* Card #1A1A2E */
+    --card: 240 27% 14%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 240 27% 14%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 216 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 27% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 27% 20%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 216 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 27% 25%;
+    --input: 240 27% 25%;
+    --ring: 216 100% 50%;
   }
 }
 
@@ -96,29 +98,30 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-image:
-        radial-gradient(at 0% 0%, hsla(216, 100%, 50%, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, hsla(190, 100%, 50%, 0.05) 0px, transparent 50%);
-    background-attachment: fixed;
+    /* Clean background, no gradients for medical look */
   }
 }
 
 @layer utilities {
   .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    /* Subtler glass effect for medical look */
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass {
+    background: rgba(26, 26, 46, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .glass-card {
-    @apply glass rounded-2xl;
+    @apply bg-card border border-border/50 shadow-sm rounded-2xl;
   }
 
-  .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--chart-3)) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  /* Utility for the specific ring chart gradient if needed */
+  .gradient-ring {
+    background: conic-gradient(hsl(var(--primary)) var(--progress), #E8E8E8 0deg);
   }
 }

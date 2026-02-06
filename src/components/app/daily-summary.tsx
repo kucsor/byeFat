@@ -1,177 +1,160 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent } from '@/components/ui/card';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, Timestamp } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { Beef, Wheat as WheatIcon, Droplets, Flame, Target } from 'lucide-react';
+import { Activity, Apple, Zap } from 'lucide-react';
 import type { DailyLog, DailyLogItem } from '@/lib/types';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { CyberFlame, BouncyActivity, QuantumFood } from './animated-icons';
 
-export function DailySummary() {
+interface DailySummaryProps {
+  date: Date;
+}
+
+export function DailySummary({ date }: DailySummaryProps) {
   const { firestore, user, userProfile } = useFirebase();
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const dateString = format(date, 'yyyy-MM-dd');
 
   const dailyLogQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
       collection(firestore, `users/${user.uid}/dailyLogs`),
-      where('date', '==', today)
+      where('date', '==', dateString)
     );
-  }, [firestore, user, today]);
+  }, [firestore, user, dateString]);
 
   const { data: dailyLogs } = useCollection<DailyLog>(dailyLogQuery);
   const dailyLog = dailyLogs?.[0];
 
-  // Fetch items to calculate macros since they might not be on the dailyLog document
+  // Fetch items to calculate macros/calories if needed
   const itemsQuery = useMemoFirebase(() => {
       if (!firestore || !user) return null;
-      return query(collection(firestore, `users/${user.uid}/dailyLogs/${today}/items`));
-  }, [firestore, user, today]);
+      return query(collection(firestore, `users/${user.uid}/dailyLogs/${dateString}/items`));
+  }, [firestore, user, dateString]);
 
   const { data: items } = useCollection<DailyLogItem>(itemsQuery);
 
   const totals = useMemo(() => {
-    const consumed = dailyLog?.consumedCalories || 0; // Use aggregate if available for calories
+    const consumed = dailyLog?.consumedCalories || 0;
     const active = dailyLog?.activeCalories || 0;
-
-    // Calculate macros from items
-    const protein = items?.reduce((acc, item) => acc + (item.protein || 0), 0) || 0;
-    const carbs = items?.reduce((acc, item) => acc + (item.carbs || 0), 0) || 0;
-    const fat = items?.reduce((acc, item) => acc + (item.fat || 0), 0) || 0;
-
     return {
-      totalCalories: consumed,
-      totalProtein: Math.round(protein),
-      totalCarbohydrates: Math.round(carbs),
-      totalFat: Math.round(fat),
-      activeCalories: active,
+      consumed,
+      active,
     };
-  }, [dailyLog, items]);
+  }, [dailyLog]);
 
-  // Goals (default to 2000 if not set)
-  const calorieGoal = userProfile?.maintenanceCalories ? userProfile.maintenanceCalories - (userProfile.deficitTarget || 500) : 2000;
+  const maintenance = userProfile?.maintenanceCalories || 2000;
+  const deficitTarget = userProfile?.deficitTarget || 500;
+  // Target "Eaten" = Maintenance - Deficit + Active
+  // But wait, the Ring is "Circular Deficit Tracker".
+  // Label: "TOTAL DEFICIT".
+  // Value: (Maintenance + Active) - Consumed.
 
-  // Macro goals (from profile or defaults)
-  const proteinGoal = userProfile?.dailyProtein || Math.round((calorieGoal * 0.3) / 4);
-  const carbsGoal = userProfile?.dailyCarbs || Math.round((calorieGoal * 0.4) / 4);
-  const fatGoal = userProfile?.dailyFat || Math.round((calorieGoal * 0.3) / 9);
+  const totalBurned = maintenance + totals.active;
+  const currentDeficit = totalBurned - totals.consumed;
 
-  const caloriesRemaining = (calorieGoal + totals.activeCalories) - totals.totalCalories;
-  const progressPercentage = Math.min(100, (totals.totalCalories / (calorieGoal + totals.activeCalories)) * 100);
+  // Progress Ring Logic
+  // If Deficit > Target, full circle? Or relative?
+  // Usually ring represents "Calories Remaining" or "Deficit Progress".
+  // If the goal is 500 deficit, and we are at 1109, we are overachieving (good).
+  // Let's assume the ring fills up as we reach the deficit target.
+  // Target: 500. Current: 1109. Percentage = 100% (saturated).
+  // Or maybe the ring represents "Calories Eaten" vs "Limit".
+  // The prompt says: "Ring progress chart central (circular deficit tracker) ... Label: TOTAL DEFICIT ... Value: 1109 ... Target: 500 kcal".
+  // So the main number is Deficit.
+  // The ring should probably visualize Deficit vs Target.
+
+  const progressPercentage = Math.min(100, Math.max(0, (currentDeficit / deficitTarget) * 100));
+
+  // SVG Config
+  const size = 280;
+  const strokeWidth = 12;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
   return (
-    <div className="space-y-4">
-    <Card className="glass-card border-white/20 overflow-visible relative z-10">
-      <CardHeader className="pb-2 border-b border-white/10">
-        <CardTitle className="text-lg font-black text-foreground flex items-center justify-between">
-            <span className="flex items-center gap-2">
-                <CyberFlame className="h-6 w-6 text-primary" />
-                Daily Fuel
-            </span>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-white/30 px-2 py-1 rounded-lg backdrop-blur-sm">
-                {format(new Date(), 'EEEE, MMM d')}
-            </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-6 space-y-8">
-        {/* Main Calorie Ring / Display */}
-        <div className="flex flex-col items-center justify-center relative">
-             <div className="w-full flex items-end justify-between px-4 mb-2">
-                 <div className="flex flex-col items-center">
-                    <span className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Goal</span>
-                    <span className="text-xl font-black text-foreground">{calorieGoal}</span>
-                 </div>
-                 <div className="flex flex-col items-center pb-1">
-                    <span className="text-xs font-bold text-muted-foreground">+ {totals.activeCalories} Active</span>
-                 </div>
-             </div>
+    <Card className="border-none shadow-none bg-transparent">
+      <CardContent className="p-0 flex flex-col items-center">
+        {/* Ring Chart */}
+        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+            {/* SVG Ring */}
+            <svg width={size} height={size} className="transform -rotate-90">
+                <defs>
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#0066FF" />
+                        <stop offset="100%" stopColor="#60A5FA" />
+                    </linearGradient>
+                </defs>
+                {/* Track */}
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="#E2E8F0"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeLinecap="round"
+                />
+                {/* Progress */}
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="url(#progressGradient)"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                />
+            </svg>
 
-             <div className="w-full h-8 bg-slate-100/50 rounded-full overflow-hidden relative border border-slate-200/50 shadow-inner">
-                <div
-                    className="h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-1000 ease-out relative"
-                    style={{ width: `${progressPercentage}%` }}
-                >
-                    <div className="absolute top-0 right-0 bottom-0 w-full bg-white/20 animate-shimmer" />
-                </div>
-             </div>
-
-             <div className="mt-4 flex flex-col items-center">
-                <span className="text-sm font-bold text-muted-foreground mb-1">Remaining</span>
+            {/* Center Info */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Deficit</span>
                 <span className={cn(
-                    "text-5xl font-black tracking-tight drop-shadow-sm",
-                    caloriesRemaining < 0 ? "text-rose-500" : "text-primary"
+                    "text-6xl font-bold tracking-tighter text-foreground font-sans",
+                    currentDeficit < 0 && "text-destructive"
                 )}>
-                    {caloriesRemaining}
+                    {Math.round(currentDeficit)}
                 </span>
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">kcal</span>
-             </div>
-
-             {/* Consumed Tag */}
-              <div className="absolute top-24 -right-2 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/40 shadow-lg rotate-3 transform hover:rotate-0 transition-transform cursor-default">
-                <div className="text-[10px] uppercase font-bold tracking-tight text-muted-foreground">Consumed</div>
-                <div className="text-lg font-black text-foreground">{totals.totalCalories.toLocaleString()}</div>
-              </div>
+                <span className="text-sm font-medium text-muted-foreground mt-1">
+                    Target: {deficitTarget} kcal
+                </span>
+            </div>
         </div>
 
-        {/* Macros */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Protein */}
-            <div className="group bg-blue-50/30 p-4 rounded-3xl border border-blue-100/50 hover:bg-blue-50/50 transition-all duration-300">
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 bg-blue-100/50 rounded-xl group-hover:scale-110 transition-transform">
-                                <Beef className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <span className="text-xs font-black uppercase tracking-wider text-blue-900/60">Protein</span>
-                        </div>
-                        <span className="text-sm font-black text-blue-900">{totals.totalProtein}g</span>
+        {/* Sub Info */}
+        <div className="flex w-full mt-6 gap-4">
+            <div className="flex-1 bg-card rounded-2xl p-4 flex items-center justify-between border border-border/50 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-100 text-orange-600 rounded-full">
+                        <Zap className="h-5 w-5 fill-current" />
                     </div>
-                    <Progress value={proteinGoal > 0 ? (totals.totalProtein / proteinGoal) * 100 : 0} className="h-2.5 rounded-full bg-blue-100/50 [&>div]:bg-blue-500" />
-                    <span className="text-[10px] text-blue-400 text-right font-bold">Target: {proteinGoal}g</span>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Active</span>
+                        <span className="text-lg font-bold text-foreground">{totals.active}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Carbs */}
-            <div className="group bg-amber-50/30 p-4 rounded-3xl border border-amber-100/50 hover:bg-amber-50/50 transition-all duration-300">
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                             <div className="p-2 bg-amber-100/50 rounded-xl group-hover:scale-110 transition-transform">
-                                <WheatIcon className="h-4 w-4 text-amber-600" />
-                             </div>
-                            <span className="text-xs font-black uppercase tracking-wider text-amber-900/60">Carbs</span>
-                        </div>
-                        <span className="text-sm font-black text-amber-900">{totals.totalCarbohydrates}g</span>
+            <div className="flex-1 bg-card rounded-2xl p-4 flex items-center justify-between border border-border/50 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-100 text-emerald-600 rounded-full">
+                        <Apple className="h-5 w-5 fill-current" />
                     </div>
-                    <Progress value={carbsGoal > 0 ? (totals.totalCarbohydrates / carbsGoal) * 100 : 0} className="h-2.5 rounded-full bg-amber-100/50 [&>div]:bg-amber-500" />
-                    <span className="text-[10px] text-amber-400 text-right font-bold">Target: {carbsGoal}g</span>
-                </div>
-            </div>
-
-            {/* Fat */}
-            <div className="group bg-rose-50/30 p-4 rounded-3xl border border-rose-100/50 hover:bg-rose-50/50 transition-all duration-300">
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                             <div className="p-2 bg-rose-100/50 rounded-xl group-hover:scale-110 transition-transform">
-                                <Droplets className="h-4 w-4 text-rose-600" />
-                             </div>
-                            <span className="text-xs font-black uppercase tracking-wider text-rose-900/60">Fat</span>
-                        </div>
-                        <span className="text-sm font-black text-rose-900">{totals.totalFat}g</span>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Food</span>
+                        <span className="text-lg font-bold text-foreground">{Math.round(totals.consumed)}</span>
                     </div>
-                    <Progress value={fatGoal > 0 ? (totals.totalFat / fatGoal) * 100 : 0} className="h-2.5 rounded-full bg-rose-100/50 [&>div]:bg-rose-500" />
-                    <span className="text-[10px] text-rose-400 text-right font-bold">Target: {fatGoal}g</span>
                 </div>
             </div>
         </div>
       </CardContent>
     </Card>
-    </div>
   );
 }
