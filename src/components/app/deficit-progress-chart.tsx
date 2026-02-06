@@ -46,10 +46,14 @@ export function DeficitProgressChart({ chartData, maintenanceCalories }: Deficit
     if (!chartData || chartData.length === 0) return [];
 
     const now = new Date();
+    const todayString = format(now, 'yyyy-MM-dd');
     const cutoffDate = range === 'all' ? null : startOfDay(subDays(now, parseInt(range)));
 
     return chartData
       .filter((day) => {
+        // Exclude today to prevent incomplete data from skewing stats
+        if (day.date === todayString) return false;
+
         // Must have calorie data
         const hasCalories = (day.consumedCalories || 0) > 0;
         if (!hasCalories) return false;
