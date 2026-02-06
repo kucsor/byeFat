@@ -39,7 +39,7 @@ const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { it
   }, [item.createdAt]);
 
   return (
-    <div className="group flex items-center justify-between py-4 border-b border-border/40 last:border-0 hover:bg-secondary/5 transition-colors">
+    <div className="group flex items-center justify-between py-4 border-b border-border/50 last:border-0 hover:bg-secondary/5 transition-colors">
         <div className="flex items-center gap-3">
              <div className="p-2 bg-secondary rounded-xl text-muted-foreground">
                 <Apple className="h-4 w-4" />
@@ -136,7 +136,7 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
   return (
     <>
         <Card className="border border-border/50 shadow-sm bg-card mb-24 md:mb-0">
-            <CardHeader className="pb-2 border-b border-border/40">
+            <CardHeader className="px-4 pt-4 pb-2 border-b border-border/50">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-lg font-black text-foreground">Today's Log</CardTitle>
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
