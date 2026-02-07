@@ -1,12 +1,11 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { Activity, Apple, Zap } from 'lucide-react';
+import { Apple, Zap } from 'lucide-react';
 import type { DailyLog, DailyLogItem } from '@/lib/types';
-import { useMemo } from 'react';
+import { useMemo, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { MacrosDisplay } from './macros-display';
 
@@ -57,115 +56,145 @@ export function DailySummary({ date }: DailySummaryProps) {
 
   const maintenance = userProfile?.maintenanceCalories || 2000;
   const deficitTarget = userProfile?.deficitTarget || 500;
-  // Target "Eaten" = Maintenance - Deficit + Active
-  // But wait, the Ring is "Circular Deficit Tracker".
-  // Label: "TOTAL DEFICIT".
-  // Value: (Maintenance + Active) - Consumed.
 
   const totalBurned = maintenance + totals.active;
   const currentDeficit = totalBurned - totals.consumed;
 
-  // Progress Ring Logic
-  // If Deficit > Target, full circle? Or relative?
-  // Usually ring represents "Calories Remaining" or "Deficit Progress".
-  // If the goal is 500 deficit, and we are at 1109, we are overachieving (good).
-  // Let's assume the ring fills up as we reach the deficit target.
-  // Target: 500. Current: 1109. Percentage = 100% (saturated).
-  // Or maybe the ring represents "Calories Eaten" vs "Limit".
-  // The prompt says: "Ring progress chart central (circular deficit tracker) ... Label: TOTAL DEFICIT ... Value: 1109 ... Target: 500 kcal".
-  // So the main number is Deficit.
-  // The ring should probably visualize Deficit vs Target.
+  // Progress Calculation
+  // We want to show progress towards the target deficit.
+  // If target is 500, and current is 250, we are at 50%.
+  // If current is negative (surplus), we are at 0% or show warning color.
+  // If current > target, we are > 100% (success).
 
   const progressPercentage = Math.min(100, Math.max(0, (currentDeficit / deficitTarget) * 100));
 
   // SVG Config
-  const size = 280;
-  const strokeWidth = 12;
+  const size = 260; // Slightly smaller to fit padding
+  const strokeWidth = 16; // Thicker for modern look
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
+  const id = useId();
+  const gradientId = `gradient-${id.replace(/:/g, '')}`;
+  const filterId = `filter-${id.replace(/:/g, '')}`;
+
   return (
-    <Card className="border-none shadow-none bg-transparent">
-      <CardContent className="p-0 flex flex-col items-center">
-        {/* Ring Chart */}
-        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-            {/* SVG Ring */}
-            <svg width={size} height={size} className="transform -rotate-90">
-                <defs>
-                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#0066FF" />
-                        <stop offset="100%" stopColor="#60A5FA" />
-                    </linearGradient>
-                </defs>
-                {/* Track */}
-                <circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    stroke="#E2E8F0"
-                    strokeWidth={strokeWidth}
-                    fill="none"
-                    strokeLinecap="round"
-                />
-                {/* Progress */}
-                <circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    stroke="url(#progressGradient)"
-                    strokeWidth={strokeWidth}
-                    fill="none"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 ease-out"
-                />
-            </svg>
-
-            {/* Center Info */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Total Deficit</span>
-                <span className={cn(
-                    "text-6xl font-bold tracking-tighter text-foreground font-sans",
-                    currentDeficit < 0 && "text-destructive"
-                )}>
-                    {Math.round(currentDeficit)}
-                </span>
-                <span className="text-sm font-medium text-muted-foreground mt-1">
-                    Target: {deficitTarget} kcal
+    <div className="flex flex-col h-full w-full p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold tracking-tight text-foreground">Daily Summary</h2>
+            <div className="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                    Target: {deficitTarget}
                 </span>
             </div>
         </div>
 
-        {/* Sub Info */}
-        <div className="flex w-full mt-6 gap-4">
-            <div className="flex-1 bg-card rounded-2xl p-4 flex items-center justify-between border border-border/50 shadow-sm">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-orange-100 text-orange-600 rounded-full">
-                        <Zap className="h-5 w-5 fill-current" />
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Active</span>
-                        <span className="text-lg font-bold text-foreground">{totals.active}</span>
-                    </div>
-                </div>
-            </div>
+        {/* Ring Chart Container */}
+        <div className="flex-1 flex flex-col items-center justify-center min-h-[280px] relative">
+            {/* Background Glow */}
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent rounded-full blur-3xl opacity-50 pointer-events-none" />
 
-            <div className="flex-1 bg-card rounded-2xl p-4 flex items-center justify-between border border-border/50 shadow-sm">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-100 text-emerald-600 rounded-full">
-                        <Apple className="h-5 w-5 fill-current" />
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Food</span>
-                        <span className="text-lg font-bold text-foreground">{Math.round(totals.consumed)}</span>
+            <div className="relative flex items-center justify-center transition-transform hover:scale-[1.02] duration-500 ease-out cursor-default">
+                {/* SVG Ring */}
+                <svg width={size} height={size} className="transform -rotate-90 drop-shadow-lg">
+                    <defs>
+                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#3B82F6" /> {/* Blue-500 */}
+                            <stop offset="100%" stopColor="#60A5FA" /> {/* Blue-400 */}
+                        </linearGradient>
+                        <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                            <feMerge>
+                                <feMergeNode in="coloredBlur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    {/* Track */}
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        stroke="currentColor"
+                        strokeWidth={strokeWidth}
+                        fill="none"
+                        strokeLinecap="round"
+                        className="text-muted/10"
+                    />
+                    {/* Progress */}
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        stroke={`url(#${gradientId})`}
+                        strokeWidth={strokeWidth}
+                        fill="none"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000 ease-out"
+                        style={{ filter: `url(#${filterId})` }}
+                    />
+                </svg>
+
+                {/* Center Info */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1 opacity-80">Total Deficit</span>
+                    <span className={cn(
+                        "text-6xl font-black tracking-tighter text-foreground font-sans tabular-nums",
+                        currentDeficit < 0 && "text-destructive"
+                    )}>
+                        {Math.round(currentDeficit)}
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-2 px-3 py-1 bg-background/50 backdrop-blur-md rounded-full border border-border/50 shadow-sm">
+                        <div className={cn("w-2 h-2 rounded-full animate-pulse", currentDeficit >= deficitTarget ? "bg-emerald-500" : "bg-blue-500")} />
+                        <span className="text-xs font-medium text-muted-foreground">
+                            {progressPercentage >= 100 ? 'Target Reached' : `${Math.round(progressPercentage)}% of Goal`}
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className="mt-6 w-full flex justify-center">
+        {/* Sub Info Grid - Bento within Bento */}
+        <div className="grid grid-cols-2 gap-3 mt-6">
+            {/* Active Card */}
+            <div className="group relative overflow-hidden bg-orange-50/50 hover:bg-orange-50 transition-colors rounded-2xl p-4 border border-orange-100/50">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="p-2 bg-white rounded-xl shadow-sm border border-orange-100 group-hover:scale-110 transition-transform duration-300">
+                         <Zap className="h-4 w-4 text-orange-500 fill-orange-500" />
+                    </div>
+                    <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Active</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-2xl font-black text-gray-900 tabular-nums tracking-tight">
+                        {totals.active}
+                    </span>
+                    <span className="text-xs text-orange-600/70 font-medium">calories burned</span>
+                </div>
+            </div>
+
+            {/* Food Card */}
+            <div className="group relative overflow-hidden bg-emerald-50/50 hover:bg-emerald-50 transition-colors rounded-2xl p-4 border border-emerald-100/50">
+                <div className="flex items-center justify-between mb-2">
+                     <div className="p-2 bg-white rounded-xl shadow-sm border border-emerald-100 group-hover:scale-110 transition-transform duration-300">
+                         <Apple className="h-4 w-4 text-emerald-500 fill-emerald-500" />
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Food</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-2xl font-black text-gray-900 tabular-nums tracking-tight">
+                        {Math.round(totals.consumed)}
+                    </span>
+                    <span className="text-xs text-emerald-600/70 font-medium">calories eaten</span>
+                </div>
+            </div>
+        </div>
+
+        {/* Macros - Styled Container */}
+        <div className="mt-4 pt-4 border-t border-dashed border-border/50">
              <MacrosDisplay
                  fat={Math.round(macros.fat)}
                  protein={Math.round(macros.protein)}
@@ -175,7 +204,6 @@ export function DailySummary({ date }: DailySummaryProps) {
                  goalCarbs={userProfile?.dailyCarbs}
              />
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

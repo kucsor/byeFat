@@ -65,33 +65,69 @@ export default function Dashboard() {
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-32 md:pb-8">
+    <div className="flex min-h-screen w-full flex-col bg-background pb-32 md:pb-8 font-sans">
       <AppHeader userProfile={userProfile} />
 
-      <main className="container mx-auto max-w-xl flex-1 space-y-6 p-4">
-        {/* Date Navigator */}
-        <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      {/* Main Grid Container */}
+      <main className="container mx-auto max-w-5xl flex-1 p-4 md:p-6 lg:p-8">
 
-        {/* Daily Summary (Ring Chart) */}
-        <DailySummary date={selectedDate} />
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 auto-rows-min">
 
-        {/* Quick Actions */}
-        <QuickActions
-            onAiCalculator={() => setIsAiCalculatorOpen(true)}
-            onLogActivity={() => setIsAddActivityOpen(true)}
-            onAddFood={() => setIsAddFoodOpen(true)}
-            onScanBarcode={() => setIsBarcodeScannerOpen(true)}
-            onManualLog={() => setIsManualLogOpen(true)}
-        />
+          {/* Header Area: Date Navigator */}
+          <div className="col-span-1 md:col-span-12">
+            <div className="rounded-[20px] bg-card/50 backdrop-blur-sm border border-border/40 p-1">
+              <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
+            </div>
+          </div>
 
-        {/* Today's Log */}
-        <FoodLog
-            items={items}
-            activities={activities}
-            selectedDate={selectedDateString}
-            onAddFood={() => setIsAddFoodOpen(true)}
-        />
+          {/* Left Column: Summary & Quick Actions */}
+          <div className="col-span-1 md:col-span-5 lg:col-span-4 flex flex-col gap-4 md:gap-6">
+
+            {/* Daily Summary Card */}
+            <div className="rounded-[24px] bg-card border border-border/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-border/80 group">
+               <DailySummary date={selectedDate} />
+            </div>
+
+            {/* Quick Actions (Desktop: Grid Item, Mobile: Floating handled inside component or here) */}
+            <div className="hidden md:block rounded-[24px] bg-card border border-border/60 p-4 shadow-sm">
+                <QuickActions
+                    onAiCalculator={() => setIsAiCalculatorOpen(true)}
+                    onLogActivity={() => setIsAddActivityOpen(true)}
+                    onAddFood={() => setIsAddFoodOpen(true)}
+                    onScanBarcode={() => setIsBarcodeScannerOpen(true)}
+                    onManualLog={() => setIsManualLogOpen(true)}
+                />
+            </div>
+          </div>
+
+          {/* Right Column: Food Log */}
+          <div className="col-span-1 md:col-span-7 lg:col-span-8">
+            <div className="h-full rounded-[24px] bg-card border border-border/60 shadow-sm overflow-hidden flex flex-col">
+                <FoodLog
+                    items={items}
+                    activities={activities}
+                    selectedDate={selectedDateString}
+                    onAddFood={() => setIsAddFoodOpen(true)}
+                />
+            </div>
+          </div>
+
+        </div>
       </main>
+
+      {/* Mobile Quick Actions (Floating) */}
+      <div className="md:hidden fixed bottom-20 left-0 right-0 z-50 px-4 pointer-events-none">
+        <div className="pointer-events-auto">
+             <QuickActions
+                onAiCalculator={() => setIsAiCalculatorOpen(true)}
+                onLogActivity={() => setIsAddActivityOpen(true)}
+                onAddFood={() => setIsAddFoodOpen(true)}
+                onScanBarcode={() => setIsBarcodeScannerOpen(true)}
+                onManualLog={() => setIsManualLogOpen(true)}
+            />
+        </div>
+      </div>
 
       {/* Sheets */}
       {userProfile && (
