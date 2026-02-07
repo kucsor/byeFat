@@ -5,7 +5,14 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { format, addDays, subDays, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Dynamically import the Calendar component to reduce initial bundle size
+const Calendar = dynamic(() => import('@/components/ui/calendar').then((mod) => mod.Calendar), {
+  loading: () => <Skeleton className="h-[300px] w-full" />,
+  ssr: false,
+});
 
 interface DateNavigatorProps {
   selectedDate: Date;
@@ -72,9 +79,7 @@ export function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps
         onClick={handleNextDay}
         className={cn(
             "h-10 w-10 rounded-full hover:bg-secondary text-muted-foreground",
-            isToday && "invisible" // Hide next arrow if it's today (assuming we don't log future? Or just style choice)
-            // Actually usually we allow future logging but the prompt didn't specify. I'll keep it visible but maybe disabled if future logging isn't allowed.
-            // For now, let's keep it visible.
+            isToday && "invisible"
         )}
       >
         <ChevronRight className="h-6 w-6" />

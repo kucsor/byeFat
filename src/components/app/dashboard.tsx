@@ -12,7 +12,7 @@ import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { DateNavigator } from './date-navigator';
 import { QuickActions } from './quick-actions';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
+import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
@@ -62,14 +62,14 @@ const CARD_STYLES = cn(
 
 // Helper for hover scale effect
 const HoverCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <motion.div
+  <m.div
     variants={ITEM_VARIANTS}
     whileHover={{ scale: 1.02, translateY: -2 }}
     whileTap={{ scale: 0.98 }}
     className={cn(CARD_STYLES, className)}
   >
     {children}
-  </motion.div>
+  </m.div>
 );
 
 export default function Dashboard() {
@@ -118,148 +118,150 @@ export default function Dashboard() {
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background font-sans pb-32 md:pb-8">
-      {/* Background Gradient Mesh (Subtle) */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none -z-10" />
+    <LazyMotion features={domAnimation}>
+      <div className="flex min-h-screen w-full flex-col bg-background font-sans pb-32 md:pb-8">
+        {/* Background Gradient Mesh (Subtle) */}
+        <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none -z-10" />
 
-      <AppHeader userProfile={userProfile} />
+        <AppHeader userProfile={userProfile} />
 
-      {/* Main Grid Container */}
-      <motion.main
-        className="container mx-auto max-w-6xl flex-1 p-6 md:p-8"
-        initial="hidden"
-        animate="visible"
-        variants={CONTAINER_VARIANTS}
-      >
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
+        {/* Main Grid Container */}
+        <m.main
+          className="container mx-auto max-w-6xl flex-1 p-6 md:p-8"
+          initial="hidden"
+          animate="visible"
+          variants={CONTAINER_VARIANTS}
+        >
+          {/* Bento Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
 
-          {/* Header Area: Date Navigator */}
-          <motion.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-12 mb-2">
-            <div className="rounded-full bg-card/30 backdrop-blur-md border border-white/10 p-1.5 shadow-sm inline-block w-full">
-              <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-            </div>
-          </motion.div>
-
-          {/* Left Column: Summary & Quick Actions */}
-          <div className="col-span-1 md:col-span-5 lg:col-span-4 flex flex-col gap-6">
-
-            {/* Daily Summary Card - The Hero */}
-            <HoverCard className="min-h-[420px]">
-               <DailySummary date={selectedDate} />
-            </HoverCard>
-
-            {/* Quick Actions (Desktop) */}
-            <motion.div
-              variants={ITEM_VARIANTS}
-              className="hidden md:block"
-            >
-              <div className={cn(CARD_STYLES, "p-1 bg-white/5")}> {/* Nested glass container */}
-                 <QuickActions
-                    onAiCalculator={() => setIsAiCalculatorOpen(true)}
-                    onLogActivity={() => setIsAddActivityOpen(true)}
-                    onAddFood={() => setIsAddFoodOpen(true)}
-                    onScanBarcode={() => setIsBarcodeScannerOpen(true)}
-                    onManualLog={() => setIsManualLogOpen(true)}
-                 />
+            {/* Header Area: Date Navigator */}
+            <m.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-12 mb-2">
+              <div className="rounded-full bg-card/30 backdrop-blur-md border border-white/10 p-1.5 shadow-sm inline-block w-full">
+                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
               </div>
-            </motion.div>
-          </div>
+            </m.div>
 
-          {/* Right Column: Food Log */}
-          <motion.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-7 lg:col-span-8 h-full">
-            <div className={cn(CARD_STYLES, "h-full min-h-[500px] flex flex-col")}>
-                <FoodLog
-                    items={items}
-                    activities={activities}
-                    selectedDate={selectedDateString}
-                    onAddFood={() => setIsAddFoodOpen(true)}
-                />
+            {/* Left Column: Summary & Quick Actions */}
+            <div className="col-span-1 md:col-span-5 lg:col-span-4 flex flex-col gap-6">
+
+              {/* Daily Summary Card - The Hero */}
+              <HoverCard className="min-h-[420px]">
+                 <DailySummary date={selectedDate} />
+              </HoverCard>
+
+              {/* Quick Actions (Desktop) */}
+              <m.div
+                variants={ITEM_VARIANTS}
+                className="hidden md:block"
+              >
+                <div className={cn(CARD_STYLES, "p-1 bg-white/5")}> {/* Nested glass container */}
+                   <QuickActions
+                      onAiCalculator={() => setIsAiCalculatorOpen(true)}
+                      onLogActivity={() => setIsAddActivityOpen(true)}
+                      onAddFood={() => setIsAddFoodOpen(true)}
+                      onScanBarcode={() => setIsBarcodeScannerOpen(true)}
+                      onManualLog={() => setIsManualLogOpen(true)}
+                   />
+                </div>
+              </m.div>
             </div>
-          </motion.div>
 
-        </div>
-      </motion.main>
+            {/* Right Column: Food Log */}
+            <m.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-7 lg:col-span-8 h-full">
+              <div className={cn(CARD_STYLES, "h-full min-h-[500px] flex flex-col")}>
+                  <FoodLog
+                      items={items}
+                      activities={activities}
+                      selectedDate={selectedDateString}
+                      onAddFood={() => setIsAddFoodOpen(true)}
+                  />
+              </div>
+            </m.div>
 
-      {/* Mobile Quick Actions (Floating) */}
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5, type: 'spring' }}
-        className="md:hidden fixed bottom-24 left-4 right-4 z-50 pointer-events-none"
-      >
-        <div className="pointer-events-auto shadow-2xl rounded-3xl overflow-hidden bg-background/80 backdrop-blur-xl border border-white/20">
-             <QuickActions
-                onAiCalculator={() => setIsAiCalculatorOpen(true)}
-                onLogActivity={() => setIsAddActivityOpen(true)}
-                onAddFood={() => setIsAddFoodOpen(true)}
-                onScanBarcode={() => setIsBarcodeScannerOpen(true)}
-                onManualLog={() => setIsManualLogOpen(true)}
-            />
-        </div>
-      </motion.div>
+          </div>
+        </m.main>
 
-      {/* Sheets */}
-      {userProfile && (
-        <AnimatePresence>
-          {isAddFoodOpen && (
-            <AddFoodSheet
-                isOpen={isAddFoodOpen}
-                setIsOpen={setIsAddFoodOpen}
-                selectedDate={selectedDateString}
-                userProfile={userProfile}
-                selectedLog={selectedLog}
-                isLogLoading={isLogLoading}
-            />
-          )}
+        {/* Mobile Quick Actions (Floating) */}
+        <m.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, type: 'spring' }}
+          className="md:hidden fixed bottom-24 left-4 right-4 z-50 pointer-events-none"
+        >
+          <div className="pointer-events-auto shadow-2xl rounded-3xl overflow-hidden bg-background/80 backdrop-blur-xl border border-white/20">
+               <QuickActions
+                  onAiCalculator={() => setIsAiCalculatorOpen(true)}
+                  onLogActivity={() => setIsAddActivityOpen(true)}
+                  onAddFood={() => setIsAddFoodOpen(true)}
+                  onScanBarcode={() => setIsBarcodeScannerOpen(true)}
+                  onManualLog={() => setIsManualLogOpen(true)}
+              />
+          </div>
+        </m.div>
 
-          {isAddActivityOpen && (
-            <AddActivitySheet
-                isOpen={isAddActivityOpen}
-                setIsOpen={setIsAddActivityOpen}
-                selectedDate={selectedDateString}
-                userProfile={userProfile}
-                selectedLog={selectedLog}
-                isLogLoading={isLogLoading}
-            />
-          )}
+        {/* Sheets */}
+        {userProfile && (
+          <AnimatePresence>
+            {isAddFoodOpen && (
+              <AddFoodSheet
+                  isOpen={isAddFoodOpen}
+                  setIsOpen={setIsAddFoodOpen}
+                  selectedDate={selectedDateString}
+                  userProfile={userProfile}
+                  selectedLog={selectedLog}
+                  isLogLoading={isLogLoading}
+              />
+            )}
 
-          {isBarcodeScannerOpen && (
-            <BarcodeScannerSheet
-                isOpen={isBarcodeScannerOpen}
-                setIsOpen={setIsBarcodeScannerOpen}
-                selectedDate={selectedDateString}
-                userProfile={userProfile}
-                selectedLog={selectedLog}
-                isLogLoading={isLogLoading}
-            />
-          )}
+            {isAddActivityOpen && (
+              <AddActivitySheet
+                  isOpen={isAddActivityOpen}
+                  setIsOpen={setIsAddActivityOpen}
+                  selectedDate={selectedDateString}
+                  userProfile={userProfile}
+                  selectedLog={selectedLog}
+                  isLogLoading={isLogLoading}
+              />
+            )}
 
-          {isManualLogOpen && (
-             <AddManualLogSheet
-                isOpen={isManualLogOpen}
-                setIsOpen={setIsManualLogOpen}
-                selectedDate={selectedDateString}
-                userProfile={userProfile}
-                selectedLog={selectedLog}
-                isLogLoading={isLogLoading}
-            />
-          )}
+            {isBarcodeScannerOpen && (
+              <BarcodeScannerSheet
+                  isOpen={isBarcodeScannerOpen}
+                  setIsOpen={setIsBarcodeScannerOpen}
+                  selectedDate={selectedDateString}
+                  userProfile={userProfile}
+                  selectedLog={selectedLog}
+                  isLogLoading={isLogLoading}
+              />
+            )}
 
-          {isAiCalculatorOpen && (
-             <AiPortionCalculator
-                isOpen={isAiCalculatorOpen}
-                setIsOpen={setIsAiCalculatorOpen}
-                selectedDate={selectedDateString}
-                userProfile={userProfile}
-                selectedLog={selectedLog}
-                isLogLoading={isLogLoading}
-            />
-          )}
-        </AnimatePresence>
-      )}
+            {isManualLogOpen && (
+               <AddManualLogSheet
+                  isOpen={isManualLogOpen}
+                  setIsOpen={setIsManualLogOpen}
+                  selectedDate={selectedDateString}
+                  userProfile={userProfile}
+                  selectedLog={selectedLog}
+                  isLogLoading={isLogLoading}
+              />
+            )}
 
-      <BottomNav />
-    </div>
+            {isAiCalculatorOpen && (
+               <AiPortionCalculator
+                  isOpen={isAiCalculatorOpen}
+                  setIsOpen={setIsAiCalculatorOpen}
+                  selectedDate={selectedDateString}
+                  userProfile={userProfile}
+                  selectedLog={selectedLog}
+                  isLogLoading={isLogLoading}
+              />
+            )}
+          </AnimatePresence>
+        )}
+
+        <BottomNav />
+      </div>
+    </LazyMotion>
   );
 }
