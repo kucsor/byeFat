@@ -175,9 +175,9 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
   const netCalories = totalCalories - totalBurned;
 
   return (
-    <div className="flex flex-col h-full w-full bg-card">
+    <div className="flex flex-col h-full w-full bg-transparent">
         {/* Header */}
-        <div className="flex-none px-6 py-5 border-b border-border/40 flex items-center justify-between bg-card/50 backdrop-blur-xl sticky top-0 z-10">
+        <div className="flex-none px-6 py-5 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-xl sticky top-0 z-10">
             <div className="flex items-center gap-3">
                 <div className="h-8 w-1 bg-primary rounded-full" />
                 <h3 className="text-lg font-bold text-foreground tracking-tight">Timeline</h3>
