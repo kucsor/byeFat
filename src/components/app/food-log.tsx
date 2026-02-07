@@ -4,11 +4,12 @@ import { useMemo, useState, memo, useCallback } from 'react';
 import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import type { DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Pencil, Apple, Clock } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Trash2, Pencil, Apple, Clock, Flame } from 'lucide-react';
 import { doc, increment } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 import { triggerHapticFeedback } from '@/lib/haptics';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,64 +31,100 @@ type DailyLogProps = {
   onAddFood: () => void;
 };
 
-const FoodItemCard = memo(function FoodItemCard({ item, onDelete, onEdit }: { item: DailyLogItem, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void, onEdit: (item: DailyLogItem) => void }) {
-  const isAiItem = item.productId.startsWith('ai-');
+// Unified item type for display
+type LogItem = (DailyLogItem | DailyLogActivity) & { type: 'food' | 'activity' };
 
+const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item: LogItem, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void, onEdit: (item: DailyLogItem) => void }) {
+  const isActivity = item.type === 'activity';
+  const isAiItem = 'productId' in item && item.productId.startsWith('ai-');
+
+  // Format time
   const timeLabel = useMemo(() => {
     if (!item.createdAt || !item.createdAt.toDate) return '';
     return item.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, [item.createdAt]);
 
   return (
-    <div className="group flex items-center justify-between py-4 border-b border-border/50 last:border-0 hover:bg-secondary/5 transition-colors">
-        <div className="flex items-center gap-3">
-             <div className="p-2 bg-secondary rounded-xl text-muted-foreground">
-                <Apple className="h-4 w-4" />
+    <div className="group relative flex items-center justify-between p-3 mb-2 rounded-2xl bg-secondary/5 border border-transparent hover:bg-secondary/10 hover:border-border/30 transition-all duration-200">
+        <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+             {/* Icon Box */}
+             <div className={cn(
+                 "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                 isActivity ? "bg-orange-100/50 text-orange-600" : "bg-blue-100/50 text-blue-600"
+             )}>
+                {isActivity ? <Flame className="h-5 w-5 fill-current opacity-80" /> : <Apple className="h-5 w-5 fill-current opacity-80" />}
              </div>
-             <div className="flex flex-col gap-0.5">
-                <span className="font-bold text-sm text-foreground">{item.productName}</span>
+
+             {/* Content */}
+             <div className="flex flex-col min-w-0">
+                <span className="font-bold text-sm text-foreground truncate pr-2">
+                    {isActivity ? (item as DailyLogActivity).name : (item as DailyLogItem).productName}
+                </span>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="font-medium">{item.grams}g</span>
+                    {!isActivity && <span className="font-medium bg-background/50 px-1.5 py-0.5 rounded-md">{(item as DailyLogItem).grams}g</span>}
+
                     {timeLabel && (
-                        <>
-                            <span className="text-muted-foreground/40">•</span>
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {timeLabel}</span>
-                        </>
+                        <span className="flex items-center gap-1 opacity-60">
+                            <Clock className="h-3 w-3" /> {timeLabel}
+                        </span>
                     )}
                 </div>
             </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Actions & Value */}
+        <div className="flex items-center gap-3 md:gap-4 flex-shrink-0 pl-2">
              <div className="text-right">
-                <div className="text-sm font-black text-foreground">{item.calories}</div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">kcal</div>
+                <div className={cn(
+                    "text-sm font-black tabular-nums tracking-tight",
+                    isActivity ? "text-orange-600" : "text-foreground"
+                )}>
+                    {isActivity ? '-' : ''}{item.calories}
+                </div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider opacity-70">kcal</div>
             </div>
 
-            <div className="flex items-center">
-                {!isAiItem && (
-                <Button variant="ghost" size="icon" aria-label="Edit food log item" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onEdit(item)}>
-                    <Pencil className="h-4 w-4" />
-                </Button>
-                )}
-                <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Delete food log item" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
+            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+                {!isActivity && !isAiItem && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        onClick={() => onEdit(item as DailyLogItem)}
+                        aria-label="Edit item"
+                    >
+                        <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Item?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Remove "{item.productName}" from your log.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(item.id, 'items', item.calories)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
+                )}
+
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            aria-label="Delete item"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-[24px]">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will remove this entry from your daily log permanently.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => onDelete(item.id, isActivity ? 'activities' : 'items', item.calories)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+                            >
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
                 </AlertDialog>
             </div>
         </div>
@@ -105,16 +142,6 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     setIsEditSheetOpen(true);
   }, []);
 
-  const sortedItems = useMemo(() => {
-    if (!items) return [];
-    return [...items].sort((a, b) => {
-      if (a.createdAt && b.createdAt) {
-        return b.createdAt.toMillis() - a.createdAt.toMillis();
-      }
-      return 0;
-    });
-  }, [items]);
-
   const handleDelete = useCallback((itemId: string, type: 'items' | 'activities', calories: number) => {
     if (!user || !selectedDate) return;
     const docRef = doc(firestore, `users/${user.uid}/dailyLogs/${selectedDate}/${type}`, itemId);
@@ -130,36 +157,75 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
     triggerHapticFeedback();
   }, [user, selectedDate, firestore]);
 
-  const totalItems = (items?.length || 0) + (activities?.length || 0);
+  // Merge and sort
+  const combinedItems: LogItem[] = useMemo(() => {
+      const foodItems = (items || []).map(i => ({ ...i, type: 'food' } as LogItem));
+      const activityItems = (activities || []).map(a => ({ ...a, type: 'activity' } as LogItem));
+
+      return [...foodItems, ...activityItems].sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+             return b.createdAt.toMillis() - a.createdAt.toMillis();
+        }
+        return 0;
+      });
+  }, [items, activities]);
+
   const totalCalories = (items?.reduce((acc, i) => acc + i.calories, 0) || 0);
+  const totalBurned = (activities?.reduce((acc, a) => acc + a.calories, 0) || 0);
+  const netCalories = totalCalories - totalBurned;
 
   return (
-    <>
-        <Card className="border border-border/50 shadow-sm bg-card mb-24 md:mb-0">
-            <CardHeader className="px-4 pt-4 pb-2 border-b border-border/50">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-black text-foreground">Today's Log</CardTitle>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                        {totalItems} items • {totalCalories} kcal
-                    </span>
-                </div>
-            </CardHeader>
-            <CardContent className="p-0">
-                <div className="flex flex-col">
-                    {sortedItems.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground text-sm font-medium">
-                            No food logged yet today.
+    <div className="flex flex-col h-full w-full bg-card">
+        {/* Header */}
+        <div className="flex-none px-6 py-5 border-b border-border/40 flex items-center justify-between bg-card/50 backdrop-blur-xl sticky top-0 z-10">
+            <div className="flex items-center gap-3">
+                <div className="h-8 w-1 bg-primary rounded-full" />
+                <h3 className="text-lg font-bold text-foreground tracking-tight">Timeline</h3>
+            </div>
+            <div className="flex items-center gap-4">
+                 <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Net</span>
+                    <span className="text-sm font-black text-foreground tabular-nums">{netCalories}</span>
+                 </div>
+                 <div className="w-px h-6 bg-border/50" />
+                 <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onAddFood}
+                    className="h-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold uppercase tracking-wider px-4"
+                >
+                    Add
+                </Button>
+            </div>
+        </div>
+
+        {/* Content */}
+        <ScrollArea className="flex-1 w-full p-4">
+            <div className="flex flex-col min-h-full pb-20 md:pb-0">
+                {combinedItems.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-60">
+                        <div className="w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-4">
+                            <Apple className="h-8 w-8 text-muted-foreground" />
                         </div>
-                    ) : (
-                        sortedItems.map((item) => (
-                            <div key={`food-${item.id}`} className="px-4">
-                                <FoodItemCard item={item} onDelete={handleDelete} onEdit={handleEdit} />
-                            </div>
-                        ))
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+                        <span className="text-sm font-medium text-muted-foreground">
+                            Nothing logged yet.
+                        </span>
+                        <Button variant="link" onClick={onAddFood} className="mt-2 text-primary font-bold">
+                            Start Tracking
+                        </Button>
+                    </div>
+                ) : (
+                    combinedItems.map((item) => (
+                        <LogItemCard
+                            key={`${item.type}-${item.id}`}
+                            item={item}
+                            onDelete={handleDelete}
+                            onEdit={handleEdit}
+                        />
+                    ))
+                )}
+            </div>
+        </ScrollArea>
 
         <EditFoodLogItemSheet
             isOpen={isEditSheetOpen}
@@ -167,6 +233,6 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
             item={itemToEdit}
             selectedDate={selectedDate}
         />
-    </>
+    </div>
   );
 }
