@@ -85,7 +85,7 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
             </div>
 
             <div className="flex items-center opacity-100">
-                {!isActivity && !isAiItem && (
+                {!isActivity && (
                     <Button
                         variant="ghost"
                         size="icon"

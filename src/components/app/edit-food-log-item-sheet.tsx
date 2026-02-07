@@ -49,15 +49,30 @@ export function EditFoodLogItemSheet({ isOpen, setIsOpen, item, selectedDate }: 
 
   const grams = form.watch('grams');
   const calculatedMacros = useMemo(() => {
-    if (!product || !grams) return null;
+    if (!grams) return null;
+
+    let stats = product;
+
+    // Fallback for AI items or items where product fetch failed but we have data
+    if (!stats && item && item.grams > 0) {
+        stats = {
+            caloriesPer100g: (item.calories / item.grams) * 100,
+            proteinPer100g: (item.protein / item.grams) * 100,
+            fatPer100g: (item.fat / item.grams) * 100,
+            carbsPer100g: (item.carbs / item.grams) * 100,
+        } as Product;
+    }
+
+    if (!stats) return null;
+
     const ratio = grams / 100;
     return {
-        calories: Math.round(product.caloriesPer100g * ratio),
-        protein: Math.round(product.proteinPer100g * ratio),
-        fat: Math.round(product.fatPer100g * ratio),
-        carbs: Math.round(product.carbsPer100g * ratio),
+        calories: Math.round(stats.caloriesPer100g * ratio),
+        protein: Math.round(stats.proteinPer100g * ratio),
+        fat: Math.round(stats.fatPer100g * ratio),
+        carbs: Math.round(stats.carbsPer100g * ratio),
     }
-  }, [product, grams]);
+  }, [product, grams, item]);
 
   const onSubmit = async (values: z.infer<typeof editLogItemSchema>) => {
     if (!user || !item || !calculatedMacros) return;
