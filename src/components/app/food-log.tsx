@@ -280,28 +280,19 @@ export function FoodLog({ items, activities, selectedDate, onAddFood }: DailyLog
         <div className="flex-none px-6 py-5 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-xl sticky top-0 z-10">
             <div className="flex items-center gap-3">
                 <div className="h-8 w-1 bg-primary rounded-full" />
-                <h3 className="text-lg font-bold text-foreground tracking-tight">Timeline</h3>
+                <h3 className="text-lg font-bold text-foreground tracking-tight">Today's Log</h3>
             </div>
             <div className="flex items-center gap-4">
                  <div className="flex flex-col items-end">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Net</span>
                     <span className="text-sm font-black text-foreground tabular-nums">{netCalories}</span>
                  </div>
-                 <div className="w-px h-6 bg-border/50" />
-                 <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onAddFood}
-                    className="h-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold uppercase tracking-wider px-4"
-                >
-                    Add
-                </Button>
             </div>
         </div>
 
         {/* Content */}
         <ScrollArea className="flex-1 w-full p-4">
-            <div className="flex flex-col min-h-full pb-20 md:pb-0">
+            <div className="flex flex-col min-h-full pb-36 md:pb-0">
                 {combinedItems.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-60">
                         <div className="w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-4">
