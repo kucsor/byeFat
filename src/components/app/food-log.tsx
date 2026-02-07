@@ -84,16 +84,16 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
                 <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider opacity-70">kcal</div>
             </div>
 
-            <div className="flex items-center opacity-100">
+            <div className="flex items-center gap-1 opacity-100">
                 {!isActivity && (
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        className="h-8 w-8 rounded-lg text-primary/80 hover:text-primary hover:bg-primary/10"
                         onClick={() => onEdit(item as DailyLogItem)}
                         aria-label="Edit item"
                     >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="h-4 w-4" />
                     </Button>
                 )}
 
@@ -102,10 +102,10 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            className="h-8 w-8 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10"
                             aria-label="Delete item"
                         >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent className="rounded-[24px]">
