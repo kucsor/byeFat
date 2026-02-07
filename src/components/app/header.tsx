@@ -76,7 +76,14 @@ export function AppHeader({ userProfile }: { userProfile?: UserProfile | null })
         {/* Logo Section */}
         <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
             <div className="relative h-8 w-8">
-               <Image src="/app-icon.svg" alt="Logo" fill className="object-contain" priority />
+               <Image
+                 src="/app-icon.svg"
+                 alt="Logo"
+                 fill
+                 className="object-contain"
+                 priority
+                 sizes="32px"
+               />
             </div>
             <span className="font-sans font-semibold text-xl tracking-tight text-foreground">
                 byeFat

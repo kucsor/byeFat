@@ -8,6 +8,7 @@ import type { DailyLog, DailyLogItem } from '@/lib/types';
 import { useMemo, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { MacrosDisplay } from './macros-display';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DailySummaryProps {
   date: Date;
@@ -25,7 +26,7 @@ export function DailySummary({ date }: DailySummaryProps) {
     );
   }, [firestore, user, dateString]);
 
-  const { data: dailyLogs } = useCollection<DailyLog>(dailyLogQuery);
+  const { data: dailyLogs, isLoading: isLogLoading } = useCollection<DailyLog>(dailyLogQuery);
   const dailyLog = dailyLogs?.[0];
 
   // Fetch items to calculate macros/calories if needed
@@ -34,7 +35,9 @@ export function DailySummary({ date }: DailySummaryProps) {
       return query(collection(firestore, `users/${user.uid}/dailyLogs/${dateString}/items`));
   }, [firestore, user, dateString]);
 
-  const { data: items } = useCollection<DailyLogItem>(itemsQuery);
+  const { data: items, isLoading: isItemsLoading } = useCollection<DailyLogItem>(itemsQuery);
+
+  const isLoading = isLogLoading || isItemsLoading;
 
   const totals = useMemo(() => {
     const consumed = dailyLog?.consumedCalories || 0;
@@ -60,12 +63,6 @@ export function DailySummary({ date }: DailySummaryProps) {
   const totalBurned = maintenance + totals.active;
   const currentDeficit = totalBurned - totals.consumed;
 
-  // Progress Calculation
-  // We want to show progress towards the target deficit.
-  // If target is 500, and current is 250, we are at 50%.
-  // If current is negative (surplus), we are at 0% or show warning color.
-  // If current > target, we are > 100% (success).
-
   const progressPercentage = Math.min(100, Math.max(0, (currentDeficit / deficitTarget) * 100));
 
   // SVG Config
@@ -78,6 +75,27 @@ export function DailySummary({ date }: DailySummaryProps) {
   const id = useId();
   const gradientId = `gradient-${id.replace(/:/g, '')}`;
   const filterId = `filter-${id.replace(/:/g, '')}`;
+
+  if (isLoading) {
+      return (
+          <div className="flex flex-col h-full w-full p-6 space-y-6">
+              <div className="flex items-center justify-between mb-2">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+              <div className="flex-1 flex items-center justify-center">
+                  <Skeleton className="h-[260px] w-[260px] rounded-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-6">
+                  <Skeleton className="h-20 w-full rounded-2xl" />
+                  <Skeleton className="h-20 w-full rounded-2xl" />
+              </div>
+              <div className="mt-4 pt-4 border-t border-dashed border-border/50">
+                  <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+          </div>
+      )
+  }
 
   return (
     <div className="flex flex-col h-full w-full p-6">
