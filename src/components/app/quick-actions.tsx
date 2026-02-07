@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Scan, Flame, Plus, Barcode, Edit3 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface QuickActionsProps {
   onAiCalculator: () => void;
@@ -20,76 +19,74 @@ export function QuickActions({
   onManualLog,
 }: QuickActionsProps) {
   return (
-    <div className="fixed bottom-20 left-0 right-0 z-30 flex justify-center px-4 pointer-events-none md:static md:bottom-auto md:bg-transparent md:pointer-events-auto md:p-0 md:mt-8">
-      <div className="bg-white/90 backdrop-blur-xl border border-white/20 shadow-xl rounded-3xl p-4 flex items-end gap-3 pointer-events-auto md:bg-white md:shadow-sm md:border-border/50 md:w-full md:justify-around">
-        {/* AI Calculator */}
-        <div className="flex flex-col items-center gap-1 group">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onAiCalculator}
-            aria-label="AI Calculator"
-            className="h-14 w-14 rounded-full border-2 border-primary/10 bg-white hover:bg-primary/5 hover:border-primary hover:scale-105 transition-all shadow-sm"
-          >
-            <Scan className="h-6 w-6 text-primary" strokeWidth={2} />
-          </Button>
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight group-hover:text-primary transition-colors">AI Calc</span>
-        </div>
+    <div className="flex w-full items-end justify-around gap-2 p-2">
+      {/* AI Calculator */}
+      <div className="flex flex-col items-center gap-1 group">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onAiCalculator}
+          aria-label="AI Calculator"
+          className="h-12 w-12 rounded-2xl bg-white/5 text-foreground hover:bg-white/10 hover:scale-105 transition-all border border-white/10"
+        >
+          <Scan className="h-5 w-5 opacity-80" strokeWidth={2} />
+        </Button>
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight opacity-70 group-hover:opacity-100 transition-opacity">AI Calc</span>
+      </div>
 
-        {/* Log Activity */}
-        <div className="flex flex-col items-center gap-1 group">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onLogActivity}
-            aria-label="Log Activity"
-            className="h-14 w-14 rounded-full border-2 border-orange-100 bg-white hover:bg-orange-50 hover:border-orange-500 hover:scale-105 transition-all shadow-sm"
-          >
-            <Flame className="h-6 w-6 text-orange-500" strokeWidth={2} />
-          </Button>
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight group-hover:text-orange-500 transition-colors">Activity</span>
-        </div>
+      {/* Log Activity */}
+      <div className="flex flex-col items-center gap-1 group">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onLogActivity}
+          aria-label="Log Activity"
+          className="h-12 w-12 rounded-2xl bg-white/5 text-foreground hover:bg-orange-500/20 hover:text-orange-500 hover:scale-105 transition-all border border-white/10"
+        >
+          <Flame className="h-5 w-5 opacity-80" strokeWidth={2} />
+        </Button>
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight opacity-70 group-hover:opacity-100 transition-opacity">Activity</span>
+      </div>
 
-        {/* Add Food (Primary) */}
-        <div className="flex flex-col items-center gap-1 -translate-y-4 md:translate-y-0 group z-10">
-          <Button
-            size="icon"
-            onClick={onAddFood}
-            aria-label="Add Food"
-            className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90 hover:scale-110 shadow-lg shadow-primary/30 transition-all border-4 border-white/50"
-          >
-            <Plus className="h-8 w-8 text-white" strokeWidth={3} />
-          </Button>
-          <span className="text-[10px] font-black text-primary uppercase tracking-tight">Add Food</span>
-        </div>
+      {/* Add Food (Primary) */}
+      <div className="flex flex-col items-center gap-1 -translate-y-3 group z-10">
+        <Button
+          size="icon"
+          onClick={onAddFood}
+          aria-label="Add Food"
+          className="h-16 w-16 rounded-[28px] bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-110 shadow-lg shadow-primary/30 transition-all border-4 border-background/50 backdrop-blur-sm"
+        >
+          <Plus className="h-8 w-8" strokeWidth={3} />
+        </Button>
+        <span className="text-[10px] font-black text-primary uppercase tracking-tight">Add Food</span>
+      </div>
 
-        {/* Scan Barcode */}
-        <div className="flex flex-col items-center gap-1 group">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onScanBarcode}
-            aria-label="Scan Barcode"
-            className="h-14 w-14 rounded-full border-2 border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-400 hover:scale-105 transition-all shadow-sm"
-          >
-            <Barcode className="h-6 w-6 text-slate-600" strokeWidth={2} />
-          </Button>
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight group-hover:text-slate-600 transition-colors">Scan</span>
-        </div>
+      {/* Scan Barcode */}
+      <div className="flex flex-col items-center gap-1 group">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onScanBarcode}
+          aria-label="Scan Barcode"
+          className="h-12 w-12 rounded-2xl bg-white/5 text-foreground hover:bg-white/10 hover:scale-105 transition-all border border-white/10"
+        >
+          <Barcode className="h-5 w-5 opacity-80" strokeWidth={2} />
+        </Button>
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight opacity-70 group-hover:opacity-100 transition-opacity">Scan</span>
+      </div>
 
-        {/* Manual Log */}
-        <div className="flex flex-col items-center gap-1 group">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onManualLog}
-            aria-label="Manual Log"
-            className="h-14 w-14 rounded-full border-2 border-slate-100 bg-white hover:bg-slate-50 hover:border-slate-400 hover:scale-105 transition-all shadow-sm"
-          >
-            <Edit3 className="h-6 w-6 text-slate-600" strokeWidth={2} />
-          </Button>
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight group-hover:text-slate-600 transition-colors">Manual</span>
-        </div>
+      {/* Manual Log */}
+      <div className="flex flex-col items-center gap-1 group">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onManualLog}
+          aria-label="Manual Log"
+          className="h-12 w-12 rounded-2xl bg-white/5 text-foreground hover:bg-white/10 hover:scale-105 transition-all border border-white/10"
+        >
+          <Edit3 className="h-5 w-5 opacity-80" strokeWidth={2} />
+        </Button>
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight opacity-70 group-hover:opacity-100 transition-opacity">Manual</span>
       </div>
     </div>
   );

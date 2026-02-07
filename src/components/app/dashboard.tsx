@@ -12,12 +12,65 @@ import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { DateNavigator } from './date-navigator';
 import { QuickActions } from './quick-actions';
 import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
 const AddActivitySheet = dynamic(() => import('./add-activity-sheet').then(mod => mod.AddActivitySheet));
 const BarcodeScannerSheet = dynamic(() => import('./barcode-scanner-sheet').then(mod => mod.BarcodeScannerSheet));
 const AddManualLogSheet = dynamic(() => import('./add-manual-log-sheet').then(mod => mod.AddManualLogSheet));
 const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then(mod => mod.AiPortionCalculator));
+
+// --- God Mode Constants & Variants ---
+
+const CONTAINER_VARIANTS = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const ITEM_VARIANTS = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+};
+
+const CARD_STYLES = cn(
+  // Layout & Shape
+  "relative overflow-hidden rounded-3xl",
+  // Glassmorphism & Colors
+  "bg-white/5 backdrop-blur-md border border-white/10",
+  "dark:bg-black/20 dark:border-white/5", // Dark mode specific tweaks if needed, but sticking to "God Mode" spec
+  // Shadows (Layered)
+  "shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] ring-1 ring-white/5",
+  // Interaction
+  "transition-all duration-300 ease-out",
+  "hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] hover:ring-white/10"
+);
+
+// Helper for hover scale effect
+const HoverCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <motion.div
+    variants={ITEM_VARIANTS}
+    whileHover={{ scale: 1.02, translateY: -2 }}
+    whileTap={{ scale: 0.98 }}
+    className={cn(CARD_STYLES, className)}
+  >
+    {children}
+  </motion.div>
+);
 
 export default function Dashboard() {
   const { userProfile, firestore, user } = useFirebase();
@@ -30,7 +83,7 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
-  // Fetch Daily Log Document (for goals/aggregated stats)
+  // Fetch Daily Log Document
   const dailyLogQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
@@ -65,45 +118,57 @@ export default function Dashboard() {
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pb-32 md:pb-8 font-sans">
+    <div className="flex min-h-screen w-full flex-col bg-background font-sans pb-32 md:pb-8">
+      {/* Background Gradient Mesh (Subtle) */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none -z-10" />
+
       <AppHeader userProfile={userProfile} />
 
       {/* Main Grid Container */}
-      <main className="container mx-auto max-w-5xl flex-1 p-4 md:p-6 lg:p-8">
-
+      <motion.main
+        className="container mx-auto max-w-6xl flex-1 p-6 md:p-8"
+        initial="hidden"
+        animate="visible"
+        variants={CONTAINER_VARIANTS}
+      >
         {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 auto-rows-min">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
 
           {/* Header Area: Date Navigator */}
-          <div className="col-span-1 md:col-span-12">
-            <div className="rounded-[20px] bg-card/50 backdrop-blur-sm border border-border/40 p-1">
+          <motion.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-12 mb-2">
+            <div className="rounded-full bg-card/30 backdrop-blur-md border border-white/10 p-1.5 shadow-sm inline-block w-full">
               <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
             </div>
-          </div>
+          </motion.div>
 
           {/* Left Column: Summary & Quick Actions */}
-          <div className="col-span-1 md:col-span-5 lg:col-span-4 flex flex-col gap-4 md:gap-6">
+          <div className="col-span-1 md:col-span-5 lg:col-span-4 flex flex-col gap-6">
 
-            {/* Daily Summary Card */}
-            <div className="rounded-[24px] bg-card border border-border/60 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-border/80 group">
+            {/* Daily Summary Card - The Hero */}
+            <HoverCard className="min-h-[420px]">
                <DailySummary date={selectedDate} />
-            </div>
+            </HoverCard>
 
-            {/* Quick Actions (Desktop: Grid Item, Mobile: Floating handled inside component or here) */}
-            <div className="hidden md:block rounded-[24px] bg-card border border-border/60 p-4 shadow-sm">
-                <QuickActions
+            {/* Quick Actions (Desktop) */}
+            <motion.div
+              variants={ITEM_VARIANTS}
+              className="hidden md:block"
+            >
+              <div className={cn(CARD_STYLES, "p-1 bg-white/5")}> {/* Nested glass container */}
+                 <QuickActions
                     onAiCalculator={() => setIsAiCalculatorOpen(true)}
                     onLogActivity={() => setIsAddActivityOpen(true)}
                     onAddFood={() => setIsAddFoodOpen(true)}
                     onScanBarcode={() => setIsBarcodeScannerOpen(true)}
                     onManualLog={() => setIsManualLogOpen(true)}
-                />
-            </div>
+                 />
+              </div>
+            </motion.div>
           </div>
 
           {/* Right Column: Food Log */}
-          <div className="col-span-1 md:col-span-7 lg:col-span-8">
-            <div className="h-full rounded-[24px] bg-card border border-border/60 shadow-sm overflow-hidden flex flex-col">
+          <motion.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-7 lg:col-span-8 h-full">
+            <div className={cn(CARD_STYLES, "h-full min-h-[500px] flex flex-col")}>
                 <FoodLog
                     items={items}
                     activities={activities}
@@ -111,14 +176,19 @@ export default function Dashboard() {
                     onAddFood={() => setIsAddFoodOpen(true)}
                 />
             </div>
-          </div>
+          </motion.div>
 
         </div>
-      </main>
+      </motion.main>
 
       {/* Mobile Quick Actions (Floating) */}
-      <div className="md:hidden fixed bottom-20 left-0 right-0 z-50 px-4 pointer-events-none">
-        <div className="pointer-events-auto">
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5, type: 'spring' }}
+        className="md:hidden fixed bottom-24 left-4 right-4 z-50 pointer-events-none"
+      >
+        <div className="pointer-events-auto shadow-2xl rounded-3xl overflow-hidden bg-background/80 backdrop-blur-xl border border-white/20">
              <QuickActions
                 onAiCalculator={() => setIsAiCalculatorOpen(true)}
                 onLogActivity={() => setIsAddActivityOpen(true)}
@@ -127,11 +197,12 @@ export default function Dashboard() {
                 onManualLog={() => setIsManualLogOpen(true)}
             />
         </div>
-      </div>
+      </motion.div>
 
       {/* Sheets */}
       {userProfile && (
-        <>
+        <AnimatePresence>
+          {isAddFoodOpen && (
             <AddFoodSheet
                 isOpen={isAddFoodOpen}
                 setIsOpen={setIsAddFoodOpen}
@@ -140,7 +211,9 @@ export default function Dashboard() {
                 selectedLog={selectedLog}
                 isLogLoading={isLogLoading}
             />
+          )}
 
+          {isAddActivityOpen && (
             <AddActivitySheet
                 isOpen={isAddActivityOpen}
                 setIsOpen={setIsAddActivityOpen}
@@ -149,7 +222,9 @@ export default function Dashboard() {
                 selectedLog={selectedLog}
                 isLogLoading={isLogLoading}
             />
+          )}
 
+          {isBarcodeScannerOpen && (
             <BarcodeScannerSheet
                 isOpen={isBarcodeScannerOpen}
                 setIsOpen={setIsBarcodeScannerOpen}
@@ -158,8 +233,10 @@ export default function Dashboard() {
                 selectedLog={selectedLog}
                 isLogLoading={isLogLoading}
             />
+          )}
 
-            <AddManualLogSheet
+          {isManualLogOpen && (
+             <AddManualLogSheet
                 isOpen={isManualLogOpen}
                 setIsOpen={setIsManualLogOpen}
                 selectedDate={selectedDateString}
@@ -167,8 +244,10 @@ export default function Dashboard() {
                 selectedLog={selectedLog}
                 isLogLoading={isLogLoading}
             />
+          )}
 
-            <AiPortionCalculator
+          {isAiCalculatorOpen && (
+             <AiPortionCalculator
                 isOpen={isAiCalculatorOpen}
                 setIsOpen={setIsAiCalculatorOpen}
                 selectedDate={selectedDateString}
@@ -176,7 +255,8 @@ export default function Dashboard() {
                 selectedLog={selectedLog}
                 isLogLoading={isLogLoading}
             />
-        </>
+          )}
+        </AnimatePresence>
       )}
 
       <BottomNav />
