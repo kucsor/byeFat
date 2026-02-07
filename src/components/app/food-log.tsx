@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, memo, useCallback } from 'react';
+import { useMemo, useState, memo, useCallback, useEffect } from 'react';
 import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import type { DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { doc, increment } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { m, useMotionValue, useTransform, useAnimation, PanInfo } from 'framer-motion';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,7 +38,9 @@ type LogItem = (DailyLogItem | DailyLogActivity) & { type: 'food' | 'activity' }
 
 const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item: LogItem, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void, onEdit: (item: DailyLogItem) => void }) {
   const isActivity = item.type === 'activity';
-  const isAiItem = 'productId' in item && item.productId.startsWith('ai-');
+  const isMobile = useIsMobile();
+  const controls = useAnimation();
+  const x = useMotionValue(0);
 
   // Format time
   const timeLabel = useMemo(() => {
@@ -44,71 +48,67 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
     return item.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, [item.createdAt]);
 
+  // Reset swipe on mobile if not dragging
+  useEffect(() => {
+    if (!isMobile) {
+        controls.set({ x: 0 });
+    }
+  }, [isMobile, controls]);
+
+  const handleDragEnd = async (event: any, info: PanInfo) => {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+
+    // Swipe left threshold
+    if (offset < -50 || velocity < -500) {
+        await controls.start({ x: -100, transition: { type: "spring", stiffness: 300, damping: 30 } });
+    } else {
+        await controls.start({ x: 0, transition: { type: "spring", stiffness: 300, damping: 30 } });
+    }
+  };
+
+  const handleCloseSwipe = () => {
+      controls.start({ x: 0 });
+  }
+
+  const handleDeleteClick = () => {
+      handleCloseSwipe();
+      // Logic handled by alert dialog action
+  }
+
+  const handleEditClick = () => {
+      handleCloseSwipe();
+      onEdit(item as DailyLogItem);
+  }
+
   return (
-    <div className="group relative flex items-center justify-between p-3 mb-2 rounded-2xl bg-secondary/5 border border-transparent hover:bg-secondary/10 hover:border-border/30 transition-all duration-200">
-        <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-             {/* Icon Box */}
-             <div className={cn(
-                 "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                 isActivity ? "bg-orange-100/50 text-orange-600" : "bg-blue-100/50 text-blue-600"
-             )}>
-                {isActivity ? <Flame className="h-5 w-5 fill-current opacity-80" /> : <Apple className="h-5 w-5 fill-current opacity-80" />}
-             </div>
-
-             {/* Content */}
-             <div className="flex flex-col min-w-0">
-                <span className="font-bold text-sm text-foreground truncate pr-2">
-                    {isActivity ? (item as DailyLogActivity).name : (item as DailyLogItem).productName}
-                </span>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {!isActivity && <span className="font-medium bg-background/50 px-1.5 py-0.5 rounded-md">{(item as DailyLogItem).grams}g</span>}
-
-                    {timeLabel && (
-                        <span className="flex items-center gap-1 opacity-60">
-                            <Clock className="h-3 w-3" /> {timeLabel}
-                        </span>
-                    )}
-                </div>
-            </div>
-        </div>
-
-        {/* Actions & Value */}
-        <div className="flex items-center gap-3 md:gap-4 flex-shrink-0 pl-2">
-             <div className="text-right">
-                <div className={cn(
-                    "text-sm font-black tabular-nums tracking-tight",
-                    isActivity ? "text-orange-600" : "text-foreground"
-                )}>
-                    {isActivity ? '-' : ''}{item.calories}
-                </div>
-                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider opacity-70">kcal</div>
-            </div>
-
-            <div className="flex items-center gap-1 opacity-100">
+    <div className="relative mb-2 w-full">
+        {/* Mobile Actions Layer (Background) */}
+        {isMobile && (
+            <div className="absolute inset-y-0 right-0 flex items-center justify-end gap-2 pr-4 pl-12 bg-transparent z-0">
                 {!isActivity && (
                     <Button
-                        variant="ghost"
+                        variant="default"
                         size="icon"
-                        className="h-8 w-8 rounded-lg text-primary/80 hover:text-primary hover:bg-primary/10"
-                        onClick={() => onEdit(item as DailyLogItem)}
+                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-sm"
+                        onClick={handleEditClick}
                         aria-label="Edit item"
                     >
                         <Pencil className="h-4 w-4" />
                     </Button>
                 )}
-
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button
-                            variant="ghost"
+                         <Button
+                            variant="destructive"
                             size="icon"
-                            className="h-8 w-8 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                            className="h-10 w-10 rounded-full bg-destructive text-destructive-foreground shadow-sm"
                             aria-label="Delete item"
                         >
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-[24px]">
+                     <AlertDialogContent className="rounded-[24px]">
                         <AlertDialogHeader>
                             <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -116,7 +116,7 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                            <AlertDialogCancel className="rounded-xl" onClick={handleCloseSwipe}>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={() => onDelete(item.id, isActivity ? 'activities' : 'items', item.calories)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
@@ -127,7 +127,107 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </div>
+        )}
+
+        {/* Foreground Card */}
+        <m.div
+            animate={controls}
+            style={{ x, touchAction: "pan-y" }}
+            drag={isMobile ? "x" : false}
+            dragConstraints={{ left: -120, right: 0 }}
+            dragElastic={0.1}
+            onDragEnd={handleDragEnd}
+            className="group relative z-10 flex items-center justify-between p-3 rounded-2xl bg-card border border-border/40 transition-colors duration-200"
+        >
+             {/* Card Background for Mobile (Opaque to hide actions) */}
+             <div className="absolute inset-0 bg-background/80 backdrop-blur-xl rounded-2xl -z-10" />
+
+            <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                {/* Icon Box */}
+                <div className={cn(
+                    "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                    isActivity ? "bg-orange-100/50 text-orange-600" : "bg-blue-100/50 text-blue-600"
+                )}>
+                    {isActivity ? <Flame className="h-5 w-5 fill-current opacity-80" /> : <Apple className="h-5 w-5 fill-current opacity-80" />}
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-sm text-foreground truncate pr-2">
+                        {isActivity ? (item as DailyLogActivity).name : (item as DailyLogItem).productName}
+                    </span>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {!isActivity && <span className="font-medium bg-background/50 px-1.5 py-0.5 rounded-md">{(item as DailyLogItem).grams}g</span>}
+
+                        {timeLabel && (
+                            <span className="flex items-center gap-1 opacity-60">
+                                <Clock className="h-3 w-3" /> {timeLabel}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Actions & Value */}
+            <div className="flex items-center gap-3 md:gap-4 flex-shrink-0 pl-2">
+                <div className="text-right">
+                    <div className={cn(
+                        "text-sm font-black tabular-nums tracking-tight",
+                        isActivity ? "text-orange-600" : "text-foreground"
+                    )}>
+                        {isActivity ? '-' : ''}{item.calories}
+                    </div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider opacity-70">kcal</div>
+                </div>
+
+                {/* Desktop Actions (Hidden on Mobile) */}
+                {!isMobile && (
+                    <div className="flex items-center gap-1 opacity-100">
+                        {!isActivity && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-lg text-primary/80 hover:text-primary hover:bg-primary/10"
+                                onClick={() => onEdit(item as DailyLogItem)}
+                                aria-label="Edit item"
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        )}
+
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                                    aria-label="Delete item"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="rounded-[24px]">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will remove this entry from your daily log permanently.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() => onDelete(item.id, isActivity ? 'activities' : 'items', item.calories)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+                                    >
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                )}
+            </div>
+        </m.div>
     </div>
   )
 });
