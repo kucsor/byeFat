@@ -84,7 +84,7 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
                 <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider opacity-70">kcal</div>
             </div>
 
-            <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+            <div className="flex items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity focus-within:opacity-100">
                 {!isActivity && !isAiItem && (
                     <Button
                         variant="ghost"
