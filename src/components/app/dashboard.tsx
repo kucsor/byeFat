@@ -34,7 +34,7 @@ export default function Dashboard() {
     );
   }, [firestore, user, selectedDateString]);
 
-  const { data: dailyLogs } = useCollection<DailyLog>(dailyLogQuery);
+  const { data: dailyLogs, isLoading: isLogLoading } = useCollection<DailyLog>(dailyLogQuery);
   const selectedLog = dailyLogs?.[0] || null;
 
   // Fetch Items Subcollection (for Macros calculation and recent activity)
