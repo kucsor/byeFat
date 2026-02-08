@@ -70,7 +70,9 @@ export function useCollection<T = any>(
     }
 
     // MOCK DATA FOR VERIFICATION
-    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+    const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || (typeof window !== 'undefined' && (window as any).__MOCK_AUTH__);
+
+    if (isMockAuth) {
         // Extract path to decide what to return
         let path = '';
         try {
