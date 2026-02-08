@@ -125,3 +125,66 @@
     background: conic-gradient(hsl(var(--primary)) var(--progress), #E8E8E8 0deg);
   }
 }
+
+/* Custom Utilities from Premium 2026 Design */
+
+/* Scrollbar Hiding */
+.no-scrollbar::-webkit-scrollbar,
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar,
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Glassmorphism */
+.glass-panel {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.dark .glass-panel {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 3D Bar Chart Effect */
+.bar-3d {
+    background: linear-gradient(90deg, #2b8cee 0%, #60a5fa 100%);
+    box-shadow: 2px 2px 5px rgba(43, 140, 238, 0.2);
+    position: relative;
+}
+.bar-3d::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0 4px 4px 0;
+}
+
+/* Metallic Text Gradient */
+.text-metallic {
+    background: linear-gradient(135deg, #374151 0%, #9ca3af 50%, #374151 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.dark .text-metallic {
+    background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 50%, #e5e7eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

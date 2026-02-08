@@ -16,6 +16,16 @@ export default {
       },
     },
     extend: {
+
+      boxShadow: {
+        "glass": "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
+        "glow": "0 0 20px rgba(43, 140, 238, 0.3)",
+        "inner-glow": "inset 0 0 20px rgba(43, 140, 238, 0.15)",
+        "glow-green": "0 0 20px rgba(0, 224, 150, 0.6), 0 0 10px rgba(0, 224, 150, 0.4)",
+        "glow-primary": "0 0 15px rgba(43, 140, 238, 0.4)",
+        "glow-hover": "0 0 30px -5px rgba(43, 140, 238, 0.7)",
+      },
+
       fontFamily: {
         sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         // Remapped legacy fonts to sans to prevent crashes if I missed any specific class usages
@@ -35,10 +45,7 @@ export default {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
         },
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
+        primary: '#2b8cee',
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
@@ -75,6 +82,17 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        "background-light": "#f6f7f8",
+        "background-dark": "#101922",
+        "glass-border": "rgba(255, 255, 255, 0.5)",
+        "glass-surface": "rgba(255, 255, 255, 0.65)",
+        "glass-surface-dark": "rgba(30, 41, 59, 0.65)",
+        "glass-light": "rgba(255, 255, 255, 0.7)",
+        "glass-dark": "rgba(16, 25, 34, 0.7)",
+        "glass-border-light": "rgba(255, 255, 255, 0.5)",
+        "glass-border-dark": "rgba(255, 255, 255, 0.1)",
+        "accent-green": "#00E096",
+
       },
       borderRadius: {
         lg: 'var(--radius)',
