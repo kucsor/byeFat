@@ -13,7 +13,7 @@ import Link from 'next/link';
 const AddFoodSheet = dynamic(() => import('@/components/app/add-food-sheet').then(mod => mod.AddFoodSheet));
 const EditFoodLogItemSheet = dynamic(() => import('@/components/app/edit-food-log-item-sheet').then(mod => mod.EditFoodLogItemSheet));
 
-export default function FoodLog() {
+export function FoodLog() {
   const { userProfile, firestore, user } = useFirebase();
   const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
