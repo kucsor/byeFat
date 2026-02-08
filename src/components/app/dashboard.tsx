@@ -1,85 +1,27 @@
 'use client';
 
-import { AppHeader } from './header';
-import { DailySummary } from './daily-summary';
-import { FoodLog } from './food-log';
 import { BottomNav } from './bottom-nav';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { useState } from 'react';
-import { format } from 'date-fns';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useState, useMemo, useEffect } from 'react';
+import { format, addDays, subDays } from 'date-fns';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
-import { DateNavigator } from './date-navigator';
-import { QuickActions } from './quick-actions';
 import dynamic from 'next/dynamic';
-import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Bell, Flame, Egg, Croissant, Droplet } from 'lucide-react';
+import Link from 'next/link';
 
+// Dynamic imports for sheets
 const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
-const AddActivitySheet = dynamic(() => import('./add-activity-sheet').then(mod => mod.AddActivitySheet));
-const BarcodeScannerSheet = dynamic(() => import('./barcode-scanner-sheet').then(mod => mod.BarcodeScannerSheet));
-const AddManualLogSheet = dynamic(() => import('./add-manual-log-sheet').then(mod => mod.AddManualLogSheet));
-const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then(mod => mod.AiPortionCalculator));
 
-// --- God Mode Constants & Variants ---
-
-const CONTAINER_VARIANTS = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const ITEM_VARIANTS = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 100,
-      damping: 15,
-    },
-  },
-};
-
-const CARD_STYLES = cn(
-  // Layout & Shape
-  "relative overflow-hidden rounded-3xl",
-  // Glassmorphism & Colors
-  "bg-white/5 backdrop-blur-md border border-white/10",
-  "dark:bg-black/20 dark:border-white/5", // Dark mode specific tweaks if needed, but sticking to "God Mode" spec
-  // Shadows (Layered)
-  "shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] ring-1 ring-white/5",
-  // Interaction
-  "transition-all duration-300 ease-out",
-  "hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] hover:ring-white/10"
-);
-
-// Helper for hover scale effect
-const HoverCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <m.div
-    variants={ITEM_VARIANTS}
-    whileHover={{ scale: 1.02, translateY: -2 }}
-    whileTap={{ scale: 0.98 }}
-    className={cn(CARD_STYLES, className)}
-  >
-    {children}
-  </m.div>
-);
+// Styles from the HTML (converted to Tailwind string)
+const GLASS_PANEL = "backdrop-blur-md border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-800/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]";
 
 export default function Dashboard() {
   const { userProfile, firestore, user } = useFirebase();
-  const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
-  const [isAddActivityOpen, setIsAddActivityOpen] = useState(false);
-  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
-  const [isManualLogOpen, setIsManualLogOpen] = useState(false);
-  const [isAiCalculatorOpen, setIsAiCalculatorOpen] = useState(false);
 
+  // Sheet states
+  const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
@@ -95,7 +37,7 @@ export default function Dashboard() {
   const { data: dailyLogs, isLoading: isLogLoading } = useCollection<DailyLog>(dailyLogQuery);
   const selectedLog = dailyLogs?.[0] || null;
 
-  // Fetch Items Subcollection
+  // Fetch Items Subcollection (for Macros calculation and recent activity)
   const itemsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(
@@ -106,104 +48,270 @@ export default function Dashboard() {
 
   const { data: items } = useCollection<DailyLogItem>(itemsQuery);
 
-  // Fetch Activities Subcollection
-  const activitiesQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(
-        collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/activities`),
-        orderBy('createdAt', 'desc')
-    );
-  }, [firestore, user, selectedDateString]);
+  // Calculate Macros
+  const macros = useMemo(() => {
+      let p = 0, c = 0, f = 0;
+      items?.forEach(item => {
+          p += item.protein || 0;
+          c += item.carbs || 0;
+          f += item.fat || 0;
+      });
+      return { p, c, f };
+  }, [items]);
 
-  const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);
+  // Calories Logic
+  const goalCalories = selectedLog?.goalCalories || userProfile?.dailyCalories || 2000;
+  const consumedCalories = selectedLog?.consumedCalories || 0;
+  const activeCalories = selectedLog?.activeCalories || 0;
+  const netCalories = consumedCalories - activeCalories;
+  const caloriesLeft = Math.round(goalCalories - netCalories);
+
+  // Ring Progress
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius; // ~263.89
+  const percentage = Math.min(Math.max(netCalories / goalCalories, 0), 1);
+  const strokeDashoffset = circumference - (percentage * circumference);
+
+  // Last Logged Item
+  const lastLogged = items && items.length > 0 ? items[0] : null;
+
+  // Listen for Add Menu Event from BottomNav
+  useEffect(() => {
+      const handleOpenAdd = () => setIsAddFoodOpen(true);
+      window.addEventListener('open-add-menu', handleOpenAdd);
+      return () => window.removeEventListener('open-add-menu', handleOpenAdd);
+  }, []);
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="flex min-h-screen w-full flex-col bg-background font-sans pb-32 md:pb-8">
-        {/* Background Gradient Mesh (Subtle) */}
-        <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none -z-10" />
+      <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen relative overflow-x-hidden font-sans text-slate-800 dark:text-slate-100 pb-24 selection:bg-[#2b8cee]/30">
 
-        <AppHeader userProfile={userProfile} />
+        {/* Background Blobs */}
+        <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#2b8cee]/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        <div className="fixed bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-purple-400/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
-        {/* Main Grid Container */}
-        <m.main
-          className="container mx-auto max-w-6xl flex-1 p-6 md:p-8"
-          initial="hidden"
-          animate="visible"
-          variants={CONTAINER_VARIANTS}
-        >
-          {/* Bento Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-min">
+        <div className="relative z-10 flex flex-col min-h-screen pb-24 max-w-md mx-auto bg-white/5 dark:bg-black/5 backdrop-blur-[2px] shadow-2xl">
 
-            {/* Header Area: Date Navigator */}
-            <m.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-12 mb-2">
-              <div className="rounded-full bg-card/30 backdrop-blur-md border border-white/10 p-1.5 shadow-sm inline-block w-full">
-                <DateNavigator selectedDate={selectedDate} onDateChange={setSelectedDate} />
-              </div>
-            </m.div>
-
-            {/* Left Column: Summary & Quick Actions */}
-            <div className="col-span-1 md:col-span-5 lg:col-span-4 flex flex-col gap-6">
-
-              {/* Daily Summary Card - The Hero */}
-              <HoverCard className="min-h-[420px]">
-                 <DailySummary date={selectedDate} />
-              </HoverCard>
-
-              {/* Quick Actions (Desktop) */}
-              <m.div
-                variants={ITEM_VARIANTS}
-                className="hidden md:block"
-              >
-                <div className={cn(CARD_STYLES, "p-1 bg-white/5")}> {/* Nested glass container */}
-                   <QuickActions
-                      onAiCalculator={() => setIsAiCalculatorOpen(true)}
-                      onLogActivity={() => setIsAddActivityOpen(true)}
-                      onAddFood={() => setIsAddFoodOpen(true)}
-                      onScanBarcode={() => setIsBarcodeScannerOpen(true)}
-                      onManualLog={() => setIsManualLogOpen(true)}
-                   />
+            {/* Header */}
+            <header className="flex items-center justify-between p-6 pt-8">
+                <div className="flex items-center gap-3">
+                    <div className="relative group cursor-pointer">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-[#2b8cee] to-purple-400 rounded-full blur opacity-40 group-hover:opacity-60 transition-opacity"></div>
+                        {user?.photoURL ? (
+                             <img
+                                alt="Profile"
+                                className="relative size-10 rounded-full object-cover border-2 border-white/50 dark:border-white/20"
+                                src={user.photoURL}
+                             />
+                        ) : (
+                             <div className="relative size-10 rounded-full bg-slate-200 flex items-center justify-center border-2 border-white/50 dark:border-white/20">
+                                <span className="text-xs font-bold text-slate-500">{userProfile?.name?.charAt(0) || 'U'}</span>
+                             </div>
+                        )}
+                    </div>
+                    <div>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hello,</p>
+                        <h2 className="text-lg font-semibold text-slate-800 dark:text-white leading-none">{userProfile?.name?.split(' ')[0] || 'User'}</h2>
+                    </div>
                 </div>
-              </m.div>
-            </div>
+                <button className={`relative ${GLASS_PANEL} rounded-full p-2.5 transition-transform active:scale-95 group`}>
+                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800 z-10"></span>
+                    <Bell className="text-slate-600 dark:text-slate-300 w-[22px] h-[22px] group-hover:text-[#2b8cee] transition-colors" />
+                </button>
+            </header>
 
-            {/* Right Column: Food Log */}
-            <m.div variants={ITEM_VARIANTS} className="col-span-1 md:col-span-7 lg:col-span-8 h-full">
-              <div className={cn(CARD_STYLES, "h-full min-h-[500px] flex flex-col")}>
-                  <FoodLog
-                      items={items}
-                      activities={activities}
-                      selectedDate={selectedDateString}
-                      onAddFood={() => setIsAddFoodOpen(true)}
-                  />
-              </div>
-            </m.div>
+            {/* Main Content */}
+            <main className="flex-1 px-6 flex flex-col gap-8">
 
-          </div>
-        </m.main>
+                {/* Date Selector */}
+                <div className="flex justify-center items-center gap-4">
+                    <button onClick={() => setSelectedDate(subDays(selectedDate, 1))} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                        <ChevronLeft className="text-slate-400" />
+                    </button>
+                    <div className="text-center">
+                        <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-slate-700 via-slate-500 to-slate-700 dark:from-slate-200 dark:via-slate-400 dark:to-slate-200">
+                            {format(selectedDate, 'eee, MMM d')}
+                        </h1>
+                    </div>
+                    <button onClick={() => setSelectedDate(addDays(selectedDate, 1))} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                         <ChevronRight className="text-slate-400" />
+                    </button>
+                </div>
 
-        {/* Mobile Quick Actions (Floating) */}
-        <m.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5, type: 'spring' }}
-          className="md:hidden fixed bottom-24 left-4 right-4 z-50 pointer-events-none"
-        >
-          <div className="pointer-events-auto shadow-2xl rounded-3xl overflow-hidden bg-background/80 backdrop-blur-xl border border-white/20">
-               <QuickActions
-                  onAiCalculator={() => setIsAiCalculatorOpen(true)}
-                  onLogActivity={() => setIsAddActivityOpen(true)}
-                  onAddFood={() => setIsAddFoodOpen(true)}
-                  onScanBarcode={() => setIsBarcodeScannerOpen(true)}
-                  onManualLog={() => setIsManualLogOpen(true)}
-              />
-          </div>
-        </m.div>
+                {/* Hero Section: Calorie Ring */}
+                <section className="relative flex justify-center py-4">
+                    <div className="relative w-64 h-64">
+                        {/* Background Circle */}
+                        <div className="absolute inset-0 rounded-full border-[16px] border-slate-100 dark:border-slate-800/50"></div>
+
+                        {/* Progress Circle (SVG) */}
+                        <svg className="absolute inset-0 w-full h-full -rotate-90 transform drop-shadow-[0_0_20px_rgba(43,140,238,0.3)]" viewBox="0 0 100 100">
+                            <circle
+                                cx="50" cy="50" r={radius} fill="transparent" stroke="url(#gradient)" strokeWidth="8"
+                                strokeLinecap="round"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeDashoffset}
+                                className="transition-all duration-1000 ease-out"
+                            ></circle>
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#2b8cee" />
+                                    <stop offset="100%" stopColor="#a855f7" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+
+                        {/* Inner Content Glass */}
+                        <div className={`absolute inset-4 rounded-full ${GLASS_PANEL} flex flex-col items-center justify-center z-10`}>
+                            <Flame className="text-[#2b8cee] mb-1 w-8 h-8 fill-current" />
+                            <h2 className="text-4xl font-bold text-slate-800 dark:text-white tracking-tighter tabular-nums">
+                                {caloriesLeft.toLocaleString()}
+                            </h2>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Kcal Left</p>
+                            <div className="mt-2 text-xs text-slate-400 bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                                Goal: {goalCalories.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Macros Section */}
+                <section>
+                    <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Macronutrients</h3>
+                        <Link href="/progress" className="text-sm text-[#2b8cee] font-medium hover:text-[#2b8cee]/80 transition-colors">Details</Link>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                         {/* Protein Card */}
+                         <div className={`${GLASS_PANEL} p-5 rounded-3xl hover:scale-[1.02] transition-transform duration-300 cursor-pointer group`}>
+                             <div className="flex justify-between items-start mb-4">
+                                 <div className="flex items-center gap-3">
+                                     <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
+                                         <Egg className="w-5 h-5" />
+                                     </div>
+                                     <div>
+                                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Protein</p>
+                                         <p className="text-xl font-bold text-slate-800 dark:text-white">
+                                            {Math.round(macros.p)}g <span className="text-sm font-normal text-slate-400">/ {userProfile?.dailyProtein || 150}g</span>
+                                         </p>
+                                     </div>
+                                 </div>
+                                 <span className="text-sm font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
+                                     {Math.round((macros.p / (userProfile?.dailyProtein || 150)) * 100)}%
+                                 </span>
+                             </div>
+                             <div className="h-4 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden shadow-inner">
+                                 <div
+                                    className="h-full rounded-full group-hover:brightness-110 transition-all duration-500 relative"
+                                    style={{
+                                        width: `${Math.min((macros.p / (userProfile?.dailyProtein || 150)) * 100, 100)}%`,
+                                        background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)',
+                                        boxShadow: '2px 2px 5px rgba(43, 140, 238, 0.2)'
+                                    }}
+                                 >
+                                    <div className="absolute right-0 top-0 w-1 h-full bg-black/10 rounded-r-full" />
+                                 </div>
+                             </div>
+                         </div>
+
+                         <div className="grid grid-cols-2 gap-4">
+                             {/* Carbs Card */}
+                             <div className={`${GLASS_PANEL} p-5 rounded-3xl hover:scale-[1.02] transition-transform duration-300 cursor-pointer group`}>
+                                 <div className="flex flex-col gap-3 mb-2">
+                                     <div className="flex justify-between items-start">
+                                         <div className="bg-amber-100 dark:bg-amber-900/30 p-2.5 rounded-xl text-amber-600 dark:text-amber-400 w-fit">
+                                             <Croissant className="w-5 h-5" />
+                                         </div>
+                                         <span className="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg">
+                                            {Math.round((macros.c / (userProfile?.dailyCarbs || 250)) * 100)}%
+                                         </span>
+                                     </div>
+                                     <div>
+                                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Carbs</p>
+                                         <p className="text-lg font-bold text-slate-800 dark:text-white">{Math.round(macros.c)}g</p>
+                                         <p className="text-xs text-slate-400">/ {userProfile?.dailyCarbs || 250}g goal</p>
+                                     </div>
+                                 </div>
+                                 <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden shadow-inner mt-2">
+                                     <div
+                                        className="h-full rounded-full group-hover:brightness-110 transition-all duration-500 relative"
+                                        style={{
+                                            width: `${Math.min((macros.c / (userProfile?.dailyCarbs || 250)) * 100, 100)}%`,
+                                            background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)',
+                                            boxShadow: '2px 2px 5px rgba(245, 158, 11, 0.2)'
+                                        }}
+                                     ></div>
+                                 </div>
+                             </div>
+
+                             {/* Fats Card */}
+                             <div className={`${GLASS_PANEL} p-5 rounded-3xl hover:scale-[1.02] transition-transform duration-300 cursor-pointer group`}>
+                                 <div className="flex flex-col gap-3 mb-2">
+                                     <div className="flex justify-between items-start">
+                                         <div className="bg-rose-100 dark:bg-rose-900/30 p-2.5 rounded-xl text-rose-600 dark:text-rose-400 w-fit">
+                                             <Droplet className="w-5 h-5" />
+                                         </div>
+                                         <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-lg">
+                                            {Math.round((macros.f / (userProfile?.dailyFat || 65)) * 100)}%
+                                         </span>
+                                     </div>
+                                     <div>
+                                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Fats</p>
+                                         <p className="text-lg font-bold text-slate-800 dark:text-white">{Math.round(macros.f)}g</p>
+                                         <p className="text-xs text-slate-400">/ {userProfile?.dailyFat || 65}g goal</p>
+                                     </div>
+                                 </div>
+                                 <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden shadow-inner mt-2">
+                                     <div
+                                        className="h-full rounded-full group-hover:brightness-110 transition-all duration-500 relative"
+                                        style={{
+                                            width: `${Math.min((macros.f / (userProfile?.dailyFat || 65)) * 100, 100)}%`,
+                                            background: 'linear-gradient(90deg, #f43f5e 0%, #fb7185 100%)',
+                                            boxShadow: '2px 2px 5px rgba(244, 63, 94, 0.2)'
+                                        }}
+                                     ></div>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </section>
+
+                {/* Recent Activity Teaser */}
+                <section className="pb-6">
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4 px-1">Last Logged</h3>
+                    {lastLogged ? (
+                        <Link href="/diary">
+                        <div className={`${GLASS_PANEL} p-4 rounded-3xl flex items-center gap-4 hover:scale-[1.02] transition-transform`}>
+                             <div className="size-14 rounded-2xl bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-500 shadow-sm shrink-0">
+                                {lastLogged.productName.charAt(0)}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                                 <h4 className="text-base font-semibold text-slate-800 dark:text-white truncate">{lastLogged.productName}</h4>
+                                 <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    {lastLogged.createdAt?.toDate ? lastLogged.createdAt.toDate().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Just now'}
+                                 </p>
+                             </div>
+                             <div className="text-right">
+                                 <span className="block text-[#2b8cee] font-bold text-lg">{lastLogged.calories}</span>
+                                 <span className="text-xs text-slate-400 uppercase font-medium">kcal</span>
+                             </div>
+                        </div>
+                        </Link>
+                    ) : (
+                        <div className={`${GLASS_PANEL} p-4 rounded-3xl flex items-center justify-center text-slate-400 text-sm`}>
+                            No items logged today
+                        </div>
+                    )}
+                </section>
+
+            </main>
+
+            <BottomNav />
+        </div>
 
         {/* Sheets */}
-        {userProfile && (
-          <AnimatePresence>
-            {isAddFoodOpen && (
+        <AnimatePresence>
+            {isAddFoodOpen && userProfile && (
               <AddFoodSheet
                   isOpen={isAddFoodOpen}
                   setIsOpen={setIsAddFoodOpen}
@@ -213,54 +321,8 @@ export default function Dashboard() {
                   isLogLoading={isLogLoading}
               />
             )}
+        </AnimatePresence>
 
-            {isAddActivityOpen && (
-              <AddActivitySheet
-                  isOpen={isAddActivityOpen}
-                  setIsOpen={setIsAddActivityOpen}
-                  selectedDate={selectedDateString}
-                  userProfile={userProfile}
-                  selectedLog={selectedLog}
-                  isLogLoading={isLogLoading}
-              />
-            )}
-
-            {isBarcodeScannerOpen && (
-              <BarcodeScannerSheet
-                  isOpen={isBarcodeScannerOpen}
-                  setIsOpen={setIsBarcodeScannerOpen}
-                  selectedDate={selectedDateString}
-                  userProfile={userProfile}
-                  selectedLog={selectedLog}
-                  isLogLoading={isLogLoading}
-              />
-            )}
-
-            {isManualLogOpen && (
-               <AddManualLogSheet
-                  isOpen={isManualLogOpen}
-                  setIsOpen={setIsManualLogOpen}
-                  selectedDate={selectedDateString}
-                  userProfile={userProfile}
-                  selectedLog={selectedLog}
-                  isLogLoading={isLogLoading}
-              />
-            )}
-
-            {isAiCalculatorOpen && (
-               <AiPortionCalculator
-                  isOpen={isAiCalculatorOpen}
-                  setIsOpen={setIsAiCalculatorOpen}
-                  selectedDate={selectedDateString}
-                  userProfile={userProfile}
-                  selectedLog={selectedLog}
-                  isLogLoading={isLogLoading}
-              />
-            )}
-          </AnimatePresence>
-        )}
-
-        <BottomNav />
       </div>
     </LazyMotion>
   );
