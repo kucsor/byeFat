@@ -8,11 +8,16 @@ import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
 import dynamic from 'next/dynamic';
 import { LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Bell, Flame, Egg, Croissant, Droplet } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bell, Flame, Egg, Croissant, Droplet, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
+import { QuickActions } from './quick-actions';
 
 // Dynamic imports for sheets
 const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
+const AddActivitySheet = dynamic(() => import('./add-activity-sheet').then(mod => mod.AddActivitySheet));
+const BarcodeScannerSheet = dynamic(() => import('./barcode-scanner-sheet').then(mod => mod.BarcodeScannerSheet));
+const AddManualLogSheet = dynamic(() => import('./add-manual-log-sheet').then(mod => mod.AddManualLogSheet));
+const AiPortionCalculator = dynamic(() => import('./ai-portion-calculator').then(mod => mod.AiPortionCalculator));
 
 // Styles from the HTML (converted to Tailwind string)
 const GLASS_PANEL = "backdrop-blur-md border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-800/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]";
@@ -22,6 +27,11 @@ export default function Dashboard() {
 
   // Sheet states
   const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
+  const [isAddActivityOpen, setIsAddActivityOpen] = useState(false);
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
+  const [isManualLogOpen, setIsManualLogOpen] = useState(false);
+  const [isAiCalculatorOpen, setIsAiCalculatorOpen] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
@@ -61,10 +71,14 @@ export default function Dashboard() {
 
   // Calories Logic
   const goalCalories = selectedLog?.goalCalories || userProfile?.dailyCalories || 2000;
+  const maintenanceCalories = userProfile?.maintenanceCalories || 2500;
   const consumedCalories = selectedLog?.consumedCalories || 0;
   const activeCalories = selectedLog?.activeCalories || 0;
   const netCalories = consumedCalories - activeCalories;
   const caloriesLeft = Math.round(goalCalories - netCalories);
+
+  // Deficit Calculation: (Maintenance + Active) - Consumed
+  const currentDeficit = Math.round((maintenanceCalories + activeCalories) - consumedCalories);
 
   // Ring Progress
   const radius = 42;
@@ -138,8 +152,9 @@ export default function Dashboard() {
                     </button>
                 </div>
 
-                {/* Hero Section: Calorie Ring */}
-                <section className="relative flex justify-center py-4">
+                {/* Hero Section: Calorie Ring + Deficit Stat */}
+                <section className="relative flex flex-col items-center gap-6 py-4">
+                    {/* Ring */}
                     <div className="relative w-64 h-64">
                         {/* Background Circle */}
                         <div className="absolute inset-0 rounded-full border-[16px] border-slate-100 dark:border-slate-800/50"></div>
@@ -173,6 +188,32 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Deficit Display */}
+                    <div className={`${GLASS_PANEL} rounded-full px-6 py-2 flex items-center gap-3`}>
+                         <div className="bg-green-100 dark:bg-green-900/30 p-1.5 rounded-full text-green-600 dark:text-green-400">
+                             <TrendingDown className="w-4 h-4" />
+                         </div>
+                         <div className="flex flex-col">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Deficit</span>
+                             <span className="text-sm font-bold text-slate-700 dark:text-white leading-none">
+                                {currentDeficit > 0 ? `-${currentDeficit}` : `+${Math.abs(currentDeficit)}`} kcal
+                             </span>
+                         </div>
+                    </div>
+                </section>
+
+                {/* Quick Actions Restored */}
+                <section className="px-1">
+                     <div className={`${GLASS_PANEL} rounded-3xl p-2`}>
+                        <QuickActions
+                            onAiCalculator={() => setIsAiCalculatorOpen(true)}
+                            onLogActivity={() => setIsAddActivityOpen(true)}
+                            onAddFood={() => setIsAddFoodOpen(true)}
+                            onScanBarcode={() => setIsBarcodeScannerOpen(true)}
+                            onManualLog={() => setIsManualLogOpen(true)}
+                        />
+                     </div>
                 </section>
 
                 {/* Macros Section */}
@@ -311,15 +352,59 @@ export default function Dashboard() {
 
         {/* Sheets */}
         <AnimatePresence>
-            {isAddFoodOpen && userProfile && (
-              <AddFoodSheet
-                  isOpen={isAddFoodOpen}
-                  setIsOpen={setIsAddFoodOpen}
-                  selectedDate={selectedDateString}
-                  userProfile={userProfile}
-                  selectedLog={selectedLog}
-                  isLogLoading={isLogLoading}
-              />
+            {userProfile && (
+                <>
+                    {isAddFoodOpen && (
+                        <AddFoodSheet
+                            isOpen={isAddFoodOpen}
+                            setIsOpen={setIsAddFoodOpen}
+                            selectedDate={selectedDateString}
+                            userProfile={userProfile}
+                            selectedLog={selectedLog}
+                            isLogLoading={isLogLoading}
+                        />
+                    )}
+                    {isAddActivityOpen && (
+                        <AddActivitySheet
+                            isOpen={isAddActivityOpen}
+                            setIsOpen={setIsAddActivityOpen}
+                            selectedDate={selectedDateString}
+                            userProfile={userProfile}
+                            selectedLog={selectedLog}
+                            isLogLoading={isLogLoading}
+                        />
+                    )}
+                    {isBarcodeScannerOpen && (
+                        <BarcodeScannerSheet
+                            isOpen={isBarcodeScannerOpen}
+                            setIsOpen={setIsBarcodeScannerOpen}
+                            selectedDate={selectedDateString}
+                            userProfile={userProfile}
+                            selectedLog={selectedLog}
+                            isLogLoading={isLogLoading}
+                        />
+                    )}
+                    {isManualLogOpen && (
+                        <AddManualLogSheet
+                            isOpen={isManualLogOpen}
+                            setIsOpen={setIsManualLogOpen}
+                            selectedDate={selectedDateString}
+                            userProfile={userProfile}
+                            selectedLog={selectedLog}
+                            isLogLoading={isLogLoading}
+                        />
+                    )}
+                    {isAiCalculatorOpen && (
+                        <AiPortionCalculator
+                            isOpen={isAiCalculatorOpen}
+                            setIsOpen={setIsAiCalculatorOpen}
+                            selectedDate={selectedDateString}
+                            userProfile={userProfile}
+                            selectedLog={selectedLog}
+                            isLogLoading={isLogLoading}
+                        />
+                    )}
+                </>
             )}
         </AnimatePresence>
 
