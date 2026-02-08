@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useMemoFirebase } from '@/firebase';
 import { format, addDays, subDays, isSameDay } from 'date-fns';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -29,7 +29,7 @@ export default function Dashboard() {
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
   // Fetch Daily Log
-  const logsQuery = useMemo(() => {
+  const logsQuery = useMemoFirebase(() => {
       if (!user || !db) return null;
       try {
         return query(
@@ -48,7 +48,7 @@ export default function Dashboard() {
   const dailyLog = logs?.[0];
 
   // Fetch Items for Macros and Recent Activity
-  const itemsQuery = useMemo(() => {
+  const itemsQuery = useMemoFirebase(() => {
       if (!user || !db) return null;
       try {
         return query(
