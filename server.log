@@ -1,0 +1,23 @@
+
+> nextn@0.1.0 dev
+> next dev --turbopack -p 9002 -p 9008
+
+   ▲ Next.js 15.5.9 (Turbopack)
+   - Local:        http://localhost:9008
+   - Network:      http://192.168.0.2:9008
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 656ms
+ ✓ Ready in 4.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 19.3s
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 22260ms
+ ○ Compiling /profile ...
+ ✓ Compiled /profile in 952ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /profile. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /profile 200 in 1227ms
