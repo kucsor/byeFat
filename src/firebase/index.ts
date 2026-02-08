@@ -8,6 +8,23 @@ import { getFirestore } from 'firebase/firestore'
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
   if (!getApps().length) {
+    // Check if we are in mock mode
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+        console.log('Using Mock Auth - Initializing Dummy Firebase App');
+        // Provide a dummy config that satisfies Firebase's "needs options" check
+        // even if it won't connect to a real backend.
+        const mockConfig = {
+            apiKey: "dummy-api-key",
+            authDomain: "dummy-auth-domain",
+            projectId: "dummy-project-id",
+            storageBucket: "dummy-storage-bucket",
+            messagingSenderId: "dummy-sender-id",
+            appId: "dummy-app-id"
+        };
+        const firebaseApp = initializeApp(mockConfig);
+        return getSdks(firebaseApp);
+    }
+
     // Important! initializeApp() is called without any arguments because Firebase App Hosting
     // integrates with the initializeApp() function to provide the environment variables needed to
     // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
@@ -22,7 +39,15 @@ export function initializeFirebase() {
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
-      firebaseApp = initializeApp(firebaseConfig);
+
+      // Ensure firebaseConfig has at least one key to avoid 'app/no-options'
+      const config = firebaseConfig.apiKey ? firebaseConfig : {
+          apiKey: "fallback-api-key",
+          authDomain: "fallback-auth-domain",
+          projectId: "fallback-project-id"
+      };
+
+      firebaseApp = initializeApp(config);
     }
 
     return getSdks(firebaseApp);

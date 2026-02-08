@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
@@ -13,11 +13,14 @@ const inter = Inter({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#ffffff',
+};
+
 export const metadata: Metadata = {
   title: 'byeFat',
   description: 'Your personal calorie and deficit tracker.',
   manifest: '/manifest.json',
-  themeColor: '#ffffff',
   icons: {
     icon: '/app-icon.svg',
     apple: '/app-icon.svg',
