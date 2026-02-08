@@ -33,8 +33,7 @@ export default function Dashboard() {
       if (!user || !db) return null;
       try {
         return query(
-            collection(db, 'dailyLogs'),
-            where('userId', '==', user.uid),
+            collection(db, `users/${user.uid}/dailyLogs`),
             where('date', '==', selectedDateString),
             limit(1)
         );
