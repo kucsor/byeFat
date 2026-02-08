@@ -217,7 +217,7 @@ export default function Dashboard() {
                         <div className="h-4 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden shadow-inner">
                             <div
                                 className="h-full rounded-full bar-3d from-blue-500 to-blue-400 group-hover:brightness-110 transition-all duration-500"
-                                style={{ background: 'linearGradient(90deg, #3b82f6 0%, #60a5fa 100%)', width: getBarWidth(protein, proteinGoal) }}
+                                style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)', width: getBarWidth(protein, proteinGoal) }}
                             ></div>
                         </div>
                     </div>
@@ -243,7 +243,7 @@ export default function Dashboard() {
                             <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden shadow-inner mt-2">
                                 <div
                                     className="h-full rounded-full bar-3d group-hover:brightness-110 transition-all duration-500"
-                                    style={{ background: 'linearGradient(90deg, #f59e0b 0%, #fbbf24 100%)', boxShadow: '2px 2px 5px rgba(245, 158, 11, 0.2)', width: getBarWidth(carbs, carbsGoal) }}
+                                    style={{ background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)', boxShadow: '2px 2px 5px rgba(245, 158, 11, 0.2)', width: getBarWidth(carbs, carbsGoal) }}
                                 ></div>
                             </div>
                         </div>
@@ -268,7 +268,7 @@ export default function Dashboard() {
                             <div className="h-3 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden shadow-inner mt-2">
                                 <div
                                     className="h-full rounded-full bar-3d group-hover:brightness-110 transition-all duration-500"
-                                    style={{ background: 'linearGradient(90deg, #f43f5e 0%, #fb7185 100%)', boxShadow: '2px 2px 5px rgba(244, 63, 94, 0.2)', width: getBarWidth(fat, fatGoal) }}
+                                    style={{ background: 'linear-gradient(90deg, #f43f5e 0%, #fb7185 100%)', boxShadow: '2px 2px 5px rgba(244, 63, 94, 0.2)', width: getBarWidth(fat, fatGoal) }}
                                 ></div>
                             </div>
                         </div>

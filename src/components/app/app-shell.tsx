@@ -20,6 +20,7 @@ export function AppShell() {
 
   // Initial loading state or auth check in progress
   if (isUserLoading || (user && isUserProfileLoading)) {
+    console.log("AppShell: Loading...", { isUserLoading, hasUser: !!user, isUserProfileLoading });
     return <LoadingScreen />;
   }
 
