@@ -4,6 +4,7 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { ThemeProvider } from '@/components/theme-provider';
+import GlobalErrorBoundary from '@/components/GlobalErrorBoundary';
 import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
 
@@ -41,19 +42,21 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            disableTransitionOnChange
-            nonce={nonce}
-        >
-            <FirebaseClientProvider>
-                <FirebaseErrorListener />
-                {children}
-            </FirebaseClientProvider>
-            <Toaster />
-        </ThemeProvider>
+        <GlobalErrorBoundary>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem={false}
+                disableTransitionOnChange
+                nonce={nonce}
+            >
+                <FirebaseClientProvider>
+                    <FirebaseErrorListener />
+                    {children}
+                </FirebaseClientProvider>
+                <Toaster />
+            </ThemeProvider>
+        </GlobalErrorBoundary>
       </body>
     </html>
   );
