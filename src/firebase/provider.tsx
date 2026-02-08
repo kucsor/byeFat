@@ -89,6 +89,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
             id: 'mock-uid',
             email: 'jessica@example.com',
             name: 'Jessica Sterling',
+            username: 'jessica_s',
             dailyCalories: 2000,
             maintenanceCalories: 2500,
             dailyProtein: 150,
@@ -126,6 +127,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   }, [auth, firestore]);
 
   useEffect(() => {
+    const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || (typeof window !== 'undefined' && (window as any).__MOCK_AUTH__);
+    if (isMockAuth) return;
+
     if (userAuthState.user) {
       setIsUserProfileLoading(true);
       const profileRef = doc(firestore, 'users', userAuthState.user.uid);
