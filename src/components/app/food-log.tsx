@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, memo, useCallback } from 'react';
+import { useMemo, useState, memo, useCallback, useRef } from 'react';
 import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import type { DailyLogItem, DailyLogActivity } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { doc, increment } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
-import { m } from 'framer-motion';
+import { m, useMotionValue, useTransform, animate, PanInfo } from 'framer-motion';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const EditFoodLogItemSheet = dynamic(() => import('./edit-food-log-item-sheet').then(mod => mod.EditFoodLogItemSheet));
 
@@ -37,6 +43,19 @@ type LogItem = (DailyLogItem | DailyLogActivity) & { type: 'food' | 'activity' }
 
 const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item: LogItem, onDelete: (id: string, type: 'items' | 'activities', calories: number) => void, onEdit: (item: DailyLogItem) => void }) {
   const isActivity = item.type === 'activity';
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const x = useMotionValue(0);
+  const controls = useMotionValue(0); // For programmatic control if needed, but x handles it
+
+  // Background opacity/scale based on x
+  // Dragging Right (Positive X) -> Reveal Left Background (Delete)
+  const leftOpacity = useTransform(x, [20, 100], [0, 1]);
+  const leftScale = useTransform(x, [20, 100], [0.8, 1]);
+
+  // Dragging Left (Negative X) -> Reveal Right Background (Edit)
+  const rightOpacity = useTransform(x, [-20, -100], [0, 1]);
+  const rightScale = useTransform(x, [-20, -100], [0.8, 1]);
 
   // Format time
   const timeLabel = useMemo(() => {
@@ -44,18 +63,98 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
     return item.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, [item.createdAt]);
 
+  const handleDragEnd = async (event: any, info: PanInfo) => {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+
+    if (offset < -80 || (offset < -20 && velocity < -500)) {
+        // Swiped Left -> Edit (if not activity)
+        if (!isActivity) {
+            triggerHapticFeedback();
+            onEdit(item as DailyLogItem);
+        }
+    } else if (offset > 80 || (offset > 20 && velocity > 500)) {
+        // Swiped Right -> Delete
+        triggerHapticFeedback();
+        setIsDeleteDialogOpen(true);
+    }
+
+    // Always snap back
+    animate(x, 0, { type: "spring", stiffness: 400, damping: 25 });
+  };
+
+  // Long Press Logic
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTouchStart = () => {
+    longPressTimerRef.current = setTimeout(() => {
+        triggerHapticFeedback();
+        setIsMenuOpen(true);
+    }, 800); // 800ms for long press
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+    }
+  };
+
   return (
-    <div className="relative mb-2 w-full">
+    <div className="relative mb-2 w-full touch-pan-y">
+        {/* Background Actions Layer */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden z-0">
+             {/* Left (Delete) - Visible on Drag Right */}
+             <m.div
+                className="absolute inset-y-0 left-0 w-1/2 bg-destructive/10 flex items-center justify-start pl-6"
+                style={{ opacity: leftOpacity, scale: leftScale, x: useTransform(x, (val) => val > 0 ? 0 : -50) }}
+             >
+                 <div className="flex flex-col items-center justify-center text-destructive">
+                    <Trash2 className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Delete</span>
+                 </div>
+             </m.div>
+
+             {/* Right (Edit) - Visible on Drag Left */}
+             <m.div
+                className="absolute inset-y-0 right-0 w-1/2 bg-primary/10 flex items-center justify-end pr-6"
+                style={{ opacity: rightOpacity, scale: rightScale, x: useTransform(x, (val) => val < 0 ? 0 : 50) }}
+             >
+                {!isActivity && (
+                     <div className="flex flex-col items-center justify-center text-primary">
+                        <Pencil className="h-5 w-5 mb-1" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Edit</span>
+                     </div>
+                )}
+             </m.div>
+        </div>
+
         {/* Card */}
         <m.div
             layout
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0, x: 0 }} // Ensure x is managed by style
             exit={{ opacity: 0, scale: 0.95 }}
-            className="group relative z-10 flex items-center justify-between p-3 rounded-2xl bg-card border border-border/40 transition-colors duration-200"
+            style={{ x }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragStart={() => {
+                if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                }
+            }}
+            onDragEnd={handleDragEnd}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleTouchStart}
+            onMouseUp={handleTouchEnd}
+            onMouseLeave={handleTouchEnd}
+            className="group relative z-10 flex items-center justify-between p-3 rounded-2xl bg-card border border-border/40 transition-colors duration-200 cursor-grab active:cursor-grabbing select-none"
         >
              {/* Card Background (ensure opacity for layers if needed) */}
-             <div className="absolute inset-0 bg-background/40 backdrop-blur-sm rounded-2xl -z-10" />
+             <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-2xl -z-10" />
 
             <div className="flex-1 min-w-0 flex items-center gap-3 md:gap-4 overflow-hidden">
                 {/* Icon Box */}
@@ -68,7 +167,7 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
 
                 {/* Content */}
                 <div className="flex flex-col min-w-0">
-                    <span className="font-bold text-sm text-foreground truncate pr-2">
+                    <span className="font-bold text-sm text-foreground break-words whitespace-normal pr-2">
                         {isActivity ? (item as DailyLogActivity).name : (item as DailyLogItem).productName}
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -83,7 +182,7 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
                 </div>
             </div>
 
-            {/* Actions & Value */}
+            {/* Value (Buttons removed/hidden) */}
             <div className="flex items-center gap-3 md:gap-4 flex-shrink-0 pl-2">
                 <div className="text-right">
                     <div className={cn(
@@ -94,53 +193,46 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
                     </div>
                     <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider opacity-70">kcal</div>
                 </div>
-
-                {/* Actions (Visible on Mobile & Desktop) */}
-                <div className="flex items-center gap-1 opacity-100">
-                    {!isActivity && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-lg text-primary/80 hover:text-primary hover:bg-primary/10"
-                            onClick={() => onEdit(item as DailyLogItem)}
-                            aria-label="Edit item"
-                        >
-                            <Pencil className="h-4 w-4" />
-                        </Button>
-                    )}
-
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                                aria-label="Delete item"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="rounded-[24px]">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This will remove this entry from your daily log permanently.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                    onClick={() => onDelete(item.id, isActivity ? 'activities' : 'items', item.calories)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
-                                >
-                                    Delete
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
             </div>
         </m.div>
+
+        {/* Long Press Menu */}
+        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <DropdownMenuTrigger className="hidden" />
+            <DropdownMenuContent align="end" className="w-48">
+                {!isActivity && (
+                    <DropdownMenuItem onClick={() => onEdit(item as DailyLogItem)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        <span>Edit</span>
+                    </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Delete Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent className="rounded-[24px]">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will remove this entry from your daily log permanently.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={() => onDelete(item.id, isActivity ? 'activities' : 'items', item.calories)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+                    >
+                        Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   )
 });
