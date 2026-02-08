@@ -15,7 +15,16 @@ const EditFoodLogItemSheet = dynamic(() => import('./edit-food-log-item-sheet').
 
 export function FoodLog() {
   const { userProfile, firestore, user } = useFirebase();
+  const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // or a loading skeleton
+  }
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
   const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<DailyLogItem | null>(null);
@@ -24,10 +33,15 @@ export function FoodLog() {
   // Fetch Data
   const dailyLogQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(
-      collection(firestore, `users/${user.uid}/dailyLogs`),
-      where('date', '==', selectedDateString)
-    );
+    try {
+        return query(
+        collection(firestore, `users/${user.uid}/dailyLogs`),
+        where('date', '==', selectedDateString)
+        );
+    } catch (e) {
+        console.error("Error creating dailyLogQuery", e);
+        return null;
+    }
   }, [firestore, user, selectedDateString]);
 
   const { data: dailyLogs } = useCollection<DailyLog>(dailyLogQuery);
@@ -35,20 +49,30 @@ export function FoodLog() {
 
   const itemsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return query(
-      collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/items`),
-      orderBy('createdAt', 'desc')
-    );
+    try {
+        return query(
+        collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/items`),
+        orderBy('createdAt', 'desc')
+        );
+    } catch (e) {
+        console.error("Error creating itemsQuery", e);
+        return null;
+    }
   }, [firestore, user, selectedDateString]);
 
   const { data: items } = useCollection<DailyLogItem>(itemsQuery);
 
   const activitiesQuery = useMemoFirebase(() => {
       if (!firestore || !user) return null;
-      return query(
-          collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/activities`),
-          orderBy('createdAt', 'desc')
-      );
+      try {
+        return query(
+            collection(firestore, `users/${user.uid}/dailyLogs/${selectedDateString}/activities`),
+            orderBy('createdAt', 'desc')
+        );
+      } catch (e) {
+          console.error("Error creating activitiesQuery", e);
+          return null;
+      }
     }, [firestore, user, selectedDateString]);
 
   const { data: activities } = useCollection<DailyLogActivity>(activitiesQuery);

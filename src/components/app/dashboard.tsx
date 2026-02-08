@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useFirebase } from '@/firebase';
 import { format, addDays, subDays, isSameDay } from 'date-fns';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
@@ -17,7 +17,16 @@ const EditFoodLogItemSheet = dynamic(() => import('@/components/app/edit-food-lo
 export default function Dashboard() {
   const { user, userProfile, firestore: db } = useFirebase();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [mounted, setMounted] = useState(false);
   const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // or a loading skeleton
+  }
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<any>(null);
 
@@ -25,13 +34,18 @@ export default function Dashboard() {
 
   // Fetch Daily Log
   const logsQuery = useMemo(() => {
-      if (!user) return null;
-      return query(
-          collection(db, 'dailyLogs'),
-          where('userId', '==', user.uid),
-          where('date', '==', selectedDateString),
-          limit(1)
-      );
+      if (!user || !db) return null;
+      try {
+        return query(
+            collection(db, 'dailyLogs'),
+            where('userId', '==', user.uid),
+            where('date', '==', selectedDateString),
+            limit(1)
+        );
+      } catch (e) {
+          console.error("Error creating logs query", e);
+          return null;
+      }
   }, [user, db, selectedDateString]);
 
   const { data: logs, isLoading: isLogLoading } = useCollection<DailyLog>(logsQuery);
@@ -39,11 +53,16 @@ export default function Dashboard() {
 
   // Fetch Items for Macros and Recent Activity
   const itemsQuery = useMemo(() => {
-      if (!user) return null;
-      return query(
-          collection(db, `users/${user.uid}/dailyLogs/${selectedDateString}/items`),
-          orderBy('createdAt', 'desc')
-      );
+      if (!user || !db) return null;
+      try {
+        return query(
+            collection(db, `users/${user.uid}/dailyLogs/${selectedDateString}/items`),
+            orderBy('createdAt', 'desc')
+        );
+      } catch (e) {
+        console.error("Error creating items query", e);
+        return null;
+      }
   }, [user, db, selectedDateString]);
 
   const { data: items } = useCollection<DailyLogItem>(itemsQuery);
@@ -133,14 +152,8 @@ export default function Dashboard() {
                 </button>
                 <div className="text-center">
                     <h1 className="text-metallic text-xl font-bold tracking-tight">
-                        {isSameDay(selectedDate, new Date()) ? 'Today' : format(selectedDate, 'MMM d')}, {format(selectedDate, 'MMM d')}
-                        {/* Wait, the format in HTML is "Today, Oct 24". If not today, maybe "Mon, Oct 24"? */}
-                        {/* Let's fix the label logic */}
-                        <span className="hidden"></span>
-                    </h1>
-                     <span className="text-metallic text-xl font-bold tracking-tight">
                         {isSameDay(selectedDate, new Date()) ? 'Today' : format(selectedDate, 'EEEE')}, {format(selectedDate, 'MMM d')}
-                    </span>
+                    </h1>
                 </div>
                 <button onClick={() => changeDate(1)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                     <span className="material-symbols-outlined text-slate-400">chevron_right</span>
@@ -279,7 +292,7 @@ export default function Dashboard() {
                         <div className="flex-1">
                             <h4 className="text-base font-semibold text-slate-800 dark:text-white">{lastItem.productName}</h4>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {lastItem.createdAt?.toDate ? format(lastItem.createdAt.toDate(), 'h:mm a') : 'Just now'}
+                                {mounted && lastItem.createdAt?.toDate ? format(lastItem.createdAt.toDate(), 'h:mm a') : 'Just now'}
                             </p>
                         </div>
                         <div className="text-right">
