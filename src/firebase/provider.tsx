@@ -70,6 +70,34 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   const [isUserProfileLoading, setIsUserProfileLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // MOCK AUTH FOR VERIFICATION
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+        console.log("USING MOCK AUTH");
+        const mockUser = {
+            uid: 'mock-uid',
+            displayName: 'Jessica',
+            email: 'jessica@example.com',
+            photoURL: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCb9SRqvq7dDyUL-YDtOiybCOlG2KSw-mjRj_ZAwQPtHcFohPoqPZZ65UPUDdmTzjGXjWLzMzDaAHhwbjnZE3yr98lAzuncgpSJjPiTe0e64mZnBU4oCDmVdQWgUdlGLUjLQN_TrniZdgdB1Fhxf-D1ivXuVd7OIPvjL3dSe0MM_Ui4l0_5dI58wyC3Zh3jFKugbB6-g-ttVza1qFZVt3QEpYfwZuZveJxSAIPQNVElqG4k7bULAzD7wWXhQlr33OjHXrF4Rua_RWat'
+        } as unknown as User;
+
+        setUserAuthState({ user: mockUser, isUserLoading: false, userError: null });
+
+        setUserProfile({
+            id: 'mock-uid',
+            email: 'jessica@example.com',
+            name: 'Jessica Sterling',
+            dailyCalories: 2000,
+            maintenanceCalories: 2500,
+            dailyProtein: 150,
+            dailyCarbs: 250,
+            dailyFat: 65,
+            weight: 162,
+        } as UserProfile);
+
+        setIsUserProfileLoading(false);
+        return;
+    }
+
     if (!auth || !firestore) {
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth or Firestore service not provided.") });
       return;

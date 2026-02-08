@@ -69,6 +69,39 @@ export function useCollection<T = any>(
       return;
     }
 
+    // MOCK DATA FOR VERIFICATION
+    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+        // Extract path to decide what to return
+        let path = '';
+        try {
+             path = memoizedTargetRefOrQuery.type === 'collection'
+                ? (memoizedTargetRefOrQuery as CollectionReference).path
+                : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+        } catch (e) {
+            console.error("Mock path extraction failed", e);
+        }
+
+        if (path.includes('items')) {
+            setData([
+                { id: '1', productName: 'Avocado Toast', calories: 350, protein: 12, carbs: 45, fat: 18, createdAt: new Date() },
+                { id: '2', productName: 'Grilled Salmon', calories: 420, protein: 40, carbs: 10, fat: 22, createdAt: new Date() },
+            ] as any);
+        } else if (path.includes('dailyLogs')) {
+             setData([{
+                 id: 'today',
+                 date: new Date().toISOString().split('T')[0],
+                 consumedCalories: 770,
+                 activeCalories: 300,
+                 goalCalories: 2000,
+                 maintenanceCalories: 2500
+             }] as any);
+        } else {
+             setData([]);
+        }
+        setIsLoading(false);
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
 
