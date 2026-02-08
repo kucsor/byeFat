@@ -9,9 +9,6 @@ import { format } from 'date-fns';
 export function ProfileView() {
   const { user, userProfile, auth } = useFirebase();
 
-  // Helper for glass styles (reused from global CSS or inline if needed)
-  // The global CSS defines .glass-panel. We can use it.
-
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50 via-background-light to-background-light dark:from-blue-900/10 dark:via-background-dark dark:to-background-dark text-slate-800 dark:text-white font-display transition-colors duration-300 antialiased selection:bg-primary/20 pb-32">
 
@@ -52,7 +49,7 @@ export function ProfileView() {
           </div>
 
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-[#111418] dark:text-white">{userProfile?.name || 'User'}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-[#111418] dark:text-white">{userProfile?.name || user?.displayName || 'User'}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide uppercase border border-primary/20">Premium</span>
               <span className="text-sm text-gray-500 dark:text-gray-400">Member since {new Date().getFullYear()}</span>

@@ -92,9 +92,20 @@ export default {
         "glass-border-light": "rgba(255, 255, 255, 0.5)",
         "glass-border-dark": "rgba(255, 255, 255, 0.1)",
         "accent-green": "#00E096",
-
+      },
+      fontFamily: {
+        "display": ["Inter", "sans-serif"]
+      },
+      boxShadow: {
+        "glass": "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
+        "glow": "0 0 20px rgba(43, 140, 238, 0.3)",
+        "inner-glow": "inset 0 0 20px rgba(43, 140, 238, 0.15)",
+        'glow-green': '0 0 20px rgba(0, 224, 150, 0.6), 0 0 10px rgba(0, 224, 150, 0.4)',
+        'glow-primary': '0 0 15px rgba(43, 140, 238, 0.4)',
+        'glow-hover': '0 0 30px -5px rgba(43, 140, 238, 0.7)',
       },
       borderRadius: {
+        "3xl": "1.5rem", // Ensure 3xl is available
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
