@@ -5,19 +5,13 @@ import { useState, useMemo, useEffect } from 'react';
 import { format, addDays, isSameDay } from 'date-fns';
 import { collection, query, where, orderBy, doc, increment } from 'firebase/firestore';
 import type { DailyLog, DailyLogItem, DailyLogActivity } from '@/lib/types';
-import { ChevronRight, Plus, Flame, Bell, Utensils } from 'lucide-react';
-import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { triggerHapticFeedback } from '@/lib/haptics';
 import dynamic from 'next/dynamic';
-import { BottomNav } from './bottom-nav';
 import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
 const EditFoodLogItemSheet = dynamic(() => import('./edit-food-log-item-sheet').then(mod => mod.EditFoodLogItemSheet));
-
-// Helper for glass panel
-const GLASS_PANEL = "backdrop-blur-md border border-white/40 dark:border-white/10 bg-white/60 dark:bg-slate-800/40";
 
 export function FoodLog() {
   const { userProfile, firestore, user } = useFirebase();
@@ -117,25 +111,30 @@ export function FoodLog() {
   // Generate Date Strip Days (e.g., -2 to +3 days from selected)
   const dateStrip = [-2, -1, 0, 1, 2, 3].map(offset => addDays(selectedDate, offset));
 
+  const proteinGoal = userProfile?.dailyProtein || 150;
+  const carbsGoal = userProfile?.dailyCarbs || 250;
+  const fatGoal = userProfile?.dailyFat || 60;
+  const calorieGoal = selectedLog?.goalCalories || userProfile?.dailyCalories || 2000;
+
   return (
-    <div className="bg-[#f6f7f8] dark:bg-[#101922] min-h-screen relative overflow-x-hidden font-sans text-slate-800 dark:text-slate-100 pb-24">
-        {/* Header */}
-        <header className="pt-8 pb-2 px-6 flex items-center justify-between z-10 sticky top-0 bg-[#f6f7f8]/80 dark:bg-[#101922]/80 backdrop-blur-md">
+    <div className="relative min-h-screen w-full flex flex-col mx-auto max-w-md shadow-2xl overflow-hidden bg-gradient-to-b from-blue-50/50 to-background-light dark:from-slate-900/50 dark:to-background-dark text-slate-800 dark:text-slate-100 antialiased selection:bg-primary selection:text-white">
+        {/* Header / Top Bar */}
+        <header className="pt-8 pb-2 px-6 flex items-center justify-between z-10">
             <div className="flex flex-col">
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Food Diary</span>
                 <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
-                    byeFat <span className="text-[#2b8cee] text-xs align-top font-normal tracking-wide">2026</span>
+                    byeFat <span className="text-primary text-xs align-top font-normal tracking-wide">2026</span>
                 </h1>
             </div>
             <button className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <Bell className="text-slate-700 dark:text-slate-200" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-[#101922]"></span>
+                <span className="material-symbols-outlined text-slate-700 dark:text-slate-200">notifications</span>
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-background-dark"></span>
             </button>
         </header>
 
         {/* Date Picker (Glass Strip) */}
-        <div className="sticky top-20 z-20 py-4 px-4">
-            <div className={`${GLASS_PANEL} rounded-2xl shadow-sm flex items-center p-2 gap-2 overflow-x-auto no-scrollbar`}>
+        <div className="sticky top-0 z-20 py-4 px-4">
+            <div className="glass-panel rounded-2xl shadow-glass flex items-center p-2 gap-2 overflow-x-auto no-scrollbar bg-white/70 dark:bg-slate-900/70">
                  {dateStrip.map((date, idx) => {
                      const isSelected = isSameDay(date, selectedDate);
                      const isToday = isSameDay(date, new Date());
@@ -146,7 +145,7 @@ export function FoodLog() {
                             className={cn(
                                 "flex-shrink-0 flex flex-col items-center justify-center w-12 h-14 rounded-xl transition-all",
                                 isSelected
-                                    ? "bg-[#2b8cee] text-white shadow-lg scale-105"
+                                    ? "bg-primary text-white shadow-glow-primary scale-105"
                                     : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                             )}
                          >
@@ -160,8 +159,8 @@ export function FoodLog() {
             </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto px-4 pb-28">
+        {/* Main Content Scroll Area */}
+        <div className="flex-1 overflow-y-auto px-4 pb-28 no-scrollbar">
 
             {/* Summary Dashboard */}
             <div className="mt-2 mb-6 p-5 rounded-3xl bg-gradient-to-br from-white/60 to-white/30 dark:from-slate-800/60 dark:to-slate-800/30 border border-white/40 dark:border-slate-700/40 shadow-sm backdrop-blur-md">
@@ -172,16 +171,16 @@ export function FoodLog() {
                             {caloriesLeft} <span className="text-sm font-normal text-slate-400 ml-1">kcal left</span>
                         </h2>
                     </div>
-                    <div className="h-10 w-10 rounded-full border-2 border-[#2b8cee] flex items-center justify-center">
-                        <Flame className="text-[#2b8cee] text-xl fill-current" />
+                    <div className="h-10 w-10 rounded-full border-2 border-primary flex items-center justify-center">
+                        <span className="material-symbols-outlined text-primary text-xl">local_fire_department</span>
                     </div>
                 </div>
 
-                {/* Progress Bar */}
+                {/* Custom Progress Bar */}
                 <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full mb-6 overflow-hidden">
                     <div
-                        className="h-full bg-[#2b8cee] rounded-full shadow-[0_0_10px_rgba(43,140,238,0.5)] transition-all duration-1000"
-                        style={{ width: `${Math.min((netCalories / (selectedLog?.goalCalories || 2000)) * 100, 100)}%` }}
+                        className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(43,140,238,0.5)] transition-all duration-1000"
+                        style={{ width: `${Math.min((netCalories / calorieGoal) * 100, 100)}%` }}
                     ></div>
                 </div>
 
@@ -190,23 +189,23 @@ export function FoodLog() {
                     <div className="flex flex-col gap-1">
                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Protein</span>
                         <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-indigo-500" style={{ width: `${Math.min((macros.p / (userProfile?.dailyProtein || 150)) * 100, 100)}%` }}></div>
+                            <div className="h-full bg-indigo-500" style={{ width: `${Math.min((macros.p / proteinGoal) * 100, 100)}%` }}></div>
                         </div>
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{Math.round(macros.p)}g</span>
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{Math.round(macros.p)}g <span className="text-slate-400 font-normal">/ {proteinGoal}g</span></span>
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Carbs</span>
                         <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500" style={{ width: `${Math.min((macros.c / (userProfile?.dailyCarbs || 250)) * 100, 100)}%` }}></div>
+                            <div className="h-full bg-emerald-500" style={{ width: `${Math.min((macros.c / carbsGoal) * 100, 100)}%` }}></div>
                         </div>
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{Math.round(macros.c)}g</span>
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{Math.round(macros.c)}g <span className="text-slate-400 font-normal">/ {carbsGoal}g</span></span>
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Fat</span>
                         <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-500" style={{ width: `${Math.min((macros.f / (userProfile?.dailyFat || 65)) * 100, 100)}%` }}></div>
+                            <div className="h-full bg-amber-500" style={{ width: `${Math.min((macros.f / fatGoal) * 100, 100)}%` }}></div>
                         </div>
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{Math.round(macros.f)}g</span>
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{Math.round(macros.f)}g <span className="text-slate-400 font-normal">/ {fatGoal}g</span></span>
                     </div>
                 </div>
             </div>
@@ -229,45 +228,48 @@ export function FoodLog() {
                                     {mealCalories} kcal
                                 </span>
                             </h3>
-                            <button onClick={() => setIsAddFoodOpen(true)} className="text-[#2b8cee] hover:bg-[#2b8cee]/10 rounded-full p-1 transition-colors">
-                                <Plus className="w-5 h-5" />
+                            <button onClick={() => setIsAddFoodOpen(true)} className="text-primary hover:bg-primary/10 rounded-full p-1 transition-colors">
+                                <span className="material-symbols-outlined text-[20px]">add</span>
                             </button>
                         </div>
 
                         {meal.items.length > 0 ? (
-                            <div className={`${GLASS_PANEL} border border-white/30 rounded-2xl p-1 overflow-hidden flex flex-col gap-1`}>
+                            <div className="glass-card rounded-2xl p-1 overflow-hidden flex flex-col gap-1">
                                 {meal.items.map((item, idx) => (
-                                    <div
-                                        key={item.id}
-                                        onClick={() => handleEdit(item)}
-                                        className={cn(
-                                            "group flex items-center gap-4 p-3 hover:bg-white/40 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer",
-                                            idx !== meal.items.length - 1 ? "border-b border-slate-100/10" : ""
-                                        )}
-                                    >
-                                        <div className="h-14 w-14 rounded-full bg-gray-200 shrink-0 flex items-center justify-center text-gray-500 shadow-md border-2 border-white dark:border-slate-700">
-                                            {item.productName.charAt(0)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start">
-                                                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate pr-2">{item.productName}</h4>
-                                                <span className="text-sm font-bold text-[#2b8cee] whitespace-nowrap">{item.calories}</span>
+                                    <div key={item.id}>
+                                        <div
+                                            onClick={() => handleEdit(item)}
+                                            className="group flex items-center gap-4 p-3 hover:bg-white/40 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+                                        >
+                                            <div
+                                                className="h-14 w-14 rounded-full bg-gray-200 bg-cover bg-center shadow-md border-2 border-white dark:border-slate-700 shrink-0 flex items-center justify-center text-gray-500"
+                                                // style={{ backgroundImage: `url('...')` }} // Use item.imageURL if available
+                                            >
+                                                {/* Placeholder if no image */}
+                                                <span className="text-xl font-bold">{item.productName.charAt(0)}</span>
                                             </div>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium tracking-wide">
-                                                {item.grams}g • P: {item.protein}g • C: {item.carbs}g • F: {item.fat}g
-                                            </p>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-start">
+                                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate pr-2">{item.productName}</h4>
+                                                    <span className="text-sm font-bold text-primary whitespace-nowrap">{item.calories}</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium tracking-wide">
+                                                    {item.grams}g • P: {item.protein}g • C: {item.carbs}g • F: {item.fat}g
+                                                </p>
+                                            </div>
+                                            <span className="material-symbols-outlined text-slate-300 group-hover:text-primary text-lg transition-colors">chevron_right</span>
                                         </div>
-                                        <ChevronRight className="text-slate-300 group-hover:text-[#2b8cee] w-5 h-5 transition-colors" />
+                                        {idx !== meal.items.length - 1 && <div className="h-px bg-slate-200/50 dark:bg-slate-700/50 mx-4"></div>}
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className={`${GLASS_PANEL} rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-2 border-dashed border-2 !border-slate-200 dark:!border-slate-700 !bg-transparent`}>
+                            <div className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-2 border-dashed border-2 !border-slate-200 dark:!border-slate-700 !bg-transparent">
                                 <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-1">
-                                    <Utensils className="w-5 h-5" />
+                                    <span className="material-symbols-outlined">restaurant</span>
                                 </div>
                                 <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Nothing logged yet</p>
-                                <button onClick={() => setIsAddFoodOpen(true)} className="text-xs font-bold text-[#2b8cee] hover:text-[#2b8cee]/80 transition-colors uppercase tracking-wider">Add {meal.label}</button>
+                                <button onClick={() => setIsAddFoodOpen(true)} className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider">Add {meal.label}</button>
                             </div>
                         )}
                     </div>
@@ -275,15 +277,49 @@ export function FoodLog() {
             })}
         </div>
 
-        {/* Glowing FAB (Fixed Position) */}
+        {/* Glowing FAB */}
         <div className="absolute bottom-24 right-6 z-30">
-            <button onClick={() => setIsAddFoodOpen(true)} className="group relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#00E096] to-[#00BFA5] text-white shadow-[0_0_20px_rgba(0,224,150,0.6)] hover:scale-105 active:scale-95 transition-all duration-300">
+            <button
+                onClick={() => setIsAddFoodOpen(true)}
+                className="group relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#00E096] to-[#00BFA5] text-white shadow-glow-green hover:scale-105 active:scale-95 transition-all duration-300"
+            >
                 <div className="absolute inset-0 rounded-full bg-white/20 blur-sm group-hover:blur-md transition-all"></div>
-                <Plus className="w-8 h-8 relative z-10 font-bold" />
+                <span className="material-symbols-outlined text-3xl relative z-10 font-bold">add</span>
             </button>
         </div>
 
-        <BottomNav />
+        {/* Bottom Navigation */}
+        <nav className="absolute bottom-0 w-full z-20">
+            <div className="glass-panel mx-4 mb-4 h-16 rounded-3xl flex justify-between items-center px-6 shadow-2xl bg-white/70 dark:bg-slate-900/70">
+                <Link href="/diary" className="flex flex-col items-center justify-center gap-1 text-primary w-12">
+                    <span className="material-symbols-outlined text-[26px] fill-current">calendar_today</span>
+                    <span className="text-[9px] font-bold">Diary</span>
+                </Link>
+                <Link href="/progress" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12">
+                    <span className="material-symbols-outlined text-[26px]">analytics</span>
+                    <span className="text-[9px] font-medium">Stats</span>
+                </Link>
+                <div className="w-12"></div> {/* Spacer for FAB visual balance, though FAB is floating above */}
+                <Link href="/products" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12">
+                    <span className="material-symbols-outlined text-[26px]">restaurant_menu</span>
+                    <span className="text-[9px] font-medium">Recipes</span>
+                </Link>
+                <Link href="/profile" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12">
+                    <div className="h-[26px] w-[26px] rounded-full overflow-hidden border border-slate-300 dark:border-slate-600">
+                        {user?.photoURL ? (
+                            <img alt="User profile" className="h-full w-full object-cover" src={user.photoURL} />
+                        ) : (
+                            <div className="h-full w-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">
+                                {userProfile?.name?.charAt(0) || user?.displayName?.charAt(0) || 'U'}
+                            </div>
+                        )}
+                    </div>
+                    <span className="text-[9px] font-medium">Profile</span>
+                </Link>
+            </div>
+            {/* Gradient fade at bottom */}
+            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background-light dark:from-background-dark to-transparent -z-10 pointer-events-none"></div>
+        </nav>
 
         {/* Sheets */}
         <AnimatePresence>
