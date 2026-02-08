@@ -19,16 +19,12 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  if (!mounted) {
-    return null; // or a loading skeleton
-  }
-  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
-  const [itemToEdit, setItemToEdit] = useState<any>(null);
 
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
@@ -112,6 +108,10 @@ export default function Dashboard() {
   const changeDate = (days: number) => {
       setSelectedDate(prev => addDays(prev, days));
   };
+
+  if (!mounted) {
+    return null; // or a loading skeleton
+  }
 
   return (
     <div className="relative min-h-screen pb-24 max-w-md mx-auto shadow-2xl bg-white/5 dark:bg-black/5 backdrop-blur-[2px] overflow-hidden">
