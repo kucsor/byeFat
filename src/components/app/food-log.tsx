@@ -17,18 +17,15 @@ export function FoodLog() {
   const { userProfile, firestore, user } = useFirebase();
   const [mounted, setMounted] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<DailyLogItem | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return null; // or a loading skeleton
-  }
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
-  const [isAddFoodOpen, setIsAddFoodOpen] = useState(false);
-  const [itemToEdit, setItemToEdit] = useState<DailyLogItem | null>(null);
-  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
 
   // Fetch Data
   const dailyLogQuery = useMemoFirebase(() => {
@@ -139,6 +136,10 @@ export function FoodLog() {
   const carbsGoal = userProfile?.dailyCarbs || 250;
   const fatGoal = userProfile?.dailyFat || 60;
   const calorieGoal = selectedLog?.goalCalories || userProfile?.dailyCalories || 2000;
+
+  if (!mounted) {
+    return null; // or a loading skeleton
+  }
 
   return (
     <div className="relative min-h-screen w-full flex flex-col mx-auto max-w-md shadow-2xl overflow-hidden bg-gradient-to-b from-blue-50/50 to-background-light dark:from-slate-900/50 dark:to-background-dark text-slate-800 dark:text-slate-100 antialiased selection:bg-primary selection:text-white">
