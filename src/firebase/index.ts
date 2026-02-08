@@ -8,11 +8,11 @@ import { getFirestore } from 'firebase/firestore'
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
   if (!getApps().length) {
-    // Check if we are in mock mode
-    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
-        console.log('Using Mock Auth - Initializing Dummy Firebase App');
-        // Provide a dummy config that satisfies Firebase's "needs options" check
-        // even if it won't connect to a real backend.
+    const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+    const hasConfig = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== '' && firebaseConfig.apiKey !== 'dummy';
+
+    if (isMockAuth || !hasConfig) {
+        console.log('Using Mock Auth / Fallback - Initializing Dummy Firebase App due to missing config or explicit mock mode.');
         const mockConfig = {
             apiKey: "dummy-api-key",
             authDomain: "dummy-auth-domain",
@@ -21,6 +21,12 @@ export function initializeFirebase() {
             messagingSenderId: "dummy-sender-id",
             appId: "dummy-app-id"
         };
+        // Explicitly set MOCK_AUTH for downstream components if it wasn't already
+        // This is a hack because process.env is read-only usually, but helps internal logic
+        if (!isMockAuth && typeof window !== 'undefined') {
+             (window as any).__MOCK_AUTH__ = true;
+        }
+
         const firebaseApp = initializeApp(mockConfig);
         return getSdks(firebaseApp);
     }

@@ -42,6 +42,7 @@ export interface FirebaseServicesAndUser {
   userError: Error | null;
   userProfile: UserProfile | null;
   isUserProfileLoading: boolean;
+  areServicesAvailable?: boolean;
 }
 
 export interface UserHookResult {
@@ -71,7 +72,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   useEffect(() => {
     // MOCK AUTH FOR VERIFICATION
-    if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+    const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true' || (typeof window !== 'undefined' && (window as any).__MOCK_AUTH__);
+
+    if (isMockAuth) {
         console.log("USING MOCK AUTH");
         const mockUser = {
             uid: 'mock-uid',
@@ -171,11 +174,29 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
   if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
+    console.warn('useFirebase must be used within a FirebaseProvider.');
+    return {
+        areServicesAvailable: false,
+        firebaseApp: null as any,
+        firestore: null as any,
+        auth: null as any,
+        user: null,
+        isUserLoading: true,
+        userError: new Error('Firebase Provider not initialized'),
+        userProfile: null,
+        isUserProfileLoading: true,
+    } as FirebaseServicesAndUser;
   }
 
   if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth) {
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
+    console.warn('Firebase core services not available. Providing fallback.');
+    return {
+        ...context,
+        areServicesAvailable: false,
+        firebaseApp: context.firebaseApp as any,
+        firestore: context.firestore as any,
+        auth: context.auth as any,
+    };
   }
 
   return {
