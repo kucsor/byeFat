@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useFirebase, useMemoFirebase } from '@/firebase';
-import { format, addDays, subDays, isSameDay } from 'date-fns';
+import { format, addDays, isSameDay } from 'date-fns';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { DailyLog, DailyLogItem } from '@/lib/types';
@@ -78,6 +78,7 @@ export default function Dashboard() {
   }, [items]);
 
   const netCalories = consumedCalories - activeCalories;
+  // If netCalories > goalCalories, caloriesLeft is negative (which is correct behavior)
   const caloriesLeft = goalCalories - netCalories;
 
   const proteinGoal = userProfile?.dailyProtein || 150;
@@ -88,6 +89,11 @@ export default function Dashboard() {
   // Circumference = 2 * pi * r. r=42 -> C ≈ 264.
   // Offset = C - (percent * C)
   const circumference = 264;
+  // Calculate percent of GOAL consumed (net)
+  // If consumed > goal, percent > 1, offset becomes negative, which fills the circle more?
+  // Actually usually ring charts clamp to 100% or loop.
+  // The provided HTML has hardcoded values.
+  // Let's clamp between 0 and 1 for the ring visual.
   const percent = Math.min(Math.max(netCalories / goalCalories, 0), 1);
   const offset = circumference - (percent * circumference);
 
@@ -109,7 +115,7 @@ export default function Dashboard() {
   };
 
   if (!mounted) {
-    return null; // or a loading skeleton
+    return null;
   }
 
   return (
@@ -179,7 +185,7 @@ export default function Dashboard() {
                     <div className="absolute inset-4 rounded-full glass-panel bg-glass-surface dark:bg-glass-surface-dark shadow-inner-glow flex flex-col items-center justify-center z-10">
                         <span className="material-symbols-outlined text-primary mb-1 text-3xl">local_fire_department</span>
                         <h2 className="text-4xl font-bold text-slate-800 dark:text-white tracking-tighter">
-                            {caloriesLeft.toLocaleString()}
+                            {Math.round(caloriesLeft).toLocaleString()}
                         </h2>
                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Kcal Left</p>
                         <div className="mt-2 text-xs text-slate-400 bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
@@ -211,7 +217,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
                             <span className="text-sm font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
-                                {Math.round((protein / proteinGoal) * 100)}%
+                                {proteinGoal > 0 ? Math.round((protein / proteinGoal) * 100) : 0}%
                             </span>
                         </div>
                         <div className="h-4 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden shadow-inner">
@@ -231,7 +237,7 @@ export default function Dashboard() {
                                         <span className="material-symbols-outlined">bakery_dining</span>
                                     </div>
                                     <span className="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg">
-                                        {Math.round((carbs / carbsGoal) * 100)}%
+                                        {carbsGoal > 0 ? Math.round((carbs / carbsGoal) * 100) : 0}%
                                     </span>
                                 </div>
                                 <div>
@@ -256,7 +262,7 @@ export default function Dashboard() {
                                         <span className="material-symbols-outlined">water_drop</span>
                                     </div>
                                     <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-lg">
-                                        {Math.round((fat / fatGoal) * 100)}%
+                                        {fatGoal > 0 ? Math.round((fat / fatGoal) * 100) : 0}%
                                     </span>
                                 </div>
                                 <div>
@@ -284,18 +290,18 @@ export default function Dashboard() {
                         onClick={() => handleEdit(lastItem)}
                         className="glass-panel bg-white/40 dark:bg-slate-800/20 p-4 rounded-3xl flex items-center gap-4 cursor-pointer hover:bg-white/50 transition-colors"
                     >
-                        <div className="size-14 rounded-2xl bg-gray-200 flex items-center justify-center text-2xl text-gray-500 shadow-sm">
-                            {/* Placeholder image or icon */}
+                        <div className="size-14 rounded-2xl bg-gray-200 flex items-center justify-center text-2xl text-gray-500 shadow-sm shrink-0">
+                            {/* Placeholder icon */}
                             <span className="material-symbols-outlined">restaurant</span>
                         </div>
-                        <div className="flex-1">
-                            <h4 className="text-base font-semibold text-slate-800 dark:text-white">{lastItem.productName}</h4>
+                        <div className="flex-1 min-w-0">
+                            <h4 className="text-base font-semibold text-slate-800 dark:text-white truncate">{lastItem.productName}</h4>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
                                 {mounted && lastItem.createdAt?.toDate ? format(lastItem.createdAt.toDate(), 'h:mm a') : 'Just now'}
                             </p>
                         </div>
-                        <div className="text-right">
-                            <span className="block text-primary font-bold text-lg">{lastItem.calories}</span>
+                        <div className="text-right shrink-0">
+                            <span className="block text-primary font-bold text-lg">{Math.round(lastItem.calories)}</span>
                             <span className="text-xs text-slate-400 uppercase font-medium">kcal</span>
                         </div>
                     </div>
@@ -310,11 +316,11 @@ export default function Dashboard() {
         {/* Floating Bottom Navigation */}
         <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[360px]">
             <div className="glass-panel bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-full px-6 py-4 shadow-2xl flex justify-between items-center">
-                <Link href="/" className="flex flex-col items-center gap-1 group w-12">
+                <Link href="/" className="flex flex-col items-center gap-1 group w-12 cursor-pointer">
                     <span className="material-symbols-outlined text-primary font-semibold text-[26px] group-hover:scale-110 transition-transform">dashboard</span>
                     <span className="w-1 h-1 bg-primary rounded-full"></span>
                 </Link>
-                <Link href="/progress" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <Link href="/progress" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                     <span className="material-symbols-outlined text-[26px]">analytics</span>
                 </Link>
                 {/* Floating Action Button (Center) */}
@@ -327,10 +333,10 @@ export default function Dashboard() {
                         <span className="material-symbols-outlined text-3xl">add</span>
                     </button>
                 </div>
-                <Link href="/diary" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <Link href="/diary" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                     <span className="material-symbols-outlined text-[26px]">restaurant_menu</span>
                 </Link>
-                <Link href="/profile" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <Link href="/profile" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
                     <span className="material-symbols-outlined text-[26px]">person</span>
                 </Link>
             </div>

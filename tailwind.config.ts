@@ -16,7 +16,6 @@ export default {
       },
     },
     extend: {
-
       boxShadow: {
         "glass": "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
         "glow": "0 0 20px rgba(43, 140, 238, 0.3)",
@@ -33,6 +32,7 @@ export default {
         serif: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+        display: ["Inter", "sans-serif"],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -92,9 +92,9 @@ export default {
         "glass-border-light": "rgba(255, 255, 255, 0.5)",
         "glass-border-dark": "rgba(255, 255, 255, 0.1)",
         "accent-green": "#00E096",
-
       },
       borderRadius: {
+        "3xl": "1.5rem", // Ensure 3xl is available
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',

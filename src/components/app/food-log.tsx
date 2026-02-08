@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-const AddFoodSheet = dynamic(() => import('./add-food-sheet').then(mod => mod.AddFoodSheet));
-const EditFoodLogItemSheet = dynamic(() => import('./edit-food-log-item-sheet').then(mod => mod.EditFoodLogItemSheet));
+const AddFoodSheet = dynamic(() => import('@/components/app/add-food-sheet').then(mod => mod.AddFoodSheet));
+const EditFoodLogItemSheet = dynamic(() => import('@/components/app/edit-food-log-item-sheet').then(mod => mod.EditFoodLogItemSheet));
 
 export function FoodLog() {
   const { userProfile, firestore, user } = useFirebase();
@@ -110,7 +110,7 @@ export function FoodLog() {
           const hour = item.createdAt.toDate().getHours();
           if (hour >= 4 && hour < 11) breakfast.push(item);
           else if (hour >= 11 && hour < 16) lunch.push(item);
-          else if (hour >= 16 || hour < 4) dinner.push(item);
+          else if (hour >= 16 && hour < 22) dinner.push(item);
           else snacks.push(item);
       });
 
@@ -130,6 +130,7 @@ export function FoodLog() {
     }, []);
 
   // Generate Date Strip Days (e.g., -2 to +3 days from selected)
+  // To keep "Today" somewhat centered or visible
   const dateStrip = [-2, -1, 0, 1, 2, 3].map(offset => addDays(selectedDate, offset));
 
   const proteinGoal = userProfile?.dailyProtein || 150;
@@ -193,7 +194,7 @@ export function FoodLog() {
                     <div>
                         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Calories Remaining</p>
                         <h2 className="text-3xl font-bold text-slate-800 dark:text-white mt-1">
-                            {caloriesLeft} <span className="text-sm font-normal text-slate-400 ml-1">kcal left</span>
+                            {caloriesLeft.toLocaleString()} <span className="text-sm font-normal text-slate-400 ml-1">kcal left</span>
                         </h2>
                     </div>
                     <div className="h-10 w-10 rounded-full border-2 border-primary flex items-center justify-center">
@@ -250,7 +251,7 @@ export function FoodLog() {
                             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 {meal.label}
                                 <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-500 font-semibold tracking-wide">
-                                    {mealCalories} kcal
+                                    {Math.round(mealCalories)} kcal
                                 </span>
                             </h3>
                             <button onClick={() => setIsAddFoodOpen(true)} className="text-primary hover:bg-primary/10 rounded-full p-1 transition-colors">
@@ -268,7 +269,6 @@ export function FoodLog() {
                                         >
                                             <div
                                                 className="h-14 w-14 rounded-full bg-gray-200 bg-cover bg-center shadow-md border-2 border-white dark:border-slate-700 shrink-0 flex items-center justify-center text-gray-500"
-                                                // style={{ backgroundImage: `url('...')` }} // Use item.imageURL if available
                                             >
                                                 {/* Placeholder if no image */}
                                                 <span className="text-xl font-bold">{item.productName.charAt(0)}</span>
@@ -276,7 +276,7 @@ export function FoodLog() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-start">
                                                     <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate pr-2">{item.productName}</h4>
-                                                    <span className="text-sm font-bold text-primary whitespace-nowrap">{item.calories}</span>
+                                                    <span className="text-sm font-bold text-primary whitespace-nowrap">{Math.round(item.calories)}</span>
                                                 </div>
                                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium tracking-wide">
                                                     {item.grams}g • P: {item.protein}g • C: {item.carbs}g • F: {item.fat}g
@@ -316,20 +316,20 @@ export function FoodLog() {
         {/* Bottom Navigation */}
         <nav className="absolute bottom-0 w-full z-20">
             <div className="glass-panel mx-4 mb-4 h-16 rounded-3xl flex justify-between items-center px-6 shadow-2xl bg-white/70 dark:bg-slate-900/70">
-                <Link href="/diary" className="flex flex-col items-center justify-center gap-1 text-primary w-12">
+                <Link href="/diary" className="flex flex-col items-center justify-center gap-1 text-primary w-12 cursor-pointer">
                     <span className="material-symbols-outlined text-[26px] fill-current">calendar_today</span>
                     <span className="text-[9px] font-bold">Diary</span>
                 </Link>
-                <Link href="/progress" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12">
+                <Link href="/progress" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12 cursor-pointer">
                     <span className="material-symbols-outlined text-[26px]">analytics</span>
                     <span className="text-[9px] font-medium">Stats</span>
                 </Link>
                 <div className="w-12"></div> {/* Spacer for FAB visual balance, though FAB is floating above */}
-                <Link href="/products" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12">
+                <Link href="/products" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12 cursor-pointer">
                     <span className="material-symbols-outlined text-[26px]">restaurant_menu</span>
                     <span className="text-[9px] font-medium">Recipes</span>
                 </Link>
-                <Link href="/profile" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12">
+                <Link href="/profile" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12 cursor-pointer">
                     <div className="h-[26px] w-[26px] rounded-full overflow-hidden border border-slate-300 dark:border-slate-600">
                         {user?.photoURL ? (
                             <img alt="User profile" className="h-full w-full object-cover" src={user.photoURL} />
