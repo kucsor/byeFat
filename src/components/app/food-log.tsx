@@ -57,7 +57,7 @@ const LogItemCard = memo(function LogItemCard({ item, onDelete, onEdit }: { item
              {/* Card Background (ensure opacity for layers if needed) */}
              <div className="absolute inset-0 bg-background/40 backdrop-blur-sm rounded-2xl -z-10" />
 
-            <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+            <div className="flex-1 min-w-0 flex items-center gap-3 md:gap-4 overflow-hidden">
                 {/* Icon Box */}
                 <div className={cn(
                     "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
