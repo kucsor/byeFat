@@ -185,11 +185,11 @@ export default function Dashboard() {
                     <div className="absolute inset-4 rounded-full glass-panel bg-glass-surface dark:bg-glass-surface-dark shadow-inner-glow flex flex-col items-center justify-center z-10">
                         <span className="material-symbols-outlined text-primary mb-1 text-3xl">local_fire_department</span>
                         <h2 className="text-4xl font-bold text-slate-800 dark:text-white tracking-tighter">
-                            {Math.round(caloriesLeft).toLocaleString()}
+                            {Math.round(caloriesLeft).toLocaleString('en-US')}
                         </h2>
                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Kcal Left</p>
                         <div className="mt-2 text-xs text-slate-400 bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                            Goal: {goalCalories.toLocaleString()}
+                            Goal: {goalCalories.toLocaleString('en-US')}
                         </div>
                     </div>
                 </div>
@@ -259,7 +259,7 @@ export default function Dashboard() {
                             <div className="flex flex-col gap-3 mb-2">
                                 <div className="flex justify-between items-start">
                                     <div className="bg-rose-100 dark:bg-rose-900/30 p-2.5 rounded-xl text-rose-600 dark:text-rose-400 w-fit">
-                                        <span className="material-symbols-outlined">water_drop</span>
+                                        <span className="material-symbols-outlined">opacity</span>
                                     </div>
                                     <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-lg">
                                         {fatGoal > 0 ? Math.round((fat / fatGoal) * 100) : 0}%

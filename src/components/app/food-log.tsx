@@ -194,7 +194,7 @@ export function FoodLog() {
                     <div>
                         <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Calories Remaining</p>
                         <h2 className="text-3xl font-bold text-slate-800 dark:text-white mt-1">
-                            {caloriesLeft.toLocaleString()} <span className="text-sm font-normal text-slate-400 ml-1">kcal left</span>
+                            {caloriesLeft.toLocaleString('en-US')} <span className="text-sm font-normal text-slate-400 ml-1">kcal left</span>
                         </h2>
                     </div>
                     <div className="h-10 w-10 rounded-full border-2 border-primary flex items-center justify-center">
