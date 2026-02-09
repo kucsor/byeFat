@@ -9,6 +9,21 @@ import { DailyLog, DailyLogItem } from '@/lib/types';
 import { AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import {
+    MdLocalFireDepartment,
+    MdChevronLeft,
+    MdChevronRight,
+    MdNotifications,
+    MdEgg,
+    MdBakeryDining,
+    MdOpacity,
+    MdRestaurant,
+    MdDashboard,
+    MdAnalytics,
+    MdAdd,
+    MdRestaurantMenu,
+    MdPerson
+} from 'react-icons/md';
 
 // Dynamic imports for heavy components
 const AddFoodSheet = dynamic(() => import('@/components/app/add-food-sheet').then(mod => mod.AddFoodSheet));
@@ -144,7 +159,7 @@ export default function Dashboard() {
             </div>
             <button className="relative glass-panel bg-white/40 dark:bg-slate-800/40 rounded-full p-2.5 transition-transform active:scale-95 shadow-glass group">
                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800 z-10"></span>
-                <span className="material-icons text-slate-600 dark:text-slate-300 text-[22px] group-hover:text-primary transition-colors">notifications</span>
+                <MdNotifications className="text-slate-600 dark:text-slate-300 text-[22px] group-hover:text-primary transition-colors" />
             </button>
         </header>
 
@@ -153,7 +168,7 @@ export default function Dashboard() {
             {/* Date Selector */}
             <div className="flex justify-center items-center gap-4">
                 <button onClick={() => changeDate(-1)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                    <span className="material-icons text-slate-400">chevron_left</span>
+                    <MdChevronLeft className="text-slate-400 text-2xl" />
                 </button>
                 <div className="text-center">
                     <h1 className="text-metallic text-xl font-bold tracking-tight">
@@ -161,7 +176,7 @@ export default function Dashboard() {
                     </h1>
                 </div>
                 <button onClick={() => changeDate(1)} className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                    <span className="material-icons text-slate-400">chevron_right</span>
+                    <MdChevronRight className="text-slate-400 text-2xl" />
                 </button>
             </div>
 
@@ -183,7 +198,7 @@ export default function Dashboard() {
                     </svg>
                     {/* Inner Content Glass */}
                     <div className="absolute inset-4 rounded-full glass-panel bg-glass-surface dark:bg-glass-surface-dark shadow-inner-glow flex flex-col items-center justify-center z-10">
-                        <span className="material-icons text-primary mb-1 text-3xl">local_fire_department</span>
+                        <MdLocalFireDepartment className="text-primary mb-1 text-3xl" />
                         <h2 className="text-4xl font-bold text-slate-800 dark:text-white tracking-tighter">
                             {Math.round(caloriesLeft).toLocaleString('en-US')}
                         </h2>
@@ -207,7 +222,7 @@ export default function Dashboard() {
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
-                                    <span className="material-icons">egg</span>
+                                    <MdEgg className="text-2xl" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Protein</p>
@@ -234,7 +249,7 @@ export default function Dashboard() {
                             <div className="flex flex-col gap-3 mb-2">
                                 <div className="flex justify-between items-start">
                                     <div className="bg-amber-100 dark:bg-amber-900/30 p-2.5 rounded-xl text-amber-600 dark:text-amber-400 w-fit">
-                                        <span className="material-icons">bakery_dining</span>
+                                        <MdBakeryDining className="text-2xl" />
                                     </div>
                                     <span className="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg">
                                         {carbsGoal > 0 ? Math.round((carbs / carbsGoal) * 100) : 0}%
@@ -259,7 +274,7 @@ export default function Dashboard() {
                             <div className="flex flex-col gap-3 mb-2">
                                 <div className="flex justify-between items-start">
                                     <div className="bg-rose-100 dark:bg-rose-900/30 p-2.5 rounded-xl text-rose-600 dark:text-rose-400 w-fit">
-                                        <span className="material-icons">opacity</span>
+                                        <MdOpacity className="text-2xl" />
                                     </div>
                                     <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-lg">
                                         {fatGoal > 0 ? Math.round((fat / fatGoal) * 100) : 0}%
@@ -292,7 +307,7 @@ export default function Dashboard() {
                     >
                         <div className="size-14 rounded-2xl bg-gray-200 flex items-center justify-center text-2xl text-gray-500 shadow-sm shrink-0">
                             {/* Placeholder icon */}
-                            <span className="material-icons">restaurant</span>
+                            <MdRestaurant className="text-3xl" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <h4 className="text-base font-semibold text-slate-800 dark:text-white truncate">{lastItem.productName}</h4>
@@ -317,11 +332,11 @@ export default function Dashboard() {
         <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[360px]">
             <div className="glass-panel bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-full px-6 py-4 shadow-2xl flex justify-between items-center">
                 <Link href="/" className="flex flex-col items-center gap-1 group w-12 cursor-pointer">
-                    <span className="material-icons text-primary font-semibold text-[26px] group-hover:scale-110 transition-transform">dashboard</span>
+                    <MdDashboard className="text-primary font-semibold text-[26px] group-hover:scale-110 transition-transform" />
                     <span className="w-1 h-1 bg-primary rounded-full"></span>
                 </Link>
                 <Link href="/progress" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                    <span className="material-icons text-[26px]">analytics</span>
+                    <MdAnalytics className="text-[26px]" />
                 </Link>
                 {/* Floating Action Button (Center) */}
                 <div className="relative -top-8 group">
@@ -330,14 +345,14 @@ export default function Dashboard() {
                         onClick={() => setIsAddFoodOpen(true)}
                         className="relative bg-gradient-to-br from-primary to-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-all duration-300 border-4 border-white dark:border-slate-900"
                     >
-                        <span className="material-icons text-3xl">add</span>
+                        <MdAdd className="text-3xl" />
                     </button>
                 </div>
                 <Link href="/diary" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                    <span className="material-icons text-[26px]">restaurant_menu</span>
+                    <MdRestaurantMenu className="text-[26px]" />
                 </Link>
                 <Link href="/profile" className="flex flex-col items-center gap-1 group w-12 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer">
-                    <span className="material-icons text-[26px]">person</span>
+                    <MdPerson className="text-[26px]" />
                 </Link>
             </div>
         </nav>
