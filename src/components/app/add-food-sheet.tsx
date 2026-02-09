@@ -25,12 +25,15 @@ import {
   SheetFooter,
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { collection, doc, query, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, doc, query, serverTimestamp, increment, where, getDocs, addDoc } from 'firebase/firestore';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { triggerHapticFeedback } from '@/lib/haptics';
 import { AiScanner } from '@/components/app/ai-scanner';
-import { MdCameraAlt } from 'react-icons/md';
+import { BarcodeScanner } from '@/components/app/barcode-scanner';
+import { MdCameraAlt, MdQrCodeScanner } from 'react-icons/md';
+import { getProductByBarcode } from '@/app/actions/get-product-by-barcode';
+import { useToast } from '@/hooks/use-toast';
 
 const logItemSchema = z.object({
   productId: z.string().min(1, { message: "Please select a product."}),
@@ -46,11 +49,14 @@ type AddFoodSheetProps = {
   isLogLoading?: boolean;
 }
 
+type ScanMode = 'none' | 'ai' | 'barcode';
+
 export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, selectedLog, isLogLoading }: AddFoodSheetProps) {
   const [searchValue, setSearchValue] = useState('');
-  const [showAiScanner, setShowAiScanner] = useState(false);
+  const [scanMode, setScanMode] = useState<ScanMode>('none');
   const { firestore, user } = useFirebase();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   
   const productsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -124,39 +130,95 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
     if(!open) {
       form.reset({ productId: '', grams: 100 });
       setSearchValue('');
-      setShowAiScanner(false);
+      setScanMode('none');
     }
     setIsOpen(open);
   }
 
   // Handle scanned product from AI
   const handleAiScanComplete = async (scannedProduct: Product) => {
-      // 1. Add this temporary/scanned product to the 'products' collection or use it directly?
-      // For simplicity, let's add it to the products collection so we can reference it by ID.
-      // Or, better, if it's AI scanned, we might want to let the user review/edit it first.
-      // But here we need to select it in the form.
-
-      // Let's add it to Firestore so it has a real ID
       if (!firestore) return;
 
-      // Remove the temporary props before saving
       const { detectedGrams, ...productToSave } = scannedProduct as any;
-
-      // Use addDocumentNonBlocking but we need the ID immediately.
-      // Let's manually create a doc ref.
       const newProductRef = doc(collection(firestore, 'products'));
       productToSave.id = newProductRef.id;
 
       setDocumentNonBlocking(newProductRef, productToSave, { merge: true });
 
-      // Set form values
       form.setValue('productId', newProductRef.id);
       if (detectedGrams) {
           form.setValue('grams', detectedGrams);
       }
 
-      setShowAiScanner(false);
+      setScanMode('none');
       triggerHapticFeedback();
+  };
+
+  // Handle barcode scan
+  const handleBarcodeScan = async (detectedProduct: any, barcode: string) => {
+      // Note: 'detectedProduct' here is the minimal info from the barcode scanner component if it does lookup,
+      // but typically we use the server action to get details.
+
+      triggerHapticFeedback();
+
+      if (!firestore || !user) return;
+
+      try {
+          // 1. Check if we already have this product in Firestore by barcode
+          const productsRef = collection(firestore, 'products');
+          const q = query(productsRef, where('barcode', '==', barcode));
+          const querySnapshot = await getDocs(q);
+
+          let productId: string;
+
+          if (!querySnapshot.empty) {
+              // Found existing product
+              const doc = querySnapshot.docs[0];
+              productId = doc.id;
+              toast({ title: 'Product Found', description: `Found ${doc.data().name} in database.` });
+          } else {
+              // 2. Fetch from OpenFoodFacts
+              toast({ title: 'Searching...', description: 'Looking up barcode in global database.' });
+              const { product: offProduct, error } = await getProductByBarcode(barcode);
+
+              if (error || !offProduct) {
+                  toast({ variant: 'destructive', title: 'Not Found', description: error || 'Product not found.' });
+                  return; // Keep scanner open to try again?
+              }
+
+              // 3. Create new product in Firestore
+              const newProductData = {
+                name: offProduct.name,
+                brand: offProduct.brand,
+                caloriesPer100g: offProduct.caloriesPer100g,
+                proteinPer100g: offProduct.proteinPer100g,
+                fatPer100g: offProduct.fatPer100g,
+                carbsPer100g: offProduct.carbsPer100g,
+                creatorId: user.uid,
+                creatorUsername: userProfile.username || 'User',
+                likes: 0,
+                likedBy: [],
+                source: 'scanned',
+                barcode: barcode,
+              };
+
+              // We use addDoc here (via standard SDK or non-blocking wrapper, but we need ID immediately)
+              // Let's use setDocument with a new ID
+              const newRef = doc(productsRef);
+              productId = newRef.id;
+              setDocumentNonBlocking(newRef, { ...newProductData, id: productId }, { merge: true });
+
+              toast({ title: 'Product Added', description: `Added ${offProduct.name} to library.` });
+          }
+
+          // 4. Select the product in the form
+          form.setValue('productId', productId);
+          setScanMode('none');
+
+      } catch (e) {
+          console.error("Barcode lookup failed", e);
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to process barcode.' });
+      }
   };
 
   const filteredProducts = useMemo(() => {
@@ -174,21 +236,29 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
           <SheetHeader className="p-6 pb-2">
             <SheetTitle>Log Food Item</SheetTitle>
             <SheetDescription>
-              Search for a product, scan with AI, or enter the amount manually.
+              Search for a product, scan with AI/Barcode, or enter manually.
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto px-6 py-4">
 
-            {!showAiScanner ? (
+            {scanMode === 'none' ? (
                 <>
-                    <div className="mb-6">
+                    <div className="grid grid-cols-2 gap-3 mb-6">
                         <Button
                             variant="outline"
-                            className="w-full h-12 gap-2 border-dashed border-2"
-                            onClick={() => setShowAiScanner(true)}
+                            className="h-20 flex flex-col gap-2 border-dashed border-2"
+                            onClick={() => setScanMode('ai')}
                         >
-                            <MdCameraAlt className="text-xl text-primary" />
-                            <span className="font-semibold text-primary">Snap & Scan with Gemini</span>
+                            <MdCameraAlt className="text-2xl text-primary" />
+                            <span className="font-semibold text-xs text-primary">Snap & Scan (AI)</span>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="h-20 flex flex-col gap-2 border-dashed border-2"
+                            onClick={() => setScanMode('barcode')}
+                        >
+                            <MdQrCodeScanner className="text-2xl text-blue-600" />
+                            <span className="font-semibold text-xs text-blue-600">Scan Barcode</span>
                         </Button>
                     </div>
 
@@ -272,20 +342,37 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
                     </form>
                     </Form>
                 </>
-            ) : (
+            ) : scanMode === 'ai' ? (
                 <div className="h-full flex flex-col">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-medium">AI Food Scanner</h3>
-                        <Button variant="ghost" size="sm" onClick={() => setShowAiScanner(false)}>Cancel</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setScanMode('none')}>Cancel</Button>
                     </div>
                     <AiScanner
                         onScanComplete={handleAiScanComplete}
-                        onClose={() => setShowAiScanner(false)}
+                        onClose={() => setScanMode('none')}
                     />
+                </div>
+            ) : (
+                <div className="h-full flex flex-col">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-medium">Barcode Scanner</h3>
+                        <Button variant="ghost" size="sm" onClick={() => setScanMode('none')}>Cancel</Button>
+                    </div>
+                    {/* Reuse BarcodeScanner component directly */}
+                    <div className="flex-1 overflow-hidden rounded-xl border relative">
+                        <BarcodeScanner
+                            onScan={(detected, barcode) => handleBarcodeScan(detected, barcode)}
+                            onClose={() => setScanMode('none')}
+                        />
+                    </div>
+                    <p className="text-center text-xs text-muted-foreground mt-4">
+                        Point camera at a barcode to search OpenFoodFacts.
+                    </p>
                 </div>
             )}
           </div>
-          {!showAiScanner && (
+          {scanMode === 'none' && (
             <SheetFooter className="bg-card p-6 mt-4 border-t">
                 <Button onClick={form.handleSubmit(onSubmit)} type="submit" className="w-full" disabled={!selectedProduct || isLogLoading}>
                 Add to Log
