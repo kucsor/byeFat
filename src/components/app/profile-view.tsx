@@ -5,6 +5,26 @@ import { signOut } from 'firebase/auth';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import {
+    MdArrowBack,
+    MdSettings,
+    MdPerson,
+    MdVerified,
+    MdTrendingDown,
+    MdTrendingUp,
+    MdSync,
+    MdDownload,
+    MdChatBubble,
+    MdChevronRight,
+    MdWatch,
+    MdNotifications,
+    MdDiamond,
+    MdTune,
+    MdGridView,
+    MdPieChart,
+    MdAdd,
+    MdChat
+} from 'react-icons/md';
 
 export function ProfileView() {
   const { user, userProfile, auth } = useFirebase();
@@ -15,12 +35,12 @@ export function ProfileView() {
       {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between p-4 pb-2 glass-panel bg-glass-light/80 dark:bg-glass-dark/80 border-b border-glass-border-light dark:border-glass-border-dark">
         <Link href="/" className="flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer text-[#111418] dark:text-white">
-          <span className="material-icons">arrow_back</span>
+          <MdArrowBack className="text-2xl" />
         </Link>
         <h2 className="text-lg font-semibold tracking-tight">Profile</h2>
         <div className="flex size-12 items-center justify-center">
             <button className="flex items-center justify-center rounded-full size-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-[#111418] dark:text-white">
-                <span className="material-icons">settings</span>
+                <MdSettings className="text-2xl" />
             </button>
         </div>
       </header>
@@ -39,12 +59,12 @@ export function ProfileView() {
                 ></div>
               ) : (
                 <div className="h-full w-full rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400">
-                  <span className="material-icons text-5xl">person</span>
+                  <MdPerson className="text-5xl" />
                 </div>
               )}
             </div>
             <div className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white shadow-lg border-2 border-white dark:border-background-dark">
-              <span className="material-icons text-sm">verified</span>
+              <MdVerified className="text-sm" />
             </div>
           </div>
 
@@ -65,7 +85,7 @@ export function ProfileView() {
               {userProfile?.weight || '--'} <span className="text-sm font-normal text-gray-400">lbs</span>
             </span>
             <span className="text-xs font-medium text-green-500 flex items-center gap-0.5">
-              <span className="material-icons text-[14px]">trending_down</span> 1.2%
+              <MdTrendingDown className="text-[14px]" /> 1.2%
             </span>
           </div>
 
@@ -83,7 +103,7 @@ export function ProfileView() {
               14 <span className="text-sm font-normal text-gray-400">%</span>
             </span>
             <span className="text-xs font-medium text-green-500 flex items-center gap-0.5">
-              <span className="material-icons text-[14px]">trending_down</span> 0.5%
+              <MdTrendingDown className="text-[14px]" /> 0.5%
             </span>
           </div>
         </section>
@@ -103,7 +123,7 @@ export function ProfileView() {
                 </div>
               </div>
               <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-xs font-medium">
-                <span className="material-icons text-[16px]">trending_up</span>
+                <MdTrendingUp className="text-[16px]" />
                 <span>+2% vs last week</span>
               </div>
             </div>
@@ -141,19 +161,19 @@ export function ProfileView() {
           <div className="flex justify-center gap-6 px-4">
             <button className="flex flex-col items-center gap-3 group">
               <div className="size-14 rounded-full bg-white dark:bg-white/10 border border-gray-100 dark:border-white/10 flex items-center justify-center text-[#111418] dark:text-white shadow-sm group-hover:border-primary/50 group-hover:text-primary transition-all duration-300 group-hover:shadow-glow">
-                <span className="material-icons">sync</span>
+                <MdSync />
               </div>
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400 group-hover:text-primary transition-colors">Sync Device</span>
             </button>
             <button className="flex flex-col items-center gap-3 group">
               <div className="size-14 rounded-full bg-white dark:bg-white/10 border border-gray-100 dark:border-white/10 flex items-center justify-center text-[#111418] dark:text-white shadow-sm group-hover:border-primary/50 group-hover:text-primary transition-all duration-300 group-hover:shadow-glow">
-                <span className="material-icons">download</span>
+                <MdDownload />
               </div>
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400 group-hover:text-primary transition-colors">Export Data</span>
             </button>
             <button className="flex flex-col items-center gap-3 group">
               <div className="size-14 rounded-full bg-white dark:bg-white/10 border border-gray-100 dark:border-white/10 flex items-center justify-center text-[#111418] dark:text-white shadow-sm group-hover:border-primary/50 group-hover:text-primary transition-all duration-300 group-hover:shadow-glow">
-                <span className="material-icons">chat_bubble</span>
+                <MdChatBubble />
               </div>
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400 group-hover:text-primary transition-colors">Concierge</span>
             </button>
@@ -169,38 +189,38 @@ export function ProfileView() {
               <div className="flex items-center justify-between p-4 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary">
-                    <span className="material-icons">person</span>
+                    <MdPerson />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[#111418] dark:text-white">Biometrics & Goals</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Manage weight, height, age</p>
                   </div>
                 </div>
-                <span className="material-icons text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl">chevron_right</span>
+                <MdChevronRight className="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl" />
               </div>
               <div className="flex items-center justify-between p-4 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
-                    <span className="material-icons">watch</span>
+                    <MdWatch />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[#111418] dark:text-white">Connected Devices</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Apple Health, Oura, Garmin</p>
                   </div>
                 </div>
-                <span className="material-icons text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl">chevron_right</span>
+                <MdChevronRight className="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl" />
               </div>
               <div className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-orange-600 dark:text-orange-400">
-                    <span className="material-icons">notifications</span>
+                    <MdNotifications />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[#111418] dark:text-white">Notifications</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Reminders & Alerts</p>
                   </div>
                 </div>
-                <span className="material-icons text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl">chevron_right</span>
+                <MdChevronRight className="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl" />
               </div>
             </div>
           </div>
@@ -212,26 +232,26 @@ export function ProfileView() {
               <div className="flex items-center justify-between p-4 border-b border-gray-50 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600 dark:text-green-400">
-                    <span className="material-icons">diamond</span>
+                    <MdDiamond />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[#111418] dark:text-white">Concierge Settings</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Customize your assistant</p>
                   </div>
                 </div>
-                <span className="material-icons text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl">chevron_right</span>
+                <MdChevronRight className="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl" />
               </div>
               <div className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300">
-                    <span className="material-icons">tune</span>
+                    <MdTune />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[#111418] dark:text-white">App Preferences</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Theme, Units, Language</p>
                   </div>
                 </div>
-                <span className="material-icons text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl">chevron_right</span>
+                <MdChevronRight className="text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all text-xl" />
               </div>
             </div>
           </div>
@@ -247,19 +267,19 @@ export function ProfileView() {
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <div className="flex items-center gap-1 p-1.5 rounded-full bg-white/90 dark:bg-[#1A2633]/90 glass-panel shadow-lg border border-white/50 dark:border-white/10 backdrop-blur-xl">
             <Link href="/" className="flex flex-col items-center justify-center w-14 h-12 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-200 transition-all">
-                <span className="material-icons text-[24px]">grid_view</span>
+                <MdGridView className="text-[24px]" />
             </Link>
             <Link href="/progress" className="flex flex-col items-center justify-center w-14 h-12 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-200 transition-all">
-                <span className="material-icons text-[24px]">pie_chart</span>
+                <MdPieChart className="text-[24px]" />
             </Link>
             <Link href="/diary" className="flex flex-col items-center justify-center w-14 h-12 rounded-full bg-primary text-white shadow-glow hover:scale-105 transition-all">
-                <span className="material-icons text-[24px]">add</span>
+                <MdAdd className="text-[24px]" />
             </Link>
             <Link href="/concierge" className="flex flex-col items-center justify-center w-14 h-12 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-600 dark:hover:text-gray-200 transition-all">
-                <span className="material-icons text-[24px]">chat</span>
+                <MdChat className="text-[24px]" />
             </Link>
             <Link href="/profile" className="flex flex-col items-center justify-center w-14 h-12 rounded-full text-primary bg-primary/10">
-                <span className="material-icons text-[24px] filled">person</span>
+                <MdPerson className="text-[24px] filled" />
             </Link>
         </div>
       </nav>

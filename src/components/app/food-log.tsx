@@ -9,6 +9,17 @@ import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import {
+    MdLocalFireDepartment,
+    MdNotifications,
+    MdAdd,
+    MdChevronRight,
+    MdRestaurant,
+    MdCalendarToday,
+    MdAnalytics,
+    MdRestaurantMenu,
+    MdPerson
+} from 'react-icons/md';
 
 const AddFoodSheet = dynamic(() => import('@/components/app/add-food-sheet').then(mod => mod.AddFoodSheet));
 const EditFoodLogItemSheet = dynamic(() => import('@/components/app/edit-food-log-item-sheet').then(mod => mod.EditFoodLogItemSheet));
@@ -153,7 +164,7 @@ export function FoodLog() {
                 </h1>
             </div>
             <button className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <span className="material-icons text-slate-700 dark:text-slate-200">notifications</span>
+                <MdNotifications className="text-slate-700 dark:text-slate-200 text-2xl" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-background-dark"></span>
             </button>
         </header>
@@ -198,7 +209,7 @@ export function FoodLog() {
                         </h2>
                     </div>
                     <div className="h-10 w-10 rounded-full border-2 border-primary flex items-center justify-center">
-                        <span className="material-icons text-primary text-xl">local_fire_department</span>
+                        <MdLocalFireDepartment className="text-primary text-xl" />
                     </div>
                 </div>
 
@@ -255,7 +266,7 @@ export function FoodLog() {
                                 </span>
                             </h3>
                             <button onClick={() => setIsAddFoodOpen(true)} className="text-primary hover:bg-primary/10 rounded-full p-1 transition-colors">
-                                <span className="material-icons text-[20px]">add</span>
+                                <MdAdd className="text-[20px]" />
                             </button>
                         </div>
 
@@ -282,7 +293,7 @@ export function FoodLog() {
                                                     {item.grams}g • P: {item.protein}g • C: {item.carbs}g • F: {item.fat}g
                                                 </p>
                                             </div>
-                                            <span className="material-icons text-slate-300 group-hover:text-primary text-lg transition-colors">chevron_right</span>
+                                            <MdChevronRight className="text-slate-300 group-hover:text-primary text-lg transition-colors" />
                                         </div>
                                         {idx !== meal.items.length - 1 && <div className="h-px bg-slate-200/50 dark:bg-slate-700/50 mx-4"></div>}
                                     </div>
@@ -291,7 +302,7 @@ export function FoodLog() {
                         ) : (
                             <div className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-2 border-dashed border-2 !border-slate-200 dark:!border-slate-700 !bg-transparent">
                                 <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-1">
-                                    <span className="material-icons">restaurant</span>
+                                    <MdRestaurant className="text-2xl" />
                                 </div>
                                 <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Nothing logged yet</p>
                                 <button onClick={() => setIsAddFoodOpen(true)} className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider">Add {meal.label}</button>
@@ -309,7 +320,7 @@ export function FoodLog() {
                 className="group relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#00E096] to-[#00BFA5] text-white shadow-glow-green hover:scale-105 active:scale-95 transition-all duration-300"
             >
                 <div className="absolute inset-0 rounded-full bg-white/20 blur-sm group-hover:blur-md transition-all"></div>
-                <span className="material-icons text-3xl relative z-10 font-bold">add</span>
+                <MdAdd className="text-3xl relative z-10 font-bold" />
             </button>
         </div>
 
@@ -317,16 +328,16 @@ export function FoodLog() {
         <nav className="absolute bottom-0 w-full z-20">
             <div className="glass-panel mx-4 mb-4 h-16 rounded-3xl flex justify-between items-center px-6 shadow-2xl bg-white/70 dark:bg-slate-900/70">
                 <Link href="/diary" className="flex flex-col items-center justify-center gap-1 text-primary w-12 cursor-pointer">
-                    <span className="material-icons text-[26px] fill-current">calendar_today</span>
+                    <MdCalendarToday className="text-[26px] fill-current" />
                     <span className="text-[9px] font-bold">Diary</span>
                 </Link>
                 <Link href="/progress" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12 cursor-pointer">
-                    <span className="material-icons text-[26px]">analytics</span>
+                    <MdAnalytics className="text-[26px]" />
                     <span className="text-[9px] font-medium">Stats</span>
                 </Link>
                 <div className="w-12"></div> {/* Spacer for FAB visual balance, though FAB is floating above */}
                 <Link href="/products" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12 cursor-pointer">
-                    <span className="material-icons text-[26px]">restaurant_menu</span>
+                    <MdRestaurantMenu className="text-[26px]" />
                     <span className="text-[9px] font-medium">Recipes</span>
                 </Link>
                 <Link href="/profile" className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors w-12 cursor-pointer">
