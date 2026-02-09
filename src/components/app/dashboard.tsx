@@ -78,7 +78,19 @@ export default function Dashboard() {
   const { data: items } = useCollection<DailyLogItem>(itemsQuery);
 
   // Calculate Stats
-  const goalCalories = userProfile?.dailyCalories || 2000;
+  // Goal Calculation: Default to Maintenance - 500 if undefined, or use stored dailyCalories.
+  // The user requested: "Fetch the 'Maintenance' calories from the Profile calculation. Apply the logic: Daily Goal = Maintenance - 500."
+  // However, dailyCalories in profile IS ALREADY the calculated goal.
+  // To be safe and explicit as requested:
+  // If we have maintenance calories and a 'lose' goal, we ensure it's maintenance - 500.
+  // Otherwise we fall back to dailyCalories or 2000.
+
+  let calculatedGoal = userProfile?.dailyCalories || 2000;
+  if (userProfile?.maintenanceCalories && userProfile?.goal === 'lose') {
+      calculatedGoal = userProfile.maintenanceCalories - (userProfile.deficitTarget || 500);
+  }
+
+  const goalCalories = calculatedGoal;
   const activeCalories = dailyLog?.activeCalories || 0;
 
   // Calculate Macros from items
@@ -157,10 +169,6 @@ export default function Dashboard() {
                     </h2>
                 </div>
             </div>
-            <button className="relative glass-panel bg-white/40 dark:bg-slate-800/40 rounded-full p-2.5 transition-transform active:scale-95 shadow-glass group">
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-800 z-10"></span>
-                <MdNotifications className="text-slate-600 dark:text-slate-300 text-[22px] group-hover:text-primary transition-colors" />
-            </button>
         </header>
 
         {/* Main Content */}
