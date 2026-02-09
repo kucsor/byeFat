@@ -147,7 +147,7 @@ export function AddFoodSheet({ isOpen, setIsOpen, selectedDate, userProfile, sel
       const newProductRef = doc(collection(firestore, 'products'));
       productToSave.id = newProductRef.id;
 
-      await setDocumentNonBlocking(newProductRef, productToSave);
+      setDocumentNonBlocking(newProductRef, productToSave, { merge: true });
 
       // Set form values
       form.setValue('productId', newProductRef.id);
