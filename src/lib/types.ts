@@ -7,9 +7,10 @@ export type UserProfile = {
   age?: number;
   weight?: number;
   height?: number;
+  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
   goal?: 'lose' | 'maintain' | 'gain';
   // TDEE and targets
-  maintenanceCalories?: number; // BMR * 1.2 (sedentary)
+  maintenanceCalories?: number; // BMR * ActivityMultiplier
   deficitTarget?: number; // How much deficit to target (e.g., 500)
   dailyCalories?: number; // maintenanceCalories - deficitTarget
   dailyProtein?: number;

@@ -27,6 +27,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 
@@ -35,6 +36,7 @@ const profileSchema = z.object({
   age: z.coerce.number().min(1, 'Vârsta trebuie să fie un număr pozitiv.'),
   weight: z.coerce.number().min(1, 'Greutatea trebuie să fie un număr pozitiv.'),
   height: z.coerce.number().min(1, 'Înălțimea trebuie să fie un număr pozitiv.'),
+  activityLevel: z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active'], { required_error: 'Selectează nivelul de activitate.' }),
   goal: z.enum(['lose', 'maintain', 'gain'], { required_error: 'Te rog selectează un obiectiv.' }),
 });
 
@@ -51,6 +53,7 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
       age: userProfile.age,
       weight: userProfile.weight,
       height: userProfile.height,
+      activityLevel: userProfile.activityLevel || 'sedentary',
       goal: userProfile.goal ?? 'maintain',
     },
   });
@@ -59,14 +62,22 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
   const formData = watch();
 
   const results = useMemo(() => {
-    const { gender, age, weight, height } = formData;
+    const { gender, age, weight, height, activityLevel } = formData;
     if (!gender || !age || !weight || !height) return null;
 
     // Mifflin-St Jeor Equation for BMR
     const bmr = (10 * weight) + (6.25 * height) - (5 * age) + (gender === 'male' ? 5 : -161);
     
-    // TDEE (sedentary) = Maintenance calories
-    const tdee = bmr * 1.2;
+    // TDEE Multipliers
+    const multipliers = {
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725,
+        very_active: 1.9,
+    };
+
+    const tdee = bmr * (multipliers[activityLevel] || 1.2);
     const maintenanceCalories = Math.round(tdee);
     
     // Deficit target (500 kcal for weight loss)
@@ -171,6 +182,7 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
       age: userProfile.age,
       weight: userProfile.weight,
       height: userProfile.height,
+      activityLevel: userProfile.activityLevel || 'sedentary',
       goal: userProfile.goal ?? 'maintain',
     });
   }, [userProfile, form]);
@@ -180,7 +192,7 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
       <CardHeader>
         <CardTitle>Calculator Calorii & Macronutrienți</CardTitle>
         <CardDescription>
-          Calculează-ți necesarul zilnic și salvează-ți obiectivele. Nivelul de activitate este considerat sedentar.
+          Calculează-ți necesarul zilnic și salvează-ți obiectivele.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -257,6 +269,31 @@ export function CalorieCalculator({ userProfile }: { userProfile: UserProfile })
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="activityLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nivel de Activitate</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selectează nivelul de activitate" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="sedentary">Sedentar (puțin sau deloc exercițiu)</SelectItem>
+                      <SelectItem value="light">Ușor activ (exerciții ușoare/sport 1-3 zile/săptămână)</SelectItem>
+                      <SelectItem value="moderate">Moderat activ (exerciții moderate/sport 3-5 zile/săptămână)</SelectItem>
+                      <SelectItem value="active">Activ (exerciții grele/sport 6-7 zile/săptămână)</SelectItem>
+                      <SelectItem value="very_active">Foarte activ (exerciții foarte grele/job fizic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {results && (
               <div className="space-y-4">
